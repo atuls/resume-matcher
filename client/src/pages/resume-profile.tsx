@@ -7,12 +7,10 @@ import { User, FileText, Calendar, ArrowLeft, Mail, MapPin, Phone, Award, Briefc
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
 import { formatDistance } from "date-fns";
-import { useState } from "react";
 
 export default function ResumeProfilePage() {
   const [, params] = useRoute<{ id: string }>("/resume/:id");
   const resumeId = params?.id;
-  const [activeTab, setActiveTab] = useState<string>("overview");
 
   const { data: resume, isLoading, isError } = useQuery({
     queryKey: [`/api/resumes/${resumeId}`],
@@ -137,133 +135,133 @@ export default function ResumeProfilePage() {
 
         <div className="md:col-span-2">
           <Card>
-            <CardHeader className="pb-2">
-              <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
+            <Tabs defaultValue="overview">
+              <CardHeader className="pb-2">
                 <TabsList>
                   <TabsTrigger value="overview">Overview</TabsTrigger>
                   <TabsTrigger value="raw">Raw Text</TabsTrigger>
                   <TabsTrigger value="skills">Skills</TabsTrigger>
                   <TabsTrigger value="history">Work History</TabsTrigger>
                 </TabsList>
-              </Tabs>
-            </CardHeader>
-            <CardContent>
-              <TabsContent value="overview" className={activeTab === 'overview' ? 'block' : 'hidden'}>
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="font-medium text-lg">Summary</h3>
-                    <p className="text-gray-700 mt-2">{
-                      resume.extractedText.slice(0, 250).trim() + "..."
-                    }</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="font-medium text-lg">Top Skills</h3>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {['JavaScript', 'React', 'TypeScript', 'Node.js', 'Express', 'SQL', 'UI/UX'].map((skill) => (
-                        <span key={skill} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
-                          {skill}
-                        </span>
-                      ))}
+              </CardHeader>
+              <CardContent>
+                <TabsContent value="overview">
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="font-medium text-lg">Summary</h3>
+                      <p className="text-gray-700 mt-2">{
+                        resume.extractedText.slice(0, 250).trim() + "..."
+                      }</p>
                     </div>
-                  </div>
-
-                  <div>
-                    <h3 className="font-medium text-lg">Education</h3>
-                    <div className="mt-2 border-l-2 border-gray-200 pl-4">
-                      <div className="mb-2">
-                        <p className="font-medium">Bachelor of Science in Computer Science</p>
-                        <p className="text-sm text-gray-600">University of Technology</p>
-                        <p className="text-sm text-gray-500">2015 - 2019</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="raw" className={activeTab === 'raw' ? 'block' : 'hidden'}>
-                <div className="bg-gray-50 p-4 rounded-md whitespace-pre-wrap font-mono text-sm h-[500px] overflow-y-auto">
-                  {resume.extractedText}
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="skills" className={activeTab === 'skills' ? 'block' : 'hidden'}>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="bg-primary/5 p-4 rounded-lg">
-                      <h4 className="font-medium mb-2">Technical Skills</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {['JavaScript', 'TypeScript', 'React', 'Node.js', 'Express', 'SQL', 'MongoDB', 'Git', 'REST API'].map((skill) => (
+                    
+                    <div>
+                      <h3 className="font-medium text-lg">Top Skills</h3>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {['JavaScript', 'React', 'TypeScript', 'Node.js', 'Express', 'SQL', 'UI/UX'].map((skill) => (
                           <span key={skill} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
                             {skill}
                           </span>
                         ))}
                       </div>
                     </div>
-                    
-                    <div className="bg-primary/5 p-4 rounded-lg">
-                      <h4 className="font-medium mb-2">Soft Skills</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {['Communication', 'Teamwork', 'Problem Solving', 'Time Management', 'Leadership', 'Adaptability'].map((skill) => (
-                          <span key={skill} className="bg-secondary/10 text-secondary px-3 py-1 rounded-full text-sm">
-                            {skill}
-                          </span>
-                        ))}
+
+                    <div>
+                      <h3 className="font-medium text-lg">Education</h3>
+                      <div className="mt-2 border-l-2 border-gray-200 pl-4">
+                        <div className="mb-2">
+                          <p className="font-medium">Bachelor of Science in Computer Science</p>
+                          <p className="text-sm text-gray-600">University of Technology</p>
+                          <p className="text-sm text-gray-500">2015 - 2019</p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-500 italic">
-                      Note: Skills are extracted from resume content and may require verification.
-                    </p>
+                </TabsContent>
+                
+                <TabsContent value="raw">
+                  <div className="bg-gray-50 p-4 rounded-md whitespace-pre-wrap font-mono text-sm h-[500px] overflow-y-auto">
+                    {resume.extractedText}
                   </div>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="history" className={activeTab === 'history' ? 'block' : 'hidden'}>
-                <div className="space-y-6">
-                  <div className="border-l-2 border-gray-200 pl-4 pb-2">
-                    <div className="relative">
-                      <div className="absolute -left-6 mt-1 h-4 w-4 rounded-full bg-primary"></div>
-                      <h4 className="font-medium">Senior Software Engineer</h4>
-                      <p className="text-sm text-gray-600">TechCorp Inc.</p>
-                      <p className="text-sm text-gray-500">2022 - Present</p>
-                      <p className="mt-2 text-sm text-gray-700">
-                        Led development of enterprise applications using React and Node.js.
-                        Implemented CI/CD pipelines and improved performance by 40%.
+                </TabsContent>
+                
+                <TabsContent value="skills">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="bg-primary/5 p-4 rounded-lg">
+                        <h4 className="font-medium mb-2">Technical Skills</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {['JavaScript', 'TypeScript', 'React', 'Node.js', 'Express', 'SQL', 'MongoDB', 'Git', 'REST API'].map((skill) => (
+                            <span key={skill} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div className="bg-primary/5 p-4 rounded-lg">
+                        <h4 className="font-medium mb-2">Soft Skills</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {['Communication', 'Teamwork', 'Problem Solving', 'Time Management', 'Leadership', 'Adaptability'].map((skill) => (
+                            <span key={skill} className="bg-secondary/10 text-secondary px-3 py-1 rounded-full text-sm">
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4">
+                      <p className="text-sm text-gray-500 italic">
+                        Note: Skills are extracted from resume content and may require verification.
                       </p>
                     </div>
                   </div>
-                  
-                  <div className="border-l-2 border-gray-200 pl-4 pb-2">
-                    <div className="relative">
-                      <div className="absolute -left-6 mt-1 h-4 w-4 rounded-full bg-gray-400"></div>
-                      <h4 className="font-medium">Software Developer</h4>
-                      <p className="text-sm text-gray-600">Web Solutions LLC</p>
-                      <p className="text-sm text-gray-500">2019 - 2022</p>
-                      <p className="mt-2 text-sm text-gray-700">
-                        Developed and maintained web applications for clients.
-                        Collaborated with UX designers to implement responsive designs.
-                      </p>
+                </TabsContent>
+                
+                <TabsContent value="history">
+                  <div className="space-y-6">
+                    <div className="border-l-2 border-gray-200 pl-4 pb-2">
+                      <div className="relative">
+                        <div className="absolute -left-6 mt-1 h-4 w-4 rounded-full bg-primary"></div>
+                        <h4 className="font-medium">Senior Software Engineer</h4>
+                        <p className="text-sm text-gray-600">TechCorp Inc.</p>
+                        <p className="text-sm text-gray-500">2022 - Present</p>
+                        <p className="mt-2 text-sm text-gray-700">
+                          Led development of enterprise applications using React and Node.js.
+                          Implemented CI/CD pipelines and improved performance by 40%.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="border-l-2 border-gray-200 pl-4 pb-2">
+                      <div className="relative">
+                        <div className="absolute -left-6 mt-1 h-4 w-4 rounded-full bg-gray-400"></div>
+                        <h4 className="font-medium">Software Developer</h4>
+                        <p className="text-sm text-gray-600">Web Solutions LLC</p>
+                        <p className="text-sm text-gray-500">2019 - 2022</p>
+                        <p className="mt-2 text-sm text-gray-700">
+                          Developed and maintained web applications for clients.
+                          Collaborated with UX designers to implement responsive designs.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="border-l-2 border-gray-200 pl-4 pb-2">
+                      <div className="relative">
+                        <div className="absolute -left-6 mt-1 h-4 w-4 rounded-full bg-gray-400"></div>
+                        <h4 className="font-medium">Junior Developer</h4>
+                        <p className="text-sm text-gray-600">StartUp Inc.</p>
+                        <p className="text-sm text-gray-500">2018 - 2019</p>
+                        <p className="mt-2 text-sm text-gray-700">
+                          Assisted senior developers with frontend tasks using React.
+                          Participated in code reviews and learning sessions.
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  
-                  <div className="border-l-2 border-gray-200 pl-4 pb-2">
-                    <div className="relative">
-                      <div className="absolute -left-6 mt-1 h-4 w-4 rounded-full bg-gray-400"></div>
-                      <h4 className="font-medium">Junior Developer</h4>
-                      <p className="text-sm text-gray-600">StartUp Inc.</p>
-                      <p className="text-sm text-gray-500">2018 - 2019</p>
-                      <p className="mt-2 text-sm text-gray-700">
-                        Assisted senior developers with frontend tasks using React.
-                        Participated in code reviews and learning sessions.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-            </CardContent>
+                </TabsContent>
+              </CardContent>
+            </Tabs>
           </Card>
         </div>
       </div>
