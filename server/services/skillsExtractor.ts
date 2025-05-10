@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { SkillMatch } from "@/types";
+
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,

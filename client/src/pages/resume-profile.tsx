@@ -254,46 +254,44 @@ export default function ResumeProfilePage() {
                 </TabsContent>
                 
                 <TabsContent value="history">
-                  <div className="space-y-6">
-                    <div className="border-l-2 border-gray-200 pl-4 pb-2">
-                      <div className="relative">
-                        <div className="absolute -left-6 mt-1 h-4 w-4 rounded-full bg-primary"></div>
-                        <h4 className="font-medium">Senior Software Engineer</h4>
-                        <p className="text-sm text-gray-600">TechCorp Inc.</p>
-                        <p className="text-sm text-gray-500">2022 - Present</p>
-                        <p className="mt-2 text-sm text-gray-700">
-                          Led development of enterprise applications using React and Node.js.
-                          Implemented CI/CD pipelines and improved performance by 40%.
+                  {analysisLoading ? (
+                    <div className="flex justify-center items-center h-36">
+                      <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full"></div>
+                      <span className="ml-3 text-sm">Analyzing work history...</span>
+                    </div>
+                  ) : analysisError ? (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Failed to analyze work history. Please try again later.
+                      </AlertDescription>
+                    </Alert>
+                  ) : analysis && analysis.workHistory && analysis.workHistory.length > 0 ? (
+                    <div className="space-y-6">
+                      {analysis.workHistory.map((job, index) => (
+                        <div key={index} className="border-l-2 border-gray-200 pl-4 pb-2">
+                          <div className="relative">
+                            <div className={`absolute -left-6 mt-1 h-4 w-4 rounded-full ${index === 0 ? 'bg-primary' : 'bg-gray-400'}`}></div>
+                            <h4 className="font-medium">{job.title}</h4>
+                            <p className="text-sm text-gray-600">{job.company}</p>
+                            <p className="text-sm text-gray-500">{job.period}</p>
+                            <p className="mt-2 text-sm text-gray-700">
+                              {job.description}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="mt-4">
+                        <p className="text-sm text-gray-500 italic">
+                          Note: Work history is extracted from resume content using AI and may require verification.
                         </p>
                       </div>
                     </div>
-                    
-                    <div className="border-l-2 border-gray-200 pl-4 pb-2">
-                      <div className="relative">
-                        <div className="absolute -left-6 mt-1 h-4 w-4 rounded-full bg-gray-400"></div>
-                        <h4 className="font-medium">Software Developer</h4>
-                        <p className="text-sm text-gray-600">Web Solutions LLC</p>
-                        <p className="text-sm text-gray-500">2019 - 2022</p>
-                        <p className="mt-2 text-sm text-gray-700">
-                          Developed and maintained web applications for clients.
-                          Collaborated with UX designers to implement responsive designs.
-                        </p>
-                      </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">No work history detected in this resume.</p>
                     </div>
-                    
-                    <div className="border-l-2 border-gray-200 pl-4 pb-2">
-                      <div className="relative">
-                        <div className="absolute -left-6 mt-1 h-4 w-4 rounded-full bg-gray-400"></div>
-                        <h4 className="font-medium">Junior Developer</h4>
-                        <p className="text-sm text-gray-600">StartUp Inc.</p>
-                        <p className="text-sm text-gray-500">2018 - 2019</p>
-                        <p className="mt-2 text-sm text-gray-700">
-                          Assisted senior developers with frontend tasks using React.
-                          Participated in code reviews and learning sessions.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </TabsContent>
               </CardContent>
             </Tabs>
