@@ -163,16 +163,19 @@ export default function ResumeProfilePage() {
               <CardTitle className="text-lg">Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {resume && <MatchJobDialog resumeId={resume.id} buttonClassName="w-full" buttonText="Match with Job" buttonIcon={<Briefcase className="mr-2 h-4 w-4" />} />}
+              {resume && <MatchJobDialog resume={resume} />}
               
               <div className="mt-4 mb-2">
                 <h3 className="text-sm font-medium mb-2 text-gray-500">View Score for Job</h3>
-                <Select value={selectedJobId || ""} onValueChange={(val) => setSelectedJobId(val || null)}>
+                <Select 
+                  value={selectedJobId || "none"} 
+                  onValueChange={(val) => setSelectedJobId(val === "none" ? null : val)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a job position" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {jobDescriptions?.map(job => (
                       <SelectItem key={job.id} value={job.id}>
                         {job.title}
