@@ -133,6 +133,27 @@ export async function getResume(id: string): Promise<Resume> {
   return response.json();
 }
 
+export async function getResumeAnalysis(id: string): Promise<{
+  skills: string[];
+  workHistory: Array<{
+    title: string;
+    company: string;
+    period: string;
+    description: string;
+  }>;
+  resumeId: string;
+}> {
+  const response = await fetch(`/api/resumes/${id}/analysis`, {
+    credentials: "include",
+  });
+  
+  if (!response.ok) {
+    throw new Error("Failed to analyze resume");
+  }
+  
+  return response.json();
+}
+
 export async function deleteResume(id: string): Promise<void> {
   const response = await apiRequest("DELETE", `/api/resumes/${id}`);
   return;

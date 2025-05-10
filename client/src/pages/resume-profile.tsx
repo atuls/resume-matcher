@@ -2,19 +2,31 @@ import { useQuery } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getResume } from "@/lib/api";
-import { User, FileText, Calendar, ArrowLeft, Mail, MapPin, Phone, Award, Briefcase, Code } from "lucide-react";
+import { getResume, getResumeAnalysis } from "@/lib/api";
+import { User, FileText, Calendar, ArrowLeft, Mail, MapPin, Phone, Award, Briefcase, Code, AlertCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
 import { formatDistance } from "date-fns";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import MatchJobDialog from "@/components/resume/match-job-dialog";
 
 export default function ResumeProfilePage() {
   const [, params] = useRoute<{ id: string }>("/resume/:id");
   const resumeId = params?.id;
 
-  const { data: resume, isLoading, isError } = useQuery({
+  const { data: resume, isLoading: resumeLoading, isError: resumeError } = useQuery({
     queryKey: [`/api/resumes/${resumeId}`],
     queryFn: () => getResume(resumeId!),
+    enabled: !!resumeId,
+  });
+
+  const { 
+    data: analysis, 
+    isLoading: analysisLoading, 
+    isError: analysisError 
+  } = useQuery({
+    queryKey: [`/api/resumes/${resumeId}/analysis`],
+    queryFn: () => getResumeAnalysis(resumeId!),
     enabled: !!resumeId,
   });
 
@@ -28,7 +40,7 @@ export default function ResumeProfilePage() {
     }
   };
 
-  if (isLoading) {
+  if (resumeLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
@@ -37,7 +49,7 @@ export default function ResumeProfilePage() {
     );
   }
 
-  if (isError || !resume) {
+  if (resumeError || !resume) {
     return (
       <div className="text-center py-12">
         <div className="bg-red-50 text-red-600 rounded-lg p-4 mb-4">
@@ -117,10 +129,7 @@ export default function ResumeProfilePage() {
               <CardTitle className="text-lg">Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button className="w-full" variant="outline">
-                <Briefcase className="mr-2 h-4 w-4" /> 
-                Match with Job
-              </Button>
+              {resume && <MatchJobDialog resume={resume} />}
               <Button className="w-full" variant="outline" >
                 <Mail className="mr-2 h-4 w-4" />
                 Contact Candidate
@@ -185,37 +194,63 @@ export default function ResumeProfilePage() {
                 </TabsContent>
                 
                 <TabsContent value="skills">
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="bg-primary/5 p-4 rounded-lg">
-                        <h4 className="font-medium mb-2">Technical Skills</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {['JavaScript', 'TypeScript', 'React', 'Node.js', 'Express', 'SQL', 'MongoDB', 'Git', 'REST API'].map((skill) => (
-                            <span key={skill} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
-                              {skill}
-                            </span>
-                          ))}
+                  {analysisLoading ? (
+                    <div className="flex justify-center items-center h-36">
+                      <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full"></div>
+                      <span className="ml-3 text-sm">Analyzing skills...</span>
+                    </div>
+                  ) : analysisError ? (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Failed to analyze skills. Please try again later.
+                      </AlertDescription>
+                    </Alert>
+                  ) : analysis && analysis.skills && analysis.skills.length > 0 ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="bg-primary/5 p-4 rounded-lg">
+                          <h4 className="font-medium mb-2">Technical Skills</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {analysis.skills
+                              .filter(skill => !['communication', 'teamwork', 'leadership', 'problem solving', 
+                                            'adaptability', 'time management', 'creativity', 'critical thinking',
+                                            'collaboration', 'presentation'].includes(skill.toLowerCase()))
+                              .map((skill) => (
+                                <span key={skill} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
+                                  {skill}
+                                </span>
+                              ))}
+                          </div>
+                        </div>
+                        
+                        <div className="bg-primary/5 p-4 rounded-lg">
+                          <h4 className="font-medium mb-2">Soft Skills</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {analysis.skills
+                              .filter(skill => ['communication', 'teamwork', 'leadership', 'problem solving', 
+                                          'adaptability', 'time management', 'creativity', 'critical thinking',
+                                          'collaboration', 'presentation'].includes(skill.toLowerCase()))
+                              .map((skill) => (
+                                <span key={skill} className="bg-secondary/10 text-secondary px-3 py-1 rounded-full text-sm">
+                                  {skill}
+                                </span>
+                              ))}
+                          </div>
                         </div>
                       </div>
                       
-                      <div className="bg-primary/5 p-4 rounded-lg">
-                        <h4 className="font-medium mb-2">Soft Skills</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {['Communication', 'Teamwork', 'Problem Solving', 'Time Management', 'Leadership', 'Adaptability'].map((skill) => (
-                            <span key={skill} className="bg-secondary/10 text-secondary px-3 py-1 rounded-full text-sm">
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
+                      <div className="mt-4">
+                        <p className="text-sm text-gray-500 italic">
+                          Note: Skills are extracted from resume content using AI and may require verification.
+                        </p>
                       </div>
                     </div>
-                    
-                    <div className="mt-4">
-                      <p className="text-sm text-gray-500 italic">
-                        Note: Skills are extracted from resume content and may require verification.
-                      </p>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">No skills detected in this resume.</p>
                     </div>
-                  </div>
+                  )}
                 </TabsContent>
                 
                 <TabsContent value="history">

@@ -13,6 +13,10 @@ import {
   parseResume,
 } from "./services/documentProcessor";
 import {
+  extractSkillsFromResume,
+  extractWorkHistory
+} from "./services/skillsExtractor";
+import {
   analyzeRequirementsSchema,
   analyzeResumeSchema,
   insertJobDescriptionSchema,
@@ -240,6 +244,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(resume);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch resume" });
+    }
+  });
+  
+  app.get("/api/resumes/:id/analysis", async (req: Request, res: Response) => {
+    try {
+      const resume = await storage.getResume(req.params.id);
+      if (!resume) {
+        return res.status(404).json({ message: "Resume not found" });
+      }
+      
+      // Extract skills and work history in parallel
+      const [skills, workHistory] = await Promise.all([
+        extractSkillsFromResume(resume.extractedText),
+        extractWorkHistory(resume.extractedText)
+      ]);
+      
+      res.json({
+        skills,
+        workHistory,
+        resumeId: resume.id
+      });
+    } catch (error) {
+      console.error("Error analyzing resume:", error);
+      res.status(500).json({ 
+        message: "Failed to analyze resume", 
+        error: error.message 
+      });
     }
   });
 
