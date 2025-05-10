@@ -1,5 +1,5 @@
-import MistralClient from '@mistralai/mistralai';
-import fs from 'fs/promises';
+// Import Mistral SDK
+import { Mistral } from '@mistralai/mistralai';
 import { Buffer } from 'buffer';
 
 // Function to check if Mistral API key is available
@@ -14,13 +14,14 @@ export async function extractTextFromPDFWithMistral(buffer: Buffer): Promise<str
   }
 
   try {
-    const mistralClient = new MistralClient(process.env.MISTRAL_API_KEY as string);
+    // Create Mistral client using the SDK
+    const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY as string });
     
     // Convert Buffer to base64
     const base64String = buffer.toString('base64');
     
     // Call Mistral API with the PDF content
-    const response = await mistralClient.chat({
+    const response = await client.chat.complete({
       model: "mistral-large-latest", // Use the latest model that supports multimodal inputs
       messages: [
         {
