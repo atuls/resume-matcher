@@ -163,7 +163,77 @@ export default function ResumeProfilePage() {
               <CardTitle className="text-lg">Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {resume && <MatchJobDialog resume={resume} />}
+              {resume && <MatchJobDialog resumeId={resume.id} buttonClassName="w-full" buttonText="Match with Job" buttonIcon={<Briefcase className="mr-2 h-4 w-4" />} />}
+              
+              <div className="mt-4 mb-2">
+                <h3 className="text-sm font-medium mb-2 text-gray-500">View Score for Job</h3>
+                <Select value={selectedJobId || ""} onValueChange={(val) => setSelectedJobId(val || null)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a job position" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">None</SelectItem>
+                    {jobDescriptions?.map(job => (
+                      <SelectItem key={job.id} value={job.id}>
+                        {job.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {selectedJobId && (
+                <div className="border border-gray-100 rounded-lg p-3 my-3 bg-gray-50">
+                  {resumeScore ? (
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">Match Score</span>
+                        <Badge 
+                          variant={
+                            resumeScore.score >= 80 ? "secondary" :
+                            resumeScore.score >= 60 ? "default" :
+                            "outline"
+                          } 
+                          className={resumeScore.score >= 80 ? "bg-emerald-500" : ""}
+                        >
+                          {resumeScore.score}%
+                        </Badge>
+                      </div>
+                      <Progress 
+                        value={resumeScore.score} 
+                        max={100}
+                        className={`h-2 ${
+                          resumeScore.score >= 80 ? "bg-emerald-100" :
+                          resumeScore.score >= 60 ? "bg-blue-100" :
+                          "bg-gray-100"
+                        }`}
+                      />
+                      <div className="text-xs text-gray-500 flex items-center justify-between">
+                        <span>Matched {formatDate(resumeScore.matchedAt)}</span>
+                        {resumeScore.score >= 80 ? (
+                          <span className="flex items-center text-emerald-600">
+                            <CheckCircle className="h-3 w-3 mr-1" /> Great match
+                          </span>
+                        ) : resumeScore.score >= 60 ? (
+                          <span className="flex items-center text-blue-600">
+                            <CheckCircle className="h-3 w-3 mr-1" /> Good match
+                          </span>
+                        ) : (
+                          <span className="flex items-center text-gray-500">
+                            <XCircle className="h-3 w-3 mr-1" /> Low match
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center p-4 text-gray-500">
+                      <AlertCircle className="mr-2 h-4 w-4" />
+                      <span>Not matched yet</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              
               <Button className="w-full" variant="outline" >
                 <Mail className="mr-2 h-4 w-4" />
                 Contact Candidate
