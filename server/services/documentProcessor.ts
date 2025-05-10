@@ -8,52 +8,41 @@ import { isMistralApiKeyAvailable, extractTextFromPDFWithMistral } from './mistr
 import { isOpenAIApiKeyAvailable, extractTextFromPDFWithOpenAI } from './openaiPdfExtraction';
 import { parsePDF } from './pdfParser';
 
-// Function to extract text from PDF with multiple fallback methods
+// Function to extract text from PDF with fallback to basic extraction
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
-    // First try to use OpenAI for extraction if API key is available (best quality)
-    if (isOpenAIApiKeyAvailable()) {
-      try {
-        console.log('Using OpenAI for PDF text extraction...');
-        return await extractTextFromPDFWithOpenAI(buffer);
-      } catch (openaiError) {
-        console.warn('OpenAI PDF extraction failed, trying Mistral...', openaiError);
-        // If OpenAI fails, we'll try Mistral next
-      }
-    }
-    
-    // Next try Mistral if API key is available
-    if (isMistralApiKeyAvailable()) {
-      try {
-        console.log('Using Mistral AI for PDF text extraction...');
-        return await extractTextFromPDFWithMistral(buffer);
-      } catch (mistralError) {
-        console.warn('Mistral PDF extraction failed, falling back to basic PDF parser:', mistralError);
-        // If Mistral fails, we'll fall back to our basic PDF parser
-      }
-    }
-    
-    // Fallback: Using our basic PDF parser that doesn't rely on external libraries
+    // First use our reliable basic PDF parser that doesn't rely on external libraries
     console.log('Using basic PDF text extraction...');
     
     try {
       // Use our basic PDF parser that doesn't use pdf-parse
       const extractedText = await parsePDF(buffer);
       
-      if (!extractedText || extractedText.trim() === '') {
-        return `Failed to extract text content. Document appears to be a PDF of ${buffer.length} bytes.`;
+      if (extractedText && extractedText.trim() !== '') {
+        // If we got something useful, return it
+        return extractedText;
       }
       
-      // Return the extracted text
-      return extractedText;
+      // If basic extraction didn't provide useful content, check if Mistral is available
+      if (isMistralApiKeyAvailable()) {
+        try {
+          console.log('Basic extraction had limited results, trying Mistral...');
+          return await extractTextFromPDFWithMistral(buffer);
+        } catch (mistralError) {
+          console.warn('Mistral PDF extraction failed:', mistralError);
+        }
+      }
+      
+      // If we're here, all methods failed or returned limited content
+      return `PDF Document Size: ${buffer.length} bytes\n\nUnable to extract detailed text content. This may be a scanned document or the text might be stored in a format that requires more specialized tools.`;
     } catch (parserError) {
       console.error('Basic PDF parser failed:', parserError);
-      // If all methods fail, extract basic information
-      return `Unable to extract detailed text. Document is ${buffer.length} bytes in size.`;
+      // Extract basic information
+      return `PDF Document Size: ${buffer.length} bytes\n\nUnable to extract detailed text content. This may be a scanned document or the text might be stored in a format that requires more specialized tools.`;
     }
   } catch (error) {
     console.error('Error extracting text from PDF:', error);
-    return `Failed to extract text from PDF. Document is ${buffer.length} bytes in size.`;
+    return `PDF Document Size: ${buffer.length} bytes`;
   }
 }
 
