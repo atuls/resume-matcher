@@ -4,10 +4,24 @@ import { createRequire } from 'module';
 // Import dynamically to support ESM
 const importDynamic = new Function('modulePath', 'return import(modulePath)');
 
-// Function to extract text from PDF using pdf-parse
+import { isMistralApiKeyAvailable, extractTextFromPDFWithMistral } from './mistralPdfExtraction';
+
+// Function to extract text from PDF using Mistral AI with fallback to pdf-parse
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
-    // Using require instead of import for pdf-parse which works better in Node.js
+    // First try to use Mistral for extraction if API key is available
+    if (isMistralApiKeyAvailable()) {
+      try {
+        console.log('Using Mistral AI for PDF text extraction...');
+        return await extractTextFromPDFWithMistral(buffer);
+      } catch (mistralError) {
+        console.warn('Mistral PDF extraction failed, falling back to pdf-parse:', mistralError);
+        // If Mistral fails, we'll fall back to pdf-parse
+      }
+    }
+    
+    // Fallback: Using pdf-parse
+    console.log('Using pdf-parse for PDF text extraction...');
     const pdfParse = await import('pdf-parse');
     
     // Parse the PDF document
