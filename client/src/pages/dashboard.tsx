@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Settings, Plus } from "lucide-react";
-import { getJobDescriptions, getJobRequirements, analyzeResumes } from "@/lib/api";
+import { getJobDescriptions, getJobRequirements, analyzeResumes, deleteJobDescription } from "@/lib/api";
 import JobDescriptionUploader from "@/components/job-description/uploader";
 import JobDescriptionPreview from "@/components/job-description/preview";
 import ResumeUploader from "@/components/resume/uploader";
@@ -19,6 +19,7 @@ export default function Dashboard() {
   const [requirementsConfirmed, setRequirementsConfirmed] = useState(false);
   const [analysisStatus, setAnalysisStatus] = useState<AnalysisStatus>({ status: 'idle' });
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Fetch job descriptions
   const {
@@ -60,6 +61,31 @@ export default function Dashboard() {
   // Handle resume selection
   const handleResumeSelection = (resumeIds: string[]) => {
     setSelectedResumeIds(resumeIds);
+  };
+  
+  // Delete job description mutation
+  const deleteJobMutation = useMutation({
+    mutationFn: deleteJobDescription,
+    onSuccess: () => {
+      toast({
+        title: "Job description deleted",
+        description: "The job description has been successfully deleted",
+      });
+      setSelectedJobDescription(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/job-descriptions'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to delete job description",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Handle job description deletion
+  const handleDeleteJobDescription = async (id: string) => {
+    deleteJobMutation.mutate(id);
   };
 
   // Start analysis process
@@ -119,7 +145,7 @@ export default function Dashboard() {
               <h2 className="text-lg font-semibold mb-4">Job Description</h2>
               <JobDescriptionPreview 
                 jobDescription={selectedJobDescription} 
-                onDelete={() => setSelectedJobDescription(null)} 
+                onDelete={() => handleDeleteJobDescription(selectedJobDescription.id)} 
               />
             </div>
           )}
