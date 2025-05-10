@@ -3,22 +3,26 @@ import { FileWithPreview, UploadState } from '@/types';
 
 interface UseFileUploadProps<T> {
   uploadFn: (file: File) => Promise<T>;
-  onSuccess?: (data: T) => void;
+  uploadMultipleFn?: (files: File[]) => Promise<T[]>;
+  onSuccess?: (data: T | T[]) => void;
   onError?: (error: Error) => void;
   accept?: string;
   maxSize?: number; // in bytes
+  multiple?: boolean; // Allow selecting multiple files
 }
 
 interface UseFileUploadReturn<T> {
   uploadState: UploadState;
   files: FileWithPreview[];
-  uploadedData: T | null;
+  uploadedData: T | T[] | null;
   errorMessage: string | null;
   handleDrop: (acceptedFiles: File[]) => void;
-  handleUpload: (file?: File) => Promise<T | null>;
+  handleUpload: (file?: File) => Promise<T | T[] | null>;
+  handleRemoveAll: () => void;
   handleRemove: (index: number) => void;
   clearFiles: () => void;
   resetState: () => void;
+  uploadProgress: number; // 0-100 percent
 }
 
 export function useFileUpload<T>({

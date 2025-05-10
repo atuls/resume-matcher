@@ -109,6 +109,28 @@ export async function uploadResume(file: File): Promise<Resume> {
   return response.json();
 }
 
+// Multi-file resume upload API
+export async function uploadMultipleResumes(files: File[]): Promise<Resume[]> {
+  // We'll make sequential calls to keep the backend simple
+  const results: Resume[] = [];
+  
+  for (const file of files) {
+    try {
+      const resume = await uploadResume(file);
+      results.push(resume);
+    } catch (error) {
+      console.error(`Error uploading ${file.name}:`, error);
+      // Continue with other files even if one fails
+    }
+  }
+  
+  if (results.length === 0 && files.length > 0) {
+    throw new Error("Failed to upload any resumes");
+  }
+  
+  return results;
+}
+
 export async function getResumes(): Promise<Resume[]> {
   const response = await fetch("/api/resumes", {
     credentials: "include",
