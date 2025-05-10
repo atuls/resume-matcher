@@ -1,4 +1,4 @@
-// We'll use the Mistral API directly with fetch instead of the SDK to avoid typing issues
+// Use Mistral's dedicated OCR model for document text extraction
 import { Buffer } from 'buffer';
 
 // Function to check if Mistral API key is available
@@ -6,7 +6,7 @@ export function isMistralApiKeyAvailable(): boolean {
   return !!process.env.MISTRAL_API_KEY;
 }
 
-// Function to extract text from PDF using Mistral's multimodal capabilities
+// Function to extract text from PDF using Mistral's dedicated OCR model
 export async function extractTextFromPDFWithMistral(buffer: Buffer): Promise<string> {
   if (!isMistralApiKeyAvailable()) {
     throw new Error('MISTRAL_API_KEY environment variable is not set');
@@ -14,7 +14,7 @@ export async function extractTextFromPDFWithMistral(buffer: Buffer): Promise<str
 
   try {
     // Check if buffer is too large (Mistral may have size limits)
-    const MAX_PDF_SIZE = 5 * 1024 * 1024; // 5MB limit
+    const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10MB limit
     if (buffer.length > MAX_PDF_SIZE) {
       throw new Error(`PDF is too large (${buffer.length} bytes) for Mistral API processing`);
     }
@@ -22,14 +22,15 @@ export async function extractTextFromPDFWithMistral(buffer: Buffer): Promise<str
     // Convert Buffer to base64
     const base64String = buffer.toString('base64');
     
-    // Prepare the request to Mistral API
-    console.log('Using Mistral multimodal model for PDF text extraction...');
+    console.log('Using Mistral OCR model for PDF text extraction...');
     
     const apiKey = process.env.MISTRAL_API_KEY;
+    
+    // Using the specialized OCR endpoint as per documentation
     const url = 'https://api.mistral.ai/v1/chat/completions';
     
-    // Create a proper model name - we'll use a model known to exist
-    const modelName = "mistral-medium"; // More reliable than "mistral-large-latest"
+    // Use the dedicated OCR model
+    const modelName = "mistral-ocr-latest";
     
     const response = await fetch(url, {
       method: 'POST',
@@ -45,10 +46,10 @@ export async function extractTextFromPDFWithMistral(buffer: Buffer): Promise<str
             content: [
               {
                 type: "text",
-                text: "Extract all text from this PDF document. Return only the text, no additional comments."
+                text: "Extract all text content from this document. Return only the raw text without any additional comments or formatting instructions."
               },
               {
-                type: "image_url",
+                type: "image_url", 
                 image_url: {
                   url: `data:application/pdf;base64,${base64String}`
                 }
@@ -57,7 +58,7 @@ export async function extractTextFromPDFWithMistral(buffer: Buffer): Promise<str
           }
         ],
         temperature: 0.0,
-        max_tokens: 4000, // Reduced to avoid potential token limits
+        max_tokens: 4000,
       }),
     });
     
@@ -69,7 +70,6 @@ export async function extractTextFromPDFWithMistral(buffer: Buffer): Promise<str
     
     const data = await response.json();
     console.log('Mistral API response status:', response.status);
-    console.log('Mistral API response shape:', Object.keys(data));
     
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
       console.error('Invalid response format from Mistral API:', JSON.stringify(data));
