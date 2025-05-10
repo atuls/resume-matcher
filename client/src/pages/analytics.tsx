@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { getJobDescriptions, getAnalysisResults } from "@/lib/api";
 import { useState, useEffect } from "react";
+import { EnrichedAnalysisResult, SkillMatch } from "@/types";
 
 // Sample colors for charts
 const COLORS = ['#2563eb', '#059669', '#d97706', '#dc2626', '#8b5cf6', '#ec4899'];
@@ -25,7 +26,7 @@ export default function AnalyticsPage() {
   }, [jobDescriptions, selectedJobId]);
 
   // Fetch analysis results for selected job
-  const { data: analysisResults, isLoading: isLoadingResults } = useQuery({
+  const { data: analysisResults, isLoading: isLoadingResults } = useQuery<EnrichedAnalysisResult[]>({
     queryKey: [`/api/job-descriptions/${selectedJobId}/results`],
     queryFn: () => selectedJobId ? getAnalysisResults(selectedJobId) : Promise.resolve([]),
     enabled: !!selectedJobId
@@ -61,9 +62,9 @@ export default function AnalyticsPage() {
     
     analysisResults.forEach(result => {
       // Safely access skillMatches if it exists
-      const skillMatches = result.skillMatches || [];
+      const skillMatches = result.skillMatches as SkillMatch[] || [];
       if (Array.isArray(skillMatches)) {
-        skillMatches.forEach((match: { match: string, requirement: string }) => {
+        skillMatches.forEach((match: SkillMatch) => {
           if (match.match === 'full') {
             if (!skillCounts[match.requirement]) {
               skillCounts[match.requirement] = 0;
