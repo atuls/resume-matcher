@@ -26,6 +26,9 @@ export default function CandidatesPage() {
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [resumeToDelete, setResumeToDelete] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [resumeScores, setResumeScores] = useState<{
+    [resumeId: string]: { score: number, matchedAt: Date }
+  }>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -98,6 +101,28 @@ export default function CandidatesPage() {
     if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / 1048576).toFixed(1) + ' MB';
   };
+  
+  // Effect to fetch scores when job selection or resumes change
+  useEffect(() => {
+    const fetchScores = async () => {
+      if (selectedJobId && resumes && resumes.length > 0) {
+        try {
+          const scores = await getResumeScores(
+            resumes.map(r => r.id), 
+            selectedJobId
+          );
+          setResumeScores(scores);
+        } catch (error) {
+          console.error("Error fetching scores:", error);
+          setResumeScores({});
+        }
+      } else {
+        setResumeScores({});
+      }
+    };
+    
+    fetchScores();
+  }, [selectedJobId, resumes]);
   
   // Filter resumes based on search query and selected job
   const filteredResumes = resumes?.filter(resume => {
@@ -205,6 +230,14 @@ export default function CandidatesPage() {
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Uploaded
                 </th>
+                {selectedJobId && (
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <div className="flex items-center">
+                      <BarChart3 className="h-4 w-4 mr-1 text-primary" />
+                      Match Score
+                    </div>
+                  </th>
+                )}
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
@@ -238,6 +271,45 @@ export default function CandidatesPage() {
                       {formatDate(resume.createdAt)}
                     </div>
                   </td>
+                  {selectedJobId && (
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {resumeScores[resume.id] ? (
+                        <div className="flex flex-col space-y-1">
+                          <div className="flex items-center">
+                            <Badge 
+                              variant={
+                                resumeScores[resume.id].score >= 80 ? "secondary" :
+                                resumeScores[resume.id].score >= 60 ? "default" :
+                                "outline"
+                              } 
+                              className={`mr-2 ${
+                                resumeScores[resume.id].score >= 80 ? "bg-emerald-500" : ""
+                              }`}
+                            >
+                              {resumeScores[resume.id].score}%
+                            </Badge>
+                            <span className="text-xs text-gray-500">
+                              {formatDate(resumeScores[resume.id].matchedAt)}
+                            </span>
+                          </div>
+                          <Progress 
+                            value={resumeScores[resume.id].score} 
+                            max={100}
+                            className={`h-1.5 ${
+                              resumeScores[resume.id].score >= 80 ? "bg-emerald-100" :
+                              resumeScores[resume.id].score >= 60 ? "bg-blue-100" :
+                              "bg-gray-100"
+                            }`}
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center text-gray-400">
+                          <CircleDashed className="h-4 w-4 mr-1" />
+                          <span className="text-sm">Not matched</span>
+                        </div>
+                      )}
+                    </td>
+                  )}
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end gap-2">
                       <Button 

@@ -482,7 +482,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         results.forEach(result => {
           if (resumeIds.includes(result.resumeId)) {
             scoreMap[result.resumeId] = {
-              score: result.score,
+              score: result.overallScore,
               matchedAt: result.createdAt
             };
           }
