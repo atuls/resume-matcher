@@ -2,17 +2,26 @@ import { useQuery } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getResume, getResumeAnalysis } from "@/lib/api";
-import { User, FileText, Calendar, ArrowLeft, Mail, MapPin, Phone, Award, Briefcase, Code, AlertCircle } from "lucide-react";
+import { getResume, getResumeAnalysis, getJobDescriptions, getResumeScores } from "@/lib/api";
+import { 
+  User, FileText, Calendar, ArrowLeft, Mail, MapPin, Phone, Award, 
+  Briefcase, Code, AlertCircle, BarChart3, CheckCircle, XCircle 
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
 import { formatDistance } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import MatchJobDialog from "@/components/resume/match-job-dialog";
+import { useState, useEffect } from "react";
 
 export default function ResumeProfilePage() {
   const [, params] = useRoute<{ id: string }>("/resume/:id");
   const resumeId = params?.id;
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [resumeScore, setResumeScore] = useState<{score: number, matchedAt: Date} | null>(null);
 
   const { data: resume, isLoading: resumeLoading, isError: resumeError } = useQuery({
     queryKey: [`/api/resumes/${resumeId}`],
@@ -29,6 +38,31 @@ export default function ResumeProfilePage() {
     queryFn: () => getResumeAnalysis(resumeId!),
     enabled: !!resumeId,
   });
+  
+  // Fetch job descriptions for dropdown
+  const { data: jobDescriptions } = useQuery({
+    queryKey: ['/api/job-descriptions'],
+    queryFn: getJobDescriptions
+  });
+  
+  // Fetch job match scores when job is selected
+  useEffect(() => {
+    const fetchScore = async () => {
+      if (selectedJobId && resumeId) {
+        try {
+          const scores = await getResumeScores([resumeId], selectedJobId);
+          setResumeScore(scores[resumeId] || null);
+        } catch (error) {
+          console.error("Error fetching score:", error);
+          setResumeScore(null);
+        }
+      } else {
+        setResumeScore(null);
+      }
+    };
+    
+    fetchScore();
+  }, [selectedJobId, resumeId]);
 
   const formatDate = (dateString: Date) => {
     try {

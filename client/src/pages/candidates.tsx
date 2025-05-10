@@ -29,6 +29,8 @@ export default function CandidatesPage() {
   const [resumeScores, setResumeScores] = useState<{
     [resumeId: string]: { score: number, matchedAt: Date }
   }>({});
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -124,6 +126,18 @@ export default function CandidatesPage() {
     fetchScores();
   }, [selectedJobId, resumes]);
   
+  // Handle sorting toggle
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      // Toggle direction if clicking the same field
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new field and default to descending for score (highest first)
+      setSortField(field);
+      setSortDirection(field === 'score' ? 'desc' : 'asc');
+    }
+  };
+
   // Filter resumes based on search query and selected job
   const filteredResumes = resumes?.filter(resume => {
     // Apply name filter
@@ -136,6 +150,33 @@ export default function CandidatesPage() {
     // For now, we'll just show all resumes when a job is selected
     return nameMatch;
   }) || [];
+  
+  // Sort resumes if sorting is enabled
+  const sortedResumes = [...filteredResumes].sort((a, b) => {
+    if (!sortField) return 0;
+    
+    if (sortField === 'score') {
+      const scoreA = resumeScores[a.id]?.score || 0;
+      const scoreB = resumeScores[b.id]?.score || 0;
+      return sortDirection === 'asc' ? scoreA - scoreB : scoreB - scoreA;
+    }
+    
+    if (sortField === 'name') {
+      const nameA = a.candidateName || '';
+      const nameB = b.candidateName || '';
+      return sortDirection === 'asc' 
+        ? nameA.localeCompare(nameB) 
+        : nameB.localeCompare(nameA);
+    }
+    
+    if (sortField === 'date') {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+    }
+    
+    return 0;
+  });
   
   // Handle delete confirmation
   const handleDeleteClick = (id: string) => {
@@ -216,25 +257,50 @@ export default function CandidatesPage() {
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
           <p className="text-gray-500">Loading candidates...</p>
         </div>
-      ) : filteredResumes.length > 0 ? (
+      ) : sortedResumes.length > 0 ? (
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Candidate
+                <th 
+                  scope="col" 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('name')}
+                >
+                  <div className="flex items-center">
+                    Candidate
+                    {sortField === 'name' && (
+                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </div>
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   File
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Uploaded
+                <th 
+                  scope="col" 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('date')}
+                >
+                  <div className="flex items-center">
+                    Uploaded
+                    {sortField === 'date' && (
+                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </div>
                 </th>
                 {selectedJobId && (
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('score')}
+                  >
                     <div className="flex items-center">
                       <BarChart3 className="h-4 w-4 mr-1 text-primary" />
                       Match Score
+                      {sortField === 'score' && (
+                        <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                      )}
                     </div>
                   </th>
                 )}
@@ -244,7 +310,7 @@ export default function CandidatesPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredResumes.map((resume) => (
+              {sortedResumes.map((resume) => (
                 <tr key={resume.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap cursor-pointer" onClick={() => window.location.href = `/resume/${resume.id}`}>
                     <div className="flex items-center">
