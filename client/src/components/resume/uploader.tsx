@@ -40,7 +40,7 @@ export default function ResumeUploader({ onSuccess, buttonText = "Upload Resume"
         variant: "destructive",
       });
     },
-    accept: ".pdf,.docx,.doc",
+    accept: 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     maxSize: 10 * 1024 * 1024, // 10 MB
   });
 
@@ -94,7 +94,7 @@ export default function ResumeUploader({ onSuccess, buttonText = "Upload Resume"
           id="resume-upload"
           type="file"
           className="hidden"
-          accept=".pdf,.docx,.doc"
+          accept="application/pdf,.pdf,application/msword,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx"
           onChange={(e) => e.target.files && handleDrop(Array.from(e.target.files))}
         />
         
