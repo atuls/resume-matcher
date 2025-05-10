@@ -17,37 +17,37 @@ export default function Header() {
             <div className="bg-primary text-white rounded-md p-1.5">
               <FileText className="w-5 h-5" />
             </div>
-            <Link href="/">
-              <a className="text-xl font-semibold text-gray-900">ResumAI</a>
-            </Link>
+            <span className="text-xl font-semibold text-gray-900 cursor-pointer" onClick={() => window.location.href = '/'}>
+              ResumAI
+            </span>
           </div>
           
           <div className="flex items-center space-x-6">
             <nav className="hidden md:flex items-center space-x-6">
               <Link href="/">
-                <a className={`${isActive('/') ? 'text-primary font-medium' : 'text-gray-700 hover:text-primary'}`}>
+                <span className={`cursor-pointer ${isActive('/') ? 'text-primary font-medium' : 'text-gray-700 hover:text-primary'}`}>
                   Dashboard
-                </a>
+                </span>
               </Link>
               <Link href="/jobs">
-                <a className={`${isActive('/jobs') ? 'text-primary font-medium' : 'text-gray-500 hover:text-primary'}`}>
+                <span className={`cursor-pointer ${isActive('/jobs') ? 'text-primary font-medium' : 'text-gray-500 hover:text-primary'}`}>
                   Jobs
-                </a>
+                </span>
               </Link>
               <Link href="/candidates">
-                <a className={`${isActive('/candidates') ? 'text-primary font-medium' : 'text-gray-500 hover:text-primary'}`}>
+                <span className={`cursor-pointer ${isActive('/candidates') ? 'text-primary font-medium' : 'text-gray-500 hover:text-primary'}`}>
                   Candidates
-                </a>
+                </span>
               </Link>
               <Link href="/analytics">
-                <a className={`${isActive('/analytics') ? 'text-primary font-medium' : 'text-gray-500 hover:text-primary'}`}>
+                <span className={`cursor-pointer ${isActive('/analytics') ? 'text-primary font-medium' : 'text-gray-500 hover:text-primary'}`}>
                   Analytics
-                </a>
+                </span>
               </Link>
               <Link href="/settings">
-                <a className={`${isActive('/settings') ? 'text-primary font-medium' : 'text-gray-500 hover:text-primary'}`}>
+                <span className={`cursor-pointer ${isActive('/settings') ? 'text-primary font-medium' : 'text-gray-500 hover:text-primary'}`}>
                   Settings
-                </a>
+                </span>
               </Link>
             </nav>
             

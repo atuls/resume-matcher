@@ -4,12 +4,29 @@ import { createRequire } from 'module';
 // Import dynamically to support ESM
 const importDynamic = new Function('modulePath', 'return import(modulePath)');
 
-// Function to extract text from PDF
+// Function to extract text from PDF using pdfjs-dist
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
-    const pdfParse = await importDynamic('pdf-parse').then((module: any) => module.default);
-    const data = await pdfParse(buffer);
-    return data.text;
+    const pdfjsLib = await importDynamic('pdfjs-dist').then((module: any) => module.default);
+    
+    // Set up the worker source (needed for pdfjs to work)
+    const pdfjsWorker = await importDynamic('pdfjs-dist/build/pdf.worker.js');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+    
+    // Load the PDF document
+    const loadingTask = pdfjsLib.getDocument({ data: buffer });
+    const pdf = await loadingTask.promise;
+    
+    // Extract text from all pages
+    let textContent = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const pageText = await page.getTextContent();
+      const pageContent = pageText.items.map((item: any) => item.str).join(' ');
+      textContent += pageContent + '\n';
+    }
+    
+    return textContent;
   } catch (error) {
     console.error('Error extracting text from PDF:', error);
     throw new Error('Failed to extract text from PDF');
