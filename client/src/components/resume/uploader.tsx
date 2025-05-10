@@ -1,21 +1,30 @@
 import { useState } from "react";
 import { useFileUpload } from "@/hooks/use-file-upload";
-import { uploadResume } from "@/lib/api";
+import { uploadResume, uploadMultipleResumes } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FileText, Upload, X, AlertCircle, Check, Loader2 } from "lucide-react";
+import { FileText, Upload, X, AlertCircle, Check, Loader2, Trash } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 import type { Resume } from "@shared/schema";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface ResumeUploaderProps {
-  onSuccess?: (data: Resume) => void;
+  onSuccess?: (data: Resume | Resume[]) => void;
   buttonText?: string;
+  multipleDefault?: boolean;
 }
 
-export default function ResumeUploader({ onSuccess, buttonText = "Upload Resume" }: ResumeUploaderProps) {
+export default function ResumeUploader({ 
+  onSuccess, 
+  buttonText = "Upload Resume", 
+  multipleDefault = false 
+}: ResumeUploaderProps) {
   const { toast } = useToast();
   const [dragActive, setDragActive] = useState(false);
+  const [allowMultiple, setAllowMultiple] = useState(multipleDefault);
   
   const {
     uploadState,
@@ -23,14 +32,24 @@ export default function ResumeUploader({ onSuccess, buttonText = "Upload Resume"
     handleDrop,
     handleUpload,
     handleRemove,
+    handleRemoveAll,
     errorMessage,
+    uploadProgress,
   } = useFileUpload<Resume>({
     uploadFn: uploadResume,
+    uploadMultipleFn: uploadMultipleResumes,
     onSuccess: (data) => {
-      toast({
-        title: "Resume uploaded",
-        description: "The candidate resume has been successfully uploaded.",
-      });
+      if (Array.isArray(data)) {
+        toast({
+          title: `${data.length} resumes uploaded`,
+          description: "The candidate resumes have been successfully uploaded.",
+        });
+      } else {
+        toast({
+          title: "Resume uploaded",
+          description: "The candidate resume has been successfully uploaded.",
+        });
+      }
       if (onSuccess) onSuccess(data);
     },
     onError: (error: Error) => {
@@ -42,6 +61,7 @@ export default function ResumeUploader({ onSuccess, buttonText = "Upload Resume"
     },
     accept: 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     maxSize: 10 * 1024 * 1024, // 10 MB
+    multiple: allowMultiple,
   });
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -80,6 +100,16 @@ export default function ResumeUploader({ onSuccess, buttonText = "Upload Resume"
         </Alert>
       )}
       
+      {/* Multiple files toggle */}
+      <div className="flex items-center space-x-2">
+        <Switch 
+          id="allow-multiple" 
+          checked={allowMultiple}
+          onCheckedChange={(checked) => setAllowMultiple(checked)}
+        />
+        <Label htmlFor="allow-multiple">Allow multiple resume uploads</Label>
+      </div>
+      
       {/* Drop zone */}
       <div
         className={`border-2 border-dashed rounded-lg p-6 text-center ${
@@ -94,6 +124,7 @@ export default function ResumeUploader({ onSuccess, buttonText = "Upload Resume"
           id="resume-upload"
           type="file"
           className="hidden"
+          multiple={allowMultiple}
           accept="application/pdf,.pdf,application/msword,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx"
           onChange={(e) => e.target.files && handleDrop(Array.from(e.target.files))}
         />
@@ -105,37 +136,68 @@ export default function ResumeUploader({ onSuccess, buttonText = "Upload Resume"
           <div className="text-sm">
             <p className="font-medium text-gray-900">Drag and drop or click to upload</p>
             <p className="text-gray-500">
-              Supports PDF, DOCX, DOC (Max 10MB)
+              Supports PDF, DOCX, DOC (Max 10MB{allowMultiple ? ' per file' : ''})
             </p>
+            {allowMultiple && (
+              <p className="text-xs text-blue-600 mt-1">Multiple file upload enabled</p>
+            )}
           </div>
         </div>
       </div>
       
+      {/* Upload progress */}
+      {uploadState === 'uploading' && (
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>Uploading...</span>
+            <span>{uploadProgress}%</span>
+          </div>
+          <Progress value={uploadProgress} className="h-2" />
+        </div>
+      )}
+      
       {/* File list */}
       {files.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-medium">Selected file</h3>
-          {files.map((file, index) => (
-            <Card key={index} className="p-3 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="bg-gray-100 p-2 rounded">
-                  <FileText className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium truncate max-w-xs">{file.name}</p>
-                  <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
-                </div>
-              </div>
+          <div className="flex justify-between items-center">
+            <h3 className="text-sm font-medium">
+              {allowMultiple ? `Selected files (${files.length})` : 'Selected file'}
+            </h3>
+            {allowMultiple && files.length > 1 && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => handleRemove(index)}
-                className="text-gray-500 hover:text-gray-700"
+                onClick={handleRemoveAll}
+                className="text-red-500 hover:text-red-700 hover:bg-red-50"
               >
-                <X className="h-4 w-4" />
+                <Trash className="h-4 w-4 mr-1" />
+                Remove All
               </Button>
-            </Card>
-          ))}
+            )}
+          </div>
+          <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+            {files.map((file, index) => (
+              <Card key={index} className="p-3 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-gray-100 p-2 rounded">
+                    <FileText className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium truncate max-w-xs">{file.name}</p>
+                    <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleRemove(index)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </Card>
+            ))}
+          </div>
         </div>
       )}
       
@@ -149,15 +211,17 @@ export default function ResumeUploader({ onSuccess, buttonText = "Upload Resume"
           {uploadState === 'uploading' ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Uploading...
+              Uploading {allowMultiple && files.length > 1 ? `${files.length} files` : 'file'}...
             </>
           ) : uploadState === 'success' ? (
             <>
               <Check className="mr-2 h-4 w-4" />
-              {buttonText}
+              {buttonText} {allowMultiple && files.length > 1 ? `(${files.length} files)` : ''}
             </>
           ) : (
-            buttonText
+            <>
+              {buttonText} {allowMultiple && files.length > 1 ? `(${files.length} files)` : ''}
+            </>
           )}
         </Button>
       )}

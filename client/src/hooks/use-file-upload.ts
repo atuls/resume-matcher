@@ -27,15 +27,18 @@ interface UseFileUploadReturn<T> {
 
 export function useFileUpload<T>({
   uploadFn,
+  uploadMultipleFn,
   onSuccess,
   onError,
   accept = 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain',
   maxSize = 10 * 1024 * 1024, // 10MB default
+  multiple = false, // Default to single file upload
 }: UseFileUploadProps<T>): UseFileUploadReturn<T> {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [uploadState, setUploadState] = useState<UploadState>('idle');
-  const [uploadedData, setUploadedData] = useState<T | null>(null);
+  const [uploadedData, setUploadedData] = useState<T | T[] | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
 
   const validateFile = useCallback((file: File): boolean => {
     // Check file type
@@ -83,35 +86,104 @@ export function useFileUpload<T>({
     setFiles(prev => [...prev, ...filesWithPreview]);
   }, [validateFile]);
 
-  const handleUpload = useCallback(async (file?: File): Promise<T | null> => {
+  const handleUpload = useCallback(async (file?: File): Promise<T | T[] | null> => {
     setUploadState('uploading');
     setErrorMessage(null);
+    setUploadProgress(0);
     
     try {
-      const fileToUpload = file || files[0];
-      
-      if (!fileToUpload) {
-        throw new Error('No file selected');
+      // If we're uploading a single file
+      if (file || (!multiple && files.length > 0)) {
+        const fileToUpload = file || files[0];
+        
+        if (!fileToUpload) {
+          throw new Error('No file selected');
+        }
+        
+        if (!validateFile(fileToUpload)) {
+          setUploadState('error');
+          return null;
+        }
+        
+        // Single file upload
+        setUploadProgress(30);
+        const data = await uploadFn(fileToUpload);
+        setUploadedData(data);
+        setUploadState('success');
+        setUploadProgress(100);
+        
+        if (onSuccess) {
+          onSuccess(data);
+        }
+        
+        return data;
+      } 
+      // Multiple files upload
+      else if (multiple && files.length > 0) {
+        // If we have a dedicated multiple upload function
+        if (uploadMultipleFn) {
+          // First validate all files
+          for (let i = 0; i < files.length; i++) {
+            if (!validateFile(files[i])) {
+              setUploadState('error');
+              return null;
+            }
+          }
+          
+          setUploadProgress(20);
+          const data = await uploadMultipleFn(files);
+          setUploadedData(data);
+          setUploadState('success');
+          setUploadProgress(100);
+          
+          if (onSuccess) {
+            onSuccess(data);
+          }
+          
+          return data;
+        } 
+        // Otherwise upload files sequentially
+        else {
+          const results: T[] = [];
+          
+          for (let i = 0; i < files.length; i++) {
+            if (!validateFile(files[i])) {
+              continue; // Skip invalid files
+            }
+            
+            try {
+              // Update progress for each file
+              setUploadProgress(Math.round((i / files.length) * 100));
+              const data = await uploadFn(files[i]);
+              results.push(data);
+            } catch (error) {
+              console.error(`Error uploading ${files[i].name}:`, error);
+              // Continue with other files
+            }
+          }
+          
+          if (results.length === 0) {
+            throw new Error('Failed to upload any files');
+          }
+          
+          setUploadedData(results);
+          setUploadState('success');
+          setUploadProgress(100);
+          
+          if (onSuccess) {
+            onSuccess(results);
+          }
+          
+          return results;
+        }
+      } else {
+        throw new Error('No files selected');
       }
-      
-      if (!validateFile(fileToUpload)) {
-        setUploadState('error');
-        return null;
-      }
-      
-      const data = await uploadFn(fileToUpload);
-      setUploadedData(data);
-      setUploadState('success');
-      
-      if (onSuccess) {
-        onSuccess(data);
-      }
-      
-      return data;
     } catch (error) {
       setUploadState('error');
       const message = error instanceof Error ? error.message : 'An unknown error occurred';
       setErrorMessage(message);
+      setUploadProgress(0);
       
       if (onError && error instanceof Error) {
         onError(error);
@@ -119,7 +191,7 @@ export function useFileUpload<T>({
       
       return null;
     }
-  }, [files, uploadFn, validateFile, onSuccess, onError]);
+  }, [files, uploadFn, uploadMultipleFn, validateFile, onSuccess, onError, multiple]);
 
   const handleRemove = useCallback((index: number) => {
     setFiles(prev => {
@@ -145,11 +217,16 @@ export function useFileUpload<T>({
     setFiles([]);
   }, [files]);
 
+  const handleRemoveAll = useCallback(() => {
+    clearFiles();
+  }, [clearFiles]);
+  
   const resetState = useCallback(() => {
     clearFiles();
     setUploadState('idle');
     setUploadedData(null);
     setErrorMessage(null);
+    setUploadProgress(0);
   }, [clearFiles]);
 
   return {
@@ -160,7 +237,9 @@ export function useFileUpload<T>({
     handleDrop,
     handleUpload,
     handleRemove,
+    handleRemoveAll,
     clearFiles,
     resetState,
+    uploadProgress,
   };
 }

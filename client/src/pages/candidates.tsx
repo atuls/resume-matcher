@@ -61,13 +61,20 @@ export default function CandidatesPage() {
   });
 
   // Handle successful resume upload
-  const handleResumeUpload = () => {
+  const handleResumeUpload = (data: Resume | Resume[]) => {
     setShowUploader(false);
     refetchResumes();
-    toast({
-      title: "Resume uploaded",
-      description: "The candidate resume has been successfully uploaded.",
-    });
+    if (Array.isArray(data)) {
+      toast({
+        title: `${data.length} resumes uploaded`,
+        description: "Multiple candidate resumes have been successfully uploaded.",
+      });
+    } else {
+      toast({
+        title: "Resume uploaded",
+        description: "The candidate resume has been successfully uploaded.",
+      });
+    }
   };
 
   // Format date for display
