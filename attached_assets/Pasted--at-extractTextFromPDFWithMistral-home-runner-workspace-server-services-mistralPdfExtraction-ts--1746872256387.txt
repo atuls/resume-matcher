@@ -1,0 +1,32 @@
+   at extractTextFromPDFWithMistral (/home/runner/workspace/server/services/mistralPdfExtraction.ts:57:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async extractTextFromPDF (/home/runner/workspace/server/services/documentProcessor.ts:16:16)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:68:31)
+Mistral PDF extraction failed, falling back to pdf-parse: Error: Failed to extract text from PDF with Mistral API
+    at extractTextFromPDFWithMistral (/home/runner/workspace/server/services/mistralPdfExtraction.ts:71:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async extractTextFromPDF (/home/runner/workspace/server/services/documentProcessor.ts:16:16)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:68:31)
+Using pdf-parse for PDF text extraction...
+Error extracting text from PDF: Error: ENOENT: no such file or directory, open './test/data/05-versions-space.pdf'
+    at Object.openSync (node:fs:573:18)
+    at Object.readFileSync (node:fs:452:35)
+    at Object.<anonymous> (/home/runner/workspace/node_modules/pdf-parse/index.js:15:25)
+    at Module._compile (node:internal/modules/cjs/loader:1469:14)
+    at Object.transformer (/home/runner/workspace/node_modules/tsx/dist/register-DCnOAxY2.cjs:2:1186)
+    at Module.load (node:internal/modules/cjs/loader:1288:32)
+    at Module._load (node:internal/modules/cjs/loader:1104:12)
+    at cjsLoader (node:internal/modules/esm/translators:346:17)
+    at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:286:7)
+    at ModuleJob.run (node:internal/modules/esm/module_job:234:25)
+    at async ModuleLoader.import (node:internal/modules/esm/loader:473:24)
+    at async extractTextFromPDF (/home/runner/workspace/server/services/documentProcessor.ts:25:22)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:68:31) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: './test/data/05-versions-space.pdf'
+}
+Error uploading job description: Error: Failed to extract text from PDF
+    at extractTextFromPDF (/home/runner/workspace/server/services/documentProcessor.ts:34:11)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:68:31)

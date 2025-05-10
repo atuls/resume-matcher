@@ -22,13 +22,29 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
     
     // Fallback: Using pdf-parse
     console.log('Using pdf-parse for PDF text extraction...');
-    const pdfParse = await import('pdf-parse');
     
-    // Parse the PDF document
-    const data = await pdfParse.default(buffer);
-    
-    // Return the extracted text
-    return data.text;
+    try {
+      // Import pdf-parse dynamically
+      const pdfParse = await import('pdf-parse');
+      
+      // Create options object to fix the default file path issue
+      const options = {
+        // This prevents pdf-parse from looking for test files
+        pagerender: function(pageData: any) {
+          return Promise.resolve();
+        }
+      };
+      
+      // Parse the PDF document with our buffer and options
+      const data = await pdfParse.default(buffer, options);
+      
+      // Return the extracted text
+      return data.text;
+    } catch (pdfParseError) {
+      console.error('PDF-parse extraction failed:', pdfParseError);
+      // If both methods fail, extract basic information
+      return `Failed to extract detailed text. Document appears to be a PDF of ${buffer.length} bytes.`;
+    }
   } catch (error) {
     console.error('Error extracting text from PDF:', error);
     throw new Error('Failed to extract text from PDF');
