@@ -206,6 +206,22 @@ export async function getAnalysisResults(jobDescriptionId: string): Promise<Enri
   return response.json();
 }
 
+export async function getResumeScores(resumeIds: string[], jobDescriptionId: string): Promise<{
+  [resumeId: string]: { score: number, matchedAt: Date }
+}> {
+  const response = await fetch(`/api/job-descriptions/${jobDescriptionId}/resume-scores?${
+    resumeIds.map(id => `resumeId=${encodeURIComponent(id)}`).join('&')
+  }`, {
+    credentials: "include",
+  });
+  
+  if (!response.ok) {
+    throw new Error("Failed to fetch resume scores");
+  }
+  
+  return response.json();
+}
+
 // Custom Prompt API
 export async function generateCustomPrompt(
   jobDescriptionId: string, 

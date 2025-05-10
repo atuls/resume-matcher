@@ -452,6 +452,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
   );
+  
+  // Endpoint to get matching scores for specific resumes with a job
+  app.get(
+    "/api/job-descriptions/:id/resume-scores",
+    async (req: Request, res: Response) => {
+      try {
+        const { id } = req.params;
+        const resumeIds = Array.isArray(req.query.resumeId) 
+          ? req.query.resumeId as string[] 
+          : req.query.resumeId 
+            ? [req.query.resumeId as string]
+            : [];
+        
+        if (resumeIds.length === 0) {
+          return res.json({});
+        }
+        
+        // Get all analysis results for the job
+        const results = await storage.getAnalysisResultsByJob(id);
+        
+        if (!results || results.length === 0) {
+          return res.json({});
+        }
+        
+        // Filter by requested resume IDs and format the response
+        const scoreMap: { [resumeId: string]: { score: number, matchedAt: Date } } = {};
+        
+        results.forEach(result => {
+          if (resumeIds.includes(result.resumeId)) {
+            scoreMap[result.resumeId] = {
+              score: result.score,
+              matchedAt: result.createdAt
+            };
+          }
+        });
+        
+        res.json(scoreMap);
+      } catch (error) {
+        console.error("Error getting resume scores:", error);
+        res.status(500).json({ message: "Failed to get resume scores" });
+      }
+    }
+  );
 
   // Custom prompts endpoint
   app.post("/api/custom-prompt", async (req: Request, res: Response) => {

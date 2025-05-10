@@ -3,19 +3,22 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import type { Resume } from "@shared/schema";
 import { 
-  Plus, Calendar, FileText, Trash2, AlertCircle, Filter, Search, Briefcase
+  Plus, Calendar, FileText, Trash2, AlertCircle, Filter, Search, 
+  Briefcase, BarChart3, CircleDashed, CheckCircle, XCircle
 } from "lucide-react";
-import { getResumes, getJobDescriptions, deleteResume } from "@/lib/api";
+import { getResumes, getJobDescriptions, deleteResume, getResumeScores } from "@/lib/api";
 import { formatDistanceToNow } from "date-fns";
 import ResumeUploader from "@/components/resume/uploader";
 import BatchMatchDialog from "@/components/resume/batch-match-dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription 
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 export default function CandidatesPage() {
   const [showUploader, setShowUploader] = useState(false);
