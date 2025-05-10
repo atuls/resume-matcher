@@ -1,12 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import type { Resume } from "@shared/schema";
 import { 
-  Plus, Calendar, FileText, Trash2, AlertCircle, Filter, Search 
+  Plus, Calendar, FileText, Trash2, AlertCircle, Filter, Search, Briefcase
 } from "lucide-react";
 import { getResumes, getJobDescriptions, deleteResume } from "@/lib/api";
 import { formatDistanceToNow } from "date-fns";
 import ResumeUploader from "@/components/resume/uploader";
+import BatchMatchDialog from "@/components/resume/batch-match-dialog";
 import { useState } from "react";
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription 
@@ -124,10 +126,19 @@ export default function CandidatesPage() {
     <>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Candidates</h1>
-        <Button onClick={() => setShowUploader(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Candidate
-        </Button>
+        <div className="flex space-x-2">
+          {filteredResumes.length > 0 && (
+            <BatchMatchDialog 
+              resumes={resumes || []}
+              filteredResumeIds={filteredResumes.map(r => r.id)}
+              buttonVariant="outline"
+            />
+          )}
+          <Button onClick={() => setShowUploader(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Candidate
+          </Button>
+        </div>
       </div>
       
       <div className="flex flex-col md:flex-row gap-4 mb-6">
