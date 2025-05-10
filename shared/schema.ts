@@ -1,6 +1,7 @@
 import { pgTable, text, serial, integer, boolean, timestamp, uuid, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 // Users table (keeping from original)
 export const users = pgTable("users", {
@@ -27,6 +28,11 @@ export const jobDescriptions = pgTable("job_descriptions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const jobDescriptionsRelations = relations(jobDescriptions, ({ many }) => ({
+  requirements: many(jobRequirements),
+  analysisResults: many(analysisResults),
+}));
+
 export const insertJobDescriptionSchema = createInsertSchema(jobDescriptions).omit({
   id: true,
   createdAt: true,
@@ -41,6 +47,13 @@ export const jobRequirements = pgTable("job_requirements", {
   tags: text("tags").array(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const jobRequirementsRelations = relations(jobRequirements, ({ one }) => ({
+  jobDescription: one(jobDescriptions, {
+    fields: [jobRequirements.jobDescriptionId],
+    references: [jobDescriptions.id],
+  }),
+}));
 
 export const insertJobRequirementSchema = createInsertSchema(jobRequirements).omit({
   id: true,
@@ -60,6 +73,10 @@ export const resumes = pgTable("resumes", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const resumesRelations = relations(resumes, ({ many }) => ({
+  analysisResults: many(analysisResults),
+}));
+
 export const insertResumeSchema = createInsertSchema(resumes).omit({
   id: true,
   createdAt: true,
@@ -74,6 +91,17 @@ export const analysisResults = pgTable("analysis_results", {
   skillMatches: jsonb("skill_matches").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const analysisResultsRelations = relations(analysisResults, ({ one }) => ({
+  jobDescription: one(jobDescriptions, {
+    fields: [analysisResults.jobDescriptionId],
+    references: [jobDescriptions.id],
+  }),
+  resume: one(resumes, {
+    fields: [analysisResults.resumeId],
+    references: [resumes.id],
+  }),
+}));
 
 export const insertAnalysisResultSchema = createInsertSchema(analysisResults).omit({
   id: true,

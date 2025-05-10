@@ -39,179 +39,236 @@ export interface IStorage {
   deleteAnalysisResult(id: string): Promise<boolean>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private jobDescriptions: Map<string, JobDescription>;
-  private jobRequirements: Map<string, JobRequirement>;
-  private resumes: Map<string, Resume>;
-  private analysisResults: Map<string, AnalysisResult>;
-  
-  private currentUserId: number;
-
-  constructor() {
-    this.users = new Map();
-    this.jobDescriptions = new Map();
-    this.jobRequirements = new Map();
-    this.resumes = new Map();
-    this.analysisResults = new Map();
-    this.currentUserId = 1;
-  }
-
+export class DatabaseStorage implements IStorage {
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const { db } = await import('./db');
+    const { eq } = await import('drizzle-orm');
+    const { users } = await import('@shared/schema');
+
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const { db } = await import('./db');
+    const { eq } = await import('drizzle-orm');
+    const { users } = await import('@shared/schema');
+
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const { db } = await import('./db');
+    const { users } = await import('@shared/schema');
+
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
   
   // Job Description methods
   async getJobDescription(id: string): Promise<JobDescription | undefined> {
-    return this.jobDescriptions.get(id);
+    const { db } = await import('./db');
+    const { eq } = await import('drizzle-orm');
+    const { jobDescriptions } = await import('@shared/schema');
+
+    const [jobDescription] = await db.select().from(jobDescriptions).where(eq(jobDescriptions.id, id));
+    return jobDescription;
   }
   
   async getAllJobDescriptions(): Promise<JobDescription[]> {
-    return Array.from(this.jobDescriptions.values())
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const { db } = await import('./db');
+    const { desc } = await import('drizzle-orm');
+    const { jobDescriptions } = await import('@shared/schema');
+
+    return db.select().from(jobDescriptions).orderBy(desc(jobDescriptions.createdAt));
   }
   
   async createJobDescription(jobDescription: InsertJobDescription): Promise<JobDescription> {
-    const id = randomUUID();
-    const now = new Date();
-    const newJobDescription: JobDescription = {
-      ...jobDescription,
-      id,
-      createdAt: now,
-    };
-    this.jobDescriptions.set(id, newJobDescription);
+    const { db } = await import('./db');
+    const { jobDescriptions } = await import('@shared/schema');
+
+    const [newJobDescription] = await db.insert(jobDescriptions).values(jobDescription).returning();
     return newJobDescription;
   }
   
   async deleteJobDescription(id: string): Promise<boolean> {
-    // Delete related requirements and analysis results first
-    const requirements = await this.getJobRequirements(id);
-    for (const req of requirements) {
-      await this.deleteJobRequirement(req.id);
-    }
+    const { db } = await import('./db');
+    const { eq } = await import('drizzle-orm');
+    const { jobDescriptions, jobRequirements, analysisResults } = await import('@shared/schema');
     
-    const results = await this.getAnalysisResultsByJob(id);
-    for (const result of results) {
-      await this.deleteAnalysisResult(result.id);
+    try {
+      // Delete related results first
+      await db.delete(analysisResults).where(eq(analysisResults.jobDescriptionId, id));
+      
+      // Delete requirements
+      await db.delete(jobRequirements).where(eq(jobRequirements.jobDescriptionId, id));
+      
+      // Delete job description
+      const result = await db.delete(jobDescriptions).where(eq(jobDescriptions.id, id)).returning();
+      return result.length > 0;
+    } catch (error) {
+      console.error('Error deleting job description:', error);
+      return false;
     }
-    
-    return this.jobDescriptions.delete(id);
   }
   
   // Job Requirement methods
   async getJobRequirements(jobDescriptionId: string): Promise<JobRequirement[]> {
-    return Array.from(this.jobRequirements.values())
-      .filter(req => req.jobDescriptionId === jobDescriptionId);
+    const { db } = await import('./db');
+    const { eq } = await import('drizzle-orm');
+    const { jobRequirements } = await import('@shared/schema');
+
+    return db.select().from(jobRequirements).where(eq(jobRequirements.jobDescriptionId, jobDescriptionId));
   }
   
   async createJobRequirement(requirement: InsertJobRequirement): Promise<JobRequirement> {
-    const id = randomUUID();
-    const now = new Date();
-    const newRequirement: JobRequirement = {
-      ...requirement,
-      id,
-      createdAt: now,
-    };
-    this.jobRequirements.set(id, newRequirement);
+    const { db } = await import('./db');
+    const { jobRequirements } = await import('@shared/schema');
+
+    const [newRequirement] = await db.insert(jobRequirements).values(requirement).returning();
     return newRequirement;
   }
   
   async updateJobRequirement(id: string, data: Partial<JobRequirement>): Promise<JobRequirement | undefined> {
-    const requirement = this.jobRequirements.get(id);
-    if (!requirement) return undefined;
+    const { db } = await import('./db');
+    const { eq } = await import('drizzle-orm');
+    const { jobRequirements } = await import('@shared/schema');
+
+    const [updatedRequirement] = await db
+      .update(jobRequirements)
+      .set(data)
+      .where(eq(jobRequirements.id, id))
+      .returning();
     
-    const updatedRequirement = {
-      ...requirement,
-      ...data,
-    };
-    
-    this.jobRequirements.set(id, updatedRequirement);
     return updatedRequirement;
   }
   
   async deleteJobRequirement(id: string): Promise<boolean> {
-    return this.jobRequirements.delete(id);
+    const { db } = await import('./db');
+    const { eq } = await import('drizzle-orm');
+    const { jobRequirements } = await import('@shared/schema');
+
+    const result = await db.delete(jobRequirements).where(eq(jobRequirements.id, id)).returning();
+    return result.length > 0;
   }
   
   // Resume methods
   async getResume(id: string): Promise<Resume | undefined> {
-    return this.resumes.get(id);
+    const { db } = await import('./db');
+    const { eq } = await import('drizzle-orm');
+    const { resumes } = await import('@shared/schema');
+
+    const [resume] = await db.select().from(resumes).where(eq(resumes.id, id));
+    return resume;
   }
   
   async getAllResumes(): Promise<Resume[]> {
-    return Array.from(this.resumes.values())
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const { db } = await import('./db');
+    const { desc } = await import('drizzle-orm');
+    const { resumes } = await import('@shared/schema');
+
+    return db.select().from(resumes).orderBy(desc(resumes.createdAt));
   }
   
   async createResume(resume: InsertResume): Promise<Resume> {
-    const id = randomUUID();
-    const now = new Date();
-    const newResume: Resume = {
-      ...resume,
-      id,
-      createdAt: now,
-    };
-    this.resumes.set(id, newResume);
+    const { db } = await import('./db');
+    const { resumes } = await import('@shared/schema');
+
+    const [newResume] = await db.insert(resumes).values(resume).returning();
     return newResume;
   }
   
   async deleteResume(id: string): Promise<boolean> {
-    // Delete related analysis results first
-    const results = Array.from(this.analysisResults.values())
-      .filter(result => result.resumeId === id);
+    const { db } = await import('./db');
+    const { eq } = await import('drizzle-orm');
+    const { resumes, analysisResults } = await import('@shared/schema');
     
-    for (const result of results) {
-      await this.deleteAnalysisResult(result.id);
+    try {
+      // Delete related results first
+      await db.delete(analysisResults).where(eq(analysisResults.resumeId, id));
+      
+      // Delete resume
+      const result = await db.delete(resumes).where(eq(resumes.id, id)).returning();
+      return result.length > 0;
+    } catch (error) {
+      console.error('Error deleting resume:', error);
+      return false;
     }
+  }
+  
+  // Add missing method for updateResume that was previously called in routes.ts
+  async updateResume(id: string, data: Partial<Resume>): Promise<Resume | undefined> {
+    const { db } = await import('./db');
+    const { eq } = await import('drizzle-orm');
+    const { resumes } = await import('@shared/schema');
+
+    const [updatedResume] = await db
+      .update(resumes)
+      .set(data)
+      .where(eq(resumes.id, id))
+      .returning();
     
-    return this.resumes.delete(id);
+    return updatedResume;
   }
   
   // Analysis Result methods
   async getAnalysisResult(id: string): Promise<AnalysisResult | undefined> {
-    return this.analysisResults.get(id);
+    const { db } = await import('./db');
+    const { eq } = await import('drizzle-orm');
+    const { analysisResults } = await import('@shared/schema');
+
+    const [result] = await db.select().from(analysisResults).where(eq(analysisResults.id, id));
+    return result;
   }
   
   async getAnalysisResultsByJob(jobDescriptionId: string): Promise<AnalysisResult[]> {
-    return Array.from(this.analysisResults.values())
-      .filter(result => result.jobDescriptionId === jobDescriptionId)
-      .sort((a, b) => b.overallScore - a.overallScore);
+    const { db } = await import('./db');
+    const { eq, desc } = await import('drizzle-orm');
+    const { analysisResults } = await import('@shared/schema');
+
+    return db
+      .select()
+      .from(analysisResults)
+      .where(eq(analysisResults.jobDescriptionId, jobDescriptionId))
+      .orderBy(desc(analysisResults.overallScore));
   }
   
   async getAnalysisResultForResume(resumeId: string, jobDescriptionId: string): Promise<AnalysisResult | undefined> {
-    return Array.from(this.analysisResults.values())
-      .find(result => result.resumeId === resumeId && result.jobDescriptionId === jobDescriptionId);
+    const { db } = await import('./db');
+    const { and, eq } = await import('drizzle-orm');
+    const { analysisResults } = await import('@shared/schema');
+
+    const [result] = await db
+      .select()
+      .from(analysisResults)
+      .where(
+        and(
+          eq(analysisResults.resumeId, resumeId),
+          eq(analysisResults.jobDescriptionId, jobDescriptionId)
+        )
+      );
+    
+    return result;
   }
   
   async createAnalysisResult(result: InsertAnalysisResult): Promise<AnalysisResult> {
-    const id = randomUUID();
-    const now = new Date();
-    const newResult: AnalysisResult = {
-      ...result,
-      id,
-      createdAt: now,
-    };
-    this.analysisResults.set(id, newResult);
+    const { db } = await import('./db');
+    const { analysisResults } = await import('@shared/schema');
+
+    const [newResult] = await db.insert(analysisResults).values(result).returning();
     return newResult;
   }
   
   async deleteAnalysisResult(id: string): Promise<boolean> {
-    return this.analysisResults.delete(id);
+    const { db } = await import('./db');
+    const { eq } = await import('drizzle-orm');
+    const { analysisResults } = await import('@shared/schema');
+
+    const result = await db.delete(analysisResults).where(eq(analysisResults.id, id)).returning();
+    return result.length > 0;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
