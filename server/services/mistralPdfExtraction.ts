@@ -1,89 +1,88 @@
-// Use Mistral's multimodal model for document text extraction
+// Use Mistral's OCR capabilities for PDF text extraction
 import { Buffer } from 'buffer';
+import { Mistral } from '@mistralai/mistralai';
 
 // Function to check if Mistral API key is available
 export function isMistralApiKeyAvailable(): boolean {
   return !!process.env.MISTRAL_API_KEY;
 }
 
-// Function to extract text from PDF using Mistral's multimodal capabilities
+// Function to extract text from PDF using Mistral's OCR API
 export async function extractTextFromPDFWithMistral(buffer: Buffer): Promise<string> {
   if (!isMistralApiKeyAvailable()) {
     throw new Error('MISTRAL_API_KEY environment variable is not set');
   }
 
   try {
-    // Check if buffer is too large (Mistral may have size limits)
-    const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10MB limit
-    if (buffer.length > MAX_PDF_SIZE) {
-      throw new Error(`PDF is too large (${buffer.length} bytes) for Mistral API processing`);
+    // Use the same size limit as in the working implementation
+    const SIZE_LIMIT_BYTES = 1024 * 1024; // 1MB limit
+    
+    if (buffer.length > SIZE_LIMIT_BYTES) {
+      console.log(`PDF file too large for Mistral OCR extraction (${buffer.length} bytes)`);
+      throw new Error('PDF file too large for Mistral OCR extraction');
     }
     
-    // Convert Buffer to base64
-    const base64String = buffer.toString('base64');
+    console.log('Using Mistral AI OCR API for PDF extraction');
     
-    console.log('Using Mistral chat API for PDF text extraction...');
-    
-    const apiKey = process.env.MISTRAL_API_KEY;
-    
-    // Use the chat completions API
-    const url = 'https://api.mistral.ai/v1/chat/completions';
-    
-    // Use the medium model which should be available
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "mistral-large-latest", // Use the large model which supports multimodal inputs
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Extract all text content from this PDF document. Return only the raw text without any additional comments or formatting instructions."
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: `data:application/pdf;base64,${base64String}`
-                }
-              }
-            ]
-          }
-        ],
-        temperature: 0.0,
-        max_tokens: 8000, // Increased to handle larger documents
-      }),
+    // Initialize Mistral client using the SDK
+    const mistral = new Mistral({
+      apiKey: process.env.MISTRAL_API_KEY
     });
     
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Mistral API error response: ${errorText}`);
-      throw new Error(`Mistral API error: ${response.status}`);
+    console.log('Mistral client created successfully');
+    console.log(`Sending PDF (${buffer.length} bytes) to Mistral OCR API...`);
+    
+    // Convert buffer to Base64
+    const base64Data = buffer.toString('base64');
+    console.log(`PDF converted to base64 (length: ${base64Data.length})`);
+    
+    // Create a data URI for the PDF to be used in the API call
+    const pdfDataUri = `data:application/pdf;base64,${base64Data}`;
+    
+    // Create a promise that will reject after 3 minutes
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Mistral OCR API request timed out after 3 minutes')), 180000);
+    });
+    
+    try {
+      // Make the OCR request using the ocr.process method
+      const ocrRequestPromise = mistral.ocr.process({
+        model: 'mistral-ocr-latest',
+        document: {
+          type: "document_url",
+          documentUrl: pdfDataUri
+        }
+      });
+      
+      // Race between our OCR request and the timeout
+      const ocrResponse = await Promise.race([ocrRequestPromise, timeoutPromise]);
+      
+      console.log(`Mistral OCR API responded with pages: ${ocrResponse?.pages?.length || 0}`);
+      
+      // Process OCR response - combine markdown content from all pages
+      if (ocrResponse && ocrResponse.pages && Array.isArray(ocrResponse.pages)) {
+        let extractedText = '';
+        
+        // Combine text from all pages and their markdown
+        for (const page of ocrResponse.pages) {
+          if (page.markdown) {
+            extractedText += page.markdown + '\n\n';
+          }
+        }
+        
+        console.log(`Mistral OCR successfully extracted ${extractedText.length} characters from ${ocrResponse.pages.length} pages`);
+        
+        return extractedText;
+      } else {
+        console.log('Unexpected OCR response format:', JSON.stringify(ocrResponse, null, 2));
+        throw new Error('Mistral OCR API returned an unexpected response format');
+      }
+    } catch (timeoutError: any) {
+      console.log('OCR request timed out or failed:', timeoutError.message);
+      throw timeoutError;
     }
-    
-    const data = await response.json();
-    console.log('Mistral API response status:', response.status);
-    
-    // Extract the content from the chat completion
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      console.error('Invalid response format from Mistral API:', JSON.stringify(data));
-      throw new Error('Invalid response format from Mistral API');
-    }
-    
-    const content = data.choices[0].message.content;
-    
-    if (!content) {
-      throw new Error('Empty content received from Mistral API');
-    }
-    
-    return typeof content === 'string' ? content.trim() : JSON.stringify(content);
-  } catch (error) {
-    console.error('Error extracting text from PDF with Mistral:', error);
-    throw new Error('Failed to extract text from PDF with Mistral API');
+  } catch (error: any) {
+    console.error('Mistral OCR extraction failed:', error);
+    throw new Error(`Mistral OCR extraction failed: ${error.message}`);
   }
 }

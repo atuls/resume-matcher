@@ -8,32 +8,32 @@ import { isMistralApiKeyAvailable, extractTextFromPDFWithMistral } from './mistr
 import { isOpenAIApiKeyAvailable, extractTextFromPDFWithOpenAI } from './openaiPdfExtraction';
 import { parsePDF } from './pdfParser';
 
-// Function to extract text from PDF with fallback to basic extraction
+// Function to extract text from PDF with multiple extraction methods
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
-    // First use our reliable basic PDF parser that doesn't rely on external libraries
+    // First try Mistral OCR if available - it's the highest quality method
+    if (isMistralApiKeyAvailable()) {
+      try {
+        // Try to use Mistral's OCR API for the best extraction quality
+        return await extractTextFromPDFWithMistral(buffer);
+      } catch (mistralError) {
+        console.warn('Mistral OCR extraction failed, falling back to basic parser:', mistralError.message);
+        // If Mistral fails, we'll fall back to our basic parser
+      }
+    }
+    
     console.log('Using basic PDF text extraction...');
     
     try {
-      // Use our basic PDF parser that doesn't use pdf-parse
+      // Use our basic PDF parser that doesn't rely on external libraries
       const extractedText = await parsePDF(buffer);
       
-      if (extractedText && extractedText.trim() !== '') {
-        // If we got something useful, return it
+      if (extractedText && extractedText.trim() !== '' && extractedText.length > 100) {
+        // If we got something substantial, return it
         return extractedText;
       }
       
-      // If basic extraction didn't provide useful content, check if Mistral is available
-      if (isMistralApiKeyAvailable()) {
-        try {
-          console.log('Basic extraction had limited results, trying Mistral...');
-          return await extractTextFromPDFWithMistral(buffer);
-        } catch (mistralError) {
-          console.warn('Mistral PDF extraction failed:', mistralError);
-        }
-      }
-      
-      // If we're here, all methods failed or returned limited content
+      // If extraction returned limited content
       return `PDF Document Size: ${buffer.length} bytes\n\nUnable to extract detailed text content. This may be a scanned document or the text might be stored in a format that requires more specialized tools.`;
     } catch (parserError) {
       console.error('Basic PDF parser failed:', parserError);
