@@ -5,6 +5,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
+import JobsPage from "@/pages/jobs";
+import CandidatesPage from "@/pages/candidates";
+import AnalyticsPage from "@/pages/analytics";
+import SettingsPage from "@/pages/settings";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 
@@ -12,11 +16,10 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
-      {/* Add more routes below as needed */}
-      {/* <Route path="/jobs" component={JobsPage} /> */}
-      {/* <Route path="/candidates" component={CandidatesPage} /> */}
-      {/* <Route path="/analytics" component={AnalyticsPage} /> */}
-      {/* <Route path="/settings" component={SettingsPage} /> */}
+      <Route path="/jobs" component={JobsPage} />
+      <Route path="/candidates" component={CandidatesPage} />
+      <Route path="/analytics" component={AnalyticsPage} />
+      <Route path="/settings" component={SettingsPage} />
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />

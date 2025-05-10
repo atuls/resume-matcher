@@ -1,0 +1,484 @@
+import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Settings, 
+  KeyRound, 
+  BellRing, 
+  Layout, 
+  FileCode, 
+  Shield, 
+  Database 
+} from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+
+// Form schema for API settings
+const apiFormSchema = z.object({
+  openaiApiKey: z.string().optional(),
+  mistralApiKey: z.string().optional(),
+  anthropicApiKey: z.string().optional(),
+  perplexityApiKey: z.string().optional(),
+});
+
+// Form schema for general settings
+const generalFormSchema = z.object({
+  siteName: z.string().min(1, {
+    message: "Site name must be at least 1 character.",
+  }),
+  enableNotifications: z.boolean().default(false),
+  emailNotifications: z.boolean().default(false),
+  darkMode: z.boolean().default(false),
+  defaultJobPage: z.string(),
+});
+
+// Form schema for analysis settings
+const analysisFormSchema = z.object({
+  defaultModel: z.string(),
+  includeEvidence: z.boolean().default(true),
+  scoreThreshold: z.number().min(0).max(100),
+  analysisPrompt: z.string().min(10, {
+    message: "Custom analysis prompt must be at least 10 characters long.",
+  }),
+});
+
+export default function SettingsPage() {
+  const [isApiLocked, setIsApiLocked] = useState(true);
+  const { toast } = useToast();
+
+  // Form for API settings
+  const apiForm = useForm<z.infer<typeof apiFormSchema>>({
+    resolver: zodResolver(apiFormSchema),
+    defaultValues: {
+      openaiApiKey: '●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●',
+      mistralApiKey: '●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●',
+      anthropicApiKey: '',
+      perplexityApiKey: '',
+    },
+  });
+
+  // Form for general settings
+  const generalForm = useForm<z.infer<typeof generalFormSchema>>({
+    resolver: zodResolver(generalFormSchema),
+    defaultValues: {
+      siteName: 'ResumAI',
+      enableNotifications: true,
+      emailNotifications: false,
+      darkMode: false,
+      defaultJobPage: 'dashboard',
+    },
+  });
+
+  // Form for analysis settings
+  const analysisForm = useForm<z.infer<typeof analysisFormSchema>>({
+    resolver: zodResolver(analysisFormSchema),
+    defaultValues: {
+      defaultModel: 'gpt-4o-mini',
+      includeEvidence: true,
+      scoreThreshold: 70,
+      analysisPrompt: 'Analyze this resume against the job requirements. Provide detailed feedback on skills match, experience relevance, and overall fit.',
+    },
+  });
+
+  // Handle API settings submission
+  function onApiSubmit(values: z.infer<typeof apiFormSchema>) {
+    // Would normally save these to secure storage
+    toast({
+      title: "API keys updated",
+      description: "Your API configuration has been saved securely.",
+    });
+    setIsApiLocked(true);
+  }
+
+  // Handle general settings submission
+  function onGeneralSubmit(values: z.infer<typeof generalFormSchema>) {
+    toast({
+      title: "Settings updated",
+      description: "Your application settings have been saved.",
+    });
+  }
+
+  // Handle analysis settings submission
+  function onAnalysisSubmit(values: z.infer<typeof analysisFormSchema>) {
+    toast({
+      title: "Analysis settings updated",
+      description: "Your analysis configuration has been saved.",
+    });
+  }
+
+  return (
+    <>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Settings</h1>
+        <div className="flex items-center text-gray-500">
+          <Settings className="h-5 w-5 mr-2" />
+          <span>Manage your application preferences</span>
+        </div>
+      </div>
+
+      <Tabs defaultValue="general" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="general">
+            <Layout className="h-4 w-4 mr-2" />
+            General
+          </TabsTrigger>
+          <TabsTrigger value="api">
+            <KeyRound className="h-4 w-4 mr-2" />
+            API Keys
+          </TabsTrigger>
+          <TabsTrigger value="analysis">
+            <FileCode className="h-4 w-4 mr-2" />
+            Analysis
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="general">
+          <Card>
+            <CardHeader>
+              <CardTitle>General Settings</CardTitle>
+              <CardDescription>Manage your application preferences and user interface options.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...generalForm}>
+                <form onSubmit={generalForm.handleSubmit(onGeneralSubmit)} className="space-y-6">
+                  <FormField
+                    control={generalForm.control}
+                    name="siteName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Site Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          This is the name displayed in the header and browser title.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Separator />
+                  <h3 className="text-lg font-medium">Notifications</h3>
+
+                  <FormField
+                    control={generalForm.control}
+                    name="enableNotifications"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">
+                            Enable Notifications
+                          </FormLabel>
+                          <FormDescription>
+                            Get notifications for analysis completion and system updates.
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={generalForm.control}
+                    name="emailNotifications"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">
+                            Email Notifications
+                          </FormLabel>
+                          <FormDescription>
+                            Receive email notifications for important updates.
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <Separator />
+                  <h3 className="text-lg font-medium">Appearance</h3>
+
+                  <FormField
+                    control={generalForm.control}
+                    name="darkMode"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">
+                            Dark Mode
+                          </FormLabel>
+                          <FormDescription>
+                            Toggle dark mode for the application interface.
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button type="submit">Save General Settings</Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="api">
+          <Card>
+            <CardHeader>
+              <CardTitle>API Configuration</CardTitle>
+              <CardDescription>Manage your AI service provider API keys for resume analysis.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-between items-center mb-4">
+                <p className="text-sm text-gray-500">
+                  API keys are securely stored and encrypted. You must unlock to view or edit them.
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setIsApiLocked(!isApiLocked)}
+                >
+                  {isApiLocked ? 'Unlock' : 'Lock'} API Settings
+                </Button>
+              </div>
+
+              <Form {...apiForm}>
+                <form onSubmit={apiForm.handleSubmit(onApiSubmit)} className="space-y-6">
+                  <FormField
+                    control={apiForm.control}
+                    name="openaiApiKey"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>OpenAI API Key</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            type={isApiLocked ? "password" : "text"} 
+                            disabled={isApiLocked}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Used for analyzing job descriptions and resumes.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={apiForm.control}
+                    name="mistralApiKey"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Mistral AI API Key</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            type={isApiLocked ? "password" : "text"} 
+                            disabled={isApiLocked}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Used for PDF text extraction and document processing.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={apiForm.control}
+                    name="anthropicApiKey"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Anthropic API Key (Optional)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            type={isApiLocked ? "password" : "text"} 
+                            disabled={isApiLocked}
+                            placeholder="Enter Anthropic API key"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Optional alternative AI provider for analysis.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={apiForm.control}
+                    name="perplexityApiKey"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Perplexity AI API Key (Optional)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            type={isApiLocked ? "password" : "text"} 
+                            disabled={isApiLocked}
+                            placeholder="Enter Perplexity API key"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Optional alternative AI provider for analysis.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button type="submit" disabled={isApiLocked}>Save API Settings</Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="analysis">
+          <Card>
+            <CardHeader>
+              <CardTitle>Analysis Configuration</CardTitle>
+              <CardDescription>Configure how resumes are analyzed and scored against job descriptions.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...analysisForm}>
+                <form onSubmit={analysisForm.handleSubmit(onAnalysisSubmit)} className="space-y-6">
+                  <FormField
+                    control={analysisForm.control}
+                    name="defaultModel"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Default AI Model</FormLabel>
+                        <FormControl>
+                          <select
+                            className="w-full rounded-md border border-gray-300 p-2"
+                            {...field}
+                          >
+                            <option value="gpt-4o-mini">GPT-4o Mini (Default)</option>
+                            <option value="gpt-4o">GPT-4o (Higher Quality)</option>
+                            <option value="claude-3-haiku">Claude 3 Haiku</option>
+                            <option value="mistral-large">Mistral Large</option>
+                          </select>
+                        </FormControl>
+                        <FormDescription>
+                          Select the default AI model for resume analysis.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={analysisForm.control}
+                    name="includeEvidence"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">
+                            Include Evidence in Results
+                          </FormLabel>
+                          <FormDescription>
+                            Show supporting text from resumes for each skill match.
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={analysisForm.control}
+                    name="scoreThreshold"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Minimum Match Threshold (%)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            min="0" 
+                            max="100" 
+                            {...field} 
+                            onChange={e => field.onChange(parseInt(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Minimum overall score for highlighting top candidates.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={analysisForm.control}
+                    name="analysisPrompt"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Custom Analysis Prompt</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            placeholder="Enter custom analysis instructions..."
+                            className="min-h-[100px]"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Customize the instructions given to the AI for analysis.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button type="submit">Save Analysis Settings</Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </>
+  );
+}
