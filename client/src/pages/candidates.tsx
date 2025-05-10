@@ -125,7 +125,12 @@ export default function CandidatesPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <Button size="sm" variant="outline" className="text-primary">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="text-primary"
+                      onClick={() => window.location.href = `/resume/${resume.id}`}
+                    >
                       View Profile
                     </Button>
                   </td>
