@@ -5,12 +5,24 @@ import { createRequire } from 'module';
 const importDynamic = new Function('modulePath', 'return import(modulePath)');
 
 import { isMistralApiKeyAvailable, extractTextFromPDFWithMistral } from './mistralPdfExtraction';
+import { isOpenAIApiKeyAvailable, extractTextFromPDFWithOpenAI } from './openaiPdfExtraction';
 import { parsePDF } from './pdfParser';
 
-// Function to extract text from PDF using Mistral AI with fallback to simple text extraction
+// Function to extract text from PDF with multiple fallback methods
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
-    // First try to use Mistral for extraction if API key is available
+    // First try to use OpenAI for extraction if API key is available (best quality)
+    if (isOpenAIApiKeyAvailable()) {
+      try {
+        console.log('Using OpenAI for PDF text extraction...');
+        return await extractTextFromPDFWithOpenAI(buffer);
+      } catch (openaiError) {
+        console.warn('OpenAI PDF extraction failed, trying Mistral...', openaiError);
+        // If OpenAI fails, we'll try Mistral next
+      }
+    }
+    
+    // Next try Mistral if API key is available
     if (isMistralApiKeyAvailable()) {
       try {
         console.log('Using Mistral AI for PDF text extraction...');
@@ -36,7 +48,7 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
       return extractedText;
     } catch (parserError) {
       console.error('Basic PDF parser failed:', parserError);
-      // If both methods fail, extract basic information
+      // If all methods fail, extract basic information
       return `Unable to extract detailed text. Document is ${buffer.length} bytes in size.`;
     }
   } catch (error) {

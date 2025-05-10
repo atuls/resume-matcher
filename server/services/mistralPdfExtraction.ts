@@ -37,7 +37,7 @@ export async function extractTextFromPDFWithMistral(buffer: Buffer): Promise<str
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "mistral-medium", // Use a standard model that should be available
+        model: "mistral-large-latest", // Use the large model which supports multimodal inputs
         messages: [
           {
             role: "user",
