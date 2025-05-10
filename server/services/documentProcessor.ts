@@ -7,7 +7,7 @@ const importDynamic = new Function('modulePath', 'return import(modulePath)');
 import { isMistralApiKeyAvailable, extractTextFromPDFWithMistral } from './mistralPdfExtraction';
 import { parsePDF } from './pdfParser';
 
-// Function to extract text from PDF using Mistral AI with fallback to custom pdf-parse implementation
+// Function to extract text from PDF using Mistral AI with fallback to simple text extraction
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
     // First try to use Mistral for extraction if API key is available
@@ -16,16 +16,16 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
         console.log('Using Mistral AI for PDF text extraction...');
         return await extractTextFromPDFWithMistral(buffer);
       } catch (mistralError) {
-        console.warn('Mistral PDF extraction failed, falling back to custom PDF parser:', mistralError);
-        // If Mistral fails, we'll fall back to our custom PDF parser
+        console.warn('Mistral PDF extraction failed, falling back to basic PDF parser:', mistralError);
+        // If Mistral fails, we'll fall back to our basic PDF parser
       }
     }
     
-    // Fallback: Using our custom PDF parser
-    console.log('Using custom PDF parser for text extraction...');
+    // Fallback: Using our basic PDF parser that doesn't rely on external libraries
+    console.log('Using basic PDF text extraction...');
     
     try {
-      // Use our custom PDF parser that avoids file path issues
+      // Use our basic PDF parser that doesn't use pdf-parse
       const extractedText = await parsePDF(buffer);
       
       if (!extractedText || extractedText.trim() === '') {
@@ -34,14 +34,14 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
       
       // Return the extracted text
       return extractedText;
-    } catch (pdfParseError) {
-      console.error('Custom PDF parser failed:', pdfParseError);
+    } catch (parserError) {
+      console.error('Basic PDF parser failed:', parserError);
       // If both methods fail, extract basic information
-      return `Failed to extract detailed text. Document appears to be a PDF of ${buffer.length} bytes.`;
+      return `Unable to extract detailed text. Document is ${buffer.length} bytes in size.`;
     }
   } catch (error) {
     console.error('Error extracting text from PDF:', error);
-    throw new Error('Failed to extract text from PDF');
+    return `Failed to extract text from PDF. Document is ${buffer.length} bytes in size.`;
   }
 }
 

@@ -1,0 +1,50 @@
+Custom PDF parser failed: Error: Failed to parse PDF with custom parser
+    at parsePDF (/home/runner/workspace/server/services/pdfParser.ts:25:11)
+    at async extractTextFromPDF (/home/runner/workspace/server/services/documentProcessor.ts:29:29)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:256:31)
+10:34:49 AM [express] POST /api/resumes 201 in 849ms :: {"id":"29e7ff93-9be5-44a8-8bdf-becc7abd2e13",…
+10:34:57 AM [express] POST /api/job-descriptions/df0f6d9a-fe49-4ee0-a63d-5d23bdf4bf12/analyze-require…
+10:34:57 AM [express] GET /api/job-descriptions/df0f6d9a-fe49-4ee0-a63d-5d23bdf4bf12/requirements 200…
+10:35:21 AM [express] GET /api/job-descriptions 304 in 130ms :: [{"id":"df0f6d9a-fe49-4ee0-a63d-5d23b…
+10:35:21 AM [express] GET /api/job-descriptions/df0f6d9a-fe49-4ee0-a63d-5d23bdf4bf12/requirements 200…
+10:35:36 AM [express] GET /api/job-descriptions 200 in 103ms :: []
+Using Mistral AI for PDF text extraction...
+Using Mistral OCR endpoint for PDF text extraction...
+Mistral API error response: {"detail":"Not Found"}
+Error extracting text from PDF with Mistral: Error: Mistral API error: 404
+    at extractTextFromPDFWithMistral (/home/runner/workspace/server/services/mistralPdfExtraction.ts:51:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async extractTextFromPDF (/home/runner/workspace/server/services/documentProcessor.ts:17:16)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:68:31)
+Mistral PDF extraction failed, falling back to custom PDF parser: Error: Failed to extract text from PDF with Mistral API
+    at extractTextFromPDFWithMistral (/home/runner/workspace/server/services/mistralPdfExtraction.ts:66:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async extractTextFromPDF (/home/runner/workspace/server/services/documentProcessor.ts:17:16)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:68:31)
+Using custom PDF parser for text extraction...
+Error in custom PDF parser: Error: ENOENT: no such file or directory, open './test/data/05-versions-space.pdf'
+    at Object.openSync (node:fs:573:18)
+    at Object.readFileSync (node:fs:452:35)
+    at Object.<anonymous> (/home/runner/workspace/node_modules/pdf-parse/index.js:15:25)
+    at Module._compile (node:internal/modules/cjs/loader:1469:14)
+    at Object.transformer (/home/runner/workspace/node_modules/tsx/dist/register-DCnOAxY2.cjs:2:1186)
+    at Module.load (node:internal/modules/cjs/loader:1288:32)
+    at Module._load (node:internal/modules/cjs/loader:1104:12)
+    at cjsLoader (node:internal/modules/esm/translators:346:17)
+    at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:286:7)
+    at ModuleJob.run (node:internal/modules/esm/module_job:234:25)
+    at async ModuleLoader.import (node:internal/modules/esm/loader:473:24)
+    at async parsePDF (/home/runner/workspace/server/services/pdfParser.ts:7:22)
+    at async extractTextFromPDF (/home/runner/workspace/server/services/documentProcessor.ts:29:29)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:256:31) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: './test/data/05-versions-space.pdf'
+}
+Custom PDF parser failed: Error: Failed to parse PDF with custom parser
+    at parsePDF (/home/runner/workspace/server/services/pdfParser.ts:25:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async extractTextFromPDF (/home/runner/workspace/server/services/documentProcessor.ts:29:29)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:68:31)
+10:35:43 AM [express] POST /api/job-descriptions 201 in 805ms :: {"id":"54dbd36d-88c4-43b6-bd4a-d02e
