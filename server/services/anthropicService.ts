@@ -1,5 +1,25 @@
 import Anthropic from '@anthropic-ai/sdk';
 
+// Define interfaces for Anthropic content types
+interface TextBlock {
+  type: 'text';
+  text: string;
+}
+
+interface ToolUseBlock {
+  type: 'tool_use';
+  id: string;
+  name: string;
+  input: Record<string, unknown>;
+}
+
+type ContentBlock = TextBlock | ToolUseBlock;
+
+// Type guard function to check if a ContentBlock is a TextBlock
+function isTextBlock(block: any): block is TextBlock {
+  return block && 'type' in block && block.type === 'text' && 'text' in block;
+}
+
 // Initialize the Anthropic client
 // The newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
 const anthropic = new Anthropic({
@@ -36,14 +56,14 @@ export async function extractSkillsWithClaude(text: string): Promise<string[]> {
       ],
     });
 
-    const content = message.content[0]?.text;
+    const contentBlock = message.content[0];
     
-    if (!content) {
-      throw new Error('Empty response from Claude');
+    if (!contentBlock || !isTextBlock(contentBlock)) {
+      throw new Error('Empty response from Claude or response in unexpected format');
     }
     
     try {
-      const result = JSON.parse(content);
+      const result = JSON.parse(contentBlock.text);
       return result.skills || [];
     } catch (error) {
       console.error("Failed to parse skills JSON from Claude:", error);
@@ -102,14 +122,14 @@ export async function extractWorkHistoryWithClaude(text: string): Promise<Array<
       ],
     });
 
-    const content = message.content[0]?.text;
+    const contentBlock = message.content[0];
     
-    if (!content) {
-      throw new Error('Empty response from Claude');
+    if (!contentBlock || !isTextBlock(contentBlock)) {
+      throw new Error('Empty response from Claude or response in unexpected format');
     }
     
     try {
-      const result = JSON.parse(content);
+      const result = JSON.parse(contentBlock.text);
       return result.workHistory || [];
     } catch (error) {
       console.error("Failed to parse work history JSON from Claude:", error);
@@ -181,14 +201,14 @@ export async function analyzeResumeWithClaude(
       ],
     });
 
-    const content = message.content[0]?.text;
+    const contentBlock = message.content[0];
     
-    if (!content) {
-      throw new Error('Empty response from Claude');
+    if (!contentBlock || !isTextBlock(contentBlock)) {
+      throw new Error('Empty response from Claude or response in unexpected format');
     }
     
     try {
-      const result = JSON.parse(content);
+      const result = JSON.parse(contentBlock.text);
       
       // Ensure we have all required fields
       if (!result.skills || !result.experience || !result.education || 
