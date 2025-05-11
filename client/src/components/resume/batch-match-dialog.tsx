@@ -22,11 +22,12 @@ interface BatchMatchDialogProps {
 export default function BatchMatchDialog({ 
   resumes, 
   filteredResumeIds,
-  buttonVariant = "default" 
+  buttonVariant = "default",
+  preselectedJobId
 }: BatchMatchDialogProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(preselectedJobId || null);
   const [progress, setProgress] = useState(0);
   const queryClient = useQueryClient();
   const { toast } = useToast();
