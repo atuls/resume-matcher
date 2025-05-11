@@ -30,8 +30,28 @@ export default function BatchMatchDialog({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedJobId, setSelectedJobId] = useState<string | null>(preselectedJobId || null);
   const [progress, setProgress] = useState(0);
+  const [aiStatus, setAiStatus] = useState<{available: boolean, message: string} | null>(null);
+  const [checkingAiStatus, setCheckingAiStatus] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  
+  // Check AI service status when dialog opens
+  useEffect(() => {
+    if (open && !aiStatus) {
+      setCheckingAiStatus(true);
+      checkAIServiceStatus()
+        .then(status => {
+          setAiStatus(status);
+        })
+        .catch(error => {
+          setAiStatus({ available: false, message: "Error checking AI service status" });
+          console.error("Error checking AI status:", error);
+        })
+        .finally(() => {
+          setCheckingAiStatus(false);
+        });
+    }
+  }, [open, aiStatus]);
   
   // Determine which resume IDs to use
   const resumeIds = filteredResumeIds || resumes.map(r => r.id);
@@ -112,7 +132,7 @@ export default function BatchMatchDialog({
   ) || [];
   
   // Handle match button click
-  const handleBatchMatch = () => {
+  const handleBatchMatch = async () => {
     if (!selectedJobId) {
       toast({
         title: "No job selected",
@@ -131,6 +151,43 @@ export default function BatchMatchDialog({
       return;
     }
     
+    // Check AI service status before starting the batch match process
+    if (!aiStatus) {
+      try {
+        setCheckingAiStatus(true);
+        const status = await checkAIServiceStatus();
+        setAiStatus(status);
+        
+        if (!status.available) {
+          toast({
+            title: "AI Service Unavailable",
+            description: status.message || "Please configure your OpenAI API key in settings.",
+            variant: "destructive"
+          });
+          setCheckingAiStatus(false);
+          return;
+        }
+        setCheckingAiStatus(false);
+      } catch (error) {
+        console.error("Error checking AI status:", error);
+        toast({
+          title: "AI Service Error",
+          description: "Could not verify AI service status. Please try again.",
+          variant: "destructive"
+        });
+        setCheckingAiStatus(false);
+        return;
+      }
+    } else if (!aiStatus.available) {
+      toast({
+        title: "AI Service Unavailable",
+        description: aiStatus.message || "Please configure your OpenAI API key in settings.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // All checks passed, start the batch match process
     matchMutation.mutate();
   };
   
@@ -152,6 +209,22 @@ export default function BatchMatchDialog({
         </DialogHeader>
         
         <div className="mt-4 space-y-4">
+          {/* AI Service Status Alert */}
+          {aiStatus && !aiStatus.available && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              <AlertDescription>
+                {aiStatus.message || "OpenAI API key is not configured. Resume matching will not work properly."}
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {checkingAiStatus && (
+            <div className="text-center py-2">
+              <Loader2 className="h-4 w-4 animate-spin mx-auto mb-1" />
+              <p className="text-xs text-gray-500">Checking AI service status...</p>
+            </div>
+          )}
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
             <Input 
@@ -241,7 +314,13 @@ export default function BatchMatchDialog({
           </Button>
           <Button 
             onClick={handleBatchMatch}
-            disabled={!selectedJobId || matchMutation.isPending || resumeIds.length === 0}
+            disabled={
+              !selectedJobId || 
+              matchMutation.isPending || 
+              resumeIds.length === 0 || 
+              checkingAiStatus || 
+              (aiStatus && !aiStatus.available)
+            }
           >
             {matchMutation.isPending ? (
               <>
