@@ -1,6 +1,8 @@
 import OpenAI from "openai";
+import { isAnthropicApiKeyAvailable, analyzeResumeWithClaude } from "./anthropicService";
 
 // Create OpenAI client with API key from environment variables
+// The newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY
 });
@@ -64,6 +66,37 @@ export async function analyzeResume(
   candidateTitle?: string;
 }> {
   try {
+    // First try to use Claude if available
+    if (isAnthropicApiKeyAvailable()) {
+      try {
+        console.log("Using Claude for resume analysis");
+        const claudeResult = await analyzeResumeWithClaude(resumeText, jobDescription);
+        
+        // Convert Claude's output format to our expected output format
+        const skillMatches = claudeResult.matchedRequirements.map(item => ({
+          requirement: item.requirement,
+          match: item.matched ? 'full' : 'partial',
+          confidence: item.confidence,
+          evidence: claudeResult.experience // Use experience as evidence
+        }));
+        
+        // Extract candidate name (basic approach)
+        const possibleName = resumeText.split('\n')[0].trim();
+        const candidateName = possibleName.length < 30 ? possibleName : undefined;
+        
+        return {
+          overallScore: claudeResult.score,
+          skillMatches,
+          candidateName,
+          candidateTitle: claudeResult.skills.join(', ') // Use skills as a fallback for title
+        };
+      } catch (error) {
+        console.error("Error using Claude for resume analysis, falling back to OpenAI:", error);
+        // Continue to OpenAI fallback
+      }
+    }
+    
+    // Fallback to OpenAI
     const requirementsText = requirements
       .map(r => `- ${r.requirement} (${r.importance})`)
       .join('\n');

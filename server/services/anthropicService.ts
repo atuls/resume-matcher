@@ -35,6 +35,13 @@ export function isAnthropicApiKeyAvailable(): boolean {
 
 /**
  * Extract skills from resume text using Anthropic Claude
+ *
+export function isAnthropicApiKeyAvailable(): boolean {
+  return !!process.env.ANTHROPIC_API_KEY;
+}
+
+/**
+ * Extract skills from resume text using Anthropic Claude
  * 
  * @param text The resume text to analyze
  * @returns An array of extracted skills
@@ -63,7 +70,8 @@ export async function extractSkillsWithClaude(text: string): Promise<string[]> {
     }
     
     try {
-      const result = JSON.parse(contentBlock.text);
+      // We've already verified this is a TextBlock in the guard above
+      const result = JSON.parse((contentBlock as TextBlock).text);
       return result.skills || [];
     } catch (error) {
       console.error("Failed to parse skills JSON from Claude:", error);
@@ -129,7 +137,8 @@ export async function extractWorkHistoryWithClaude(text: string): Promise<Array<
     }
     
     try {
-      const result = JSON.parse(contentBlock.text);
+      // We've already verified this is a TextBlock in the guard above
+      const result = JSON.parse((contentBlock as TextBlock).text);
       return result.workHistory || [];
     } catch (error) {
       console.error("Failed to parse work history JSON from Claude:", error);
@@ -208,7 +217,8 @@ export async function analyzeResumeWithClaude(
     }
     
     try {
-      const result = JSON.parse(contentBlock.text);
+      // We've already verified this is a TextBlock in the guard above
+      const result = JSON.parse((contentBlock as TextBlock).text);
       
       // Ensure we have all required fields
       if (!result.skills || !result.experience || !result.education || 
