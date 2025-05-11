@@ -23,6 +23,7 @@ import {
   insertJobRequirementSchema,
   insertResumeSchema,
   updateRequirementSchema,
+  insertCandidateJobConnectionSchema,
 } from "@shared/schema";
 
 // Configure multer for memory storage of uploaded files

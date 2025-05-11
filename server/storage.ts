@@ -38,6 +38,13 @@ export interface IStorage {
   getAnalysisResultForResume(resumeId: string, jobDescriptionId: string): Promise<AnalysisResult | undefined>;
   createAnalysisResult(result: InsertAnalysisResult): Promise<AnalysisResult>;
   deleteAnalysisResult(id: string): Promise<boolean>;
+  
+  // Candidate-Job Connection methods
+  getCandidateJobConnection(id: string): Promise<CandidateJobConnection | undefined>;
+  getCandidateJobConnections(filters?: { resumeId?: string, jobDescriptionId?: string }): Promise<CandidateJobConnection[]>;
+  createCandidateJobConnection(connection: InsertCandidateJobConnection): Promise<CandidateJobConnection>;
+  updateCandidateJobConnection(id: string, data: Partial<CandidateJobConnection>): Promise<CandidateJobConnection | undefined>;
+  deleteCandidateJobConnection(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -268,6 +275,87 @@ export class DatabaseStorage implements IStorage {
     const { analysisResults } = await import('@shared/schema');
 
     const result = await db.delete(analysisResults).where(eq(analysisResults.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Candidate-Job Connection methods
+  async getCandidateJobConnection(id: string): Promise<CandidateJobConnection | undefined> {
+    const { db } = await import('./db');
+    const { eq } = await import('drizzle-orm');
+    const { candidateJobConnections } = await import('@shared/schema');
+
+    const [connection] = await db
+      .select()
+      .from(candidateJobConnections)
+      .where(eq(candidateJobConnections.id, id));
+    
+    return connection;
+  }
+
+  async getCandidateJobConnections(filters?: { resumeId?: string, jobDescriptionId?: string }): Promise<CandidateJobConnection[]> {
+    const { db } = await import('./db');
+    const { eq, and, desc } = await import('drizzle-orm');
+    const { candidateJobConnections } = await import('@shared/schema');
+
+    let query = db.select().from(candidateJobConnections);
+    
+    if (filters) {
+      const conditions = [];
+      
+      if (filters.resumeId) {
+        conditions.push(eq(candidateJobConnections.resumeId, filters.resumeId));
+      }
+      
+      if (filters.jobDescriptionId) {
+        conditions.push(eq(candidateJobConnections.jobDescriptionId, filters.jobDescriptionId));
+      }
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+    }
+    
+    return query.orderBy(desc(candidateJobConnections.createdAt));
+  }
+
+  async createCandidateJobConnection(connection: InsertCandidateJobConnection): Promise<CandidateJobConnection> {
+    const { db } = await import('./db');
+    const { candidateJobConnections } = await import('@shared/schema');
+
+    const [newConnection] = await db.insert(candidateJobConnections).values(connection).returning();
+    return newConnection;
+  }
+
+  async updateCandidateJobConnection(id: string, data: Partial<CandidateJobConnection>): Promise<CandidateJobConnection | undefined> {
+    const { db } = await import('./db');
+    const { eq } = await import('drizzle-orm');
+    const { candidateJobConnections } = await import('@shared/schema');
+
+    // Add updatedAt timestamp to the update
+    const updateData = {
+      ...data,
+      updatedAt: new Date()
+    };
+
+    const [updated] = await db
+      .update(candidateJobConnections)
+      .set(updateData)
+      .where(eq(candidateJobConnections.id, id))
+      .returning();
+    
+    return updated;
+  }
+
+  async deleteCandidateJobConnection(id: string): Promise<boolean> {
+    const { db } = await import('./db');
+    const { eq } = await import('drizzle-orm');
+    const { candidateJobConnections } = await import('@shared/schema');
+
+    const result = await db
+      .delete(candidateJobConnections)
+      .where(eq(candidateJobConnections.id, id))
+      .returning();
+    
     return result.length > 0;
   }
 }
