@@ -455,6 +455,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
   
   // Endpoint to get matching scores for specific resumes with a job
+  // Original GET endpoint - keeping for backward compatibility
   app.get(
     "/api/job-descriptions/:id/resume-scores",
     async (req: Request, res: Response) => {
@@ -491,7 +492,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         res.json(scoreMap);
       } catch (error) {
-        console.error("Error getting resume scores:", error);
+        console.error("Error getting resume scores (GET):", error);
+        res.status(500).json({ message: "Failed to get resume scores" });
+      }
+    }
+  );
+  
+  // New POST endpoint for handling large batches of resume IDs
+  app.post(
+    "/api/job-descriptions/:id/resume-scores",
+    async (req: Request, res: Response) => {
+      try {
+        const { id } = req.params;
+        const { resumeIds } = req.body;
+        
+        if (!Array.isArray(resumeIds) || resumeIds.length === 0) {
+          return res.json({});
+        }
+        
+        console.log(`Processing scores request for job ${id} with ${resumeIds.length} resumes`);
+        
+        // Get all analysis results for the job
+        const results = await storage.getAnalysisResultsByJob(id);
+        
+        if (!results || results.length === 0) {
+          return res.json({});
+        }
+        
+        // Filter by requested resume IDs and format the response
+        const scoreMap: { [resumeId: string]: { score: number, matchedAt: Date } } = {};
+        
+        results.forEach(result => {
+          if (resumeIds.includes(result.resumeId)) {
+            scoreMap[result.resumeId] = {
+              score: result.overallScore,
+              matchedAt: result.createdAt
+            };
+          }
+        });
+        
+        res.json(scoreMap);
+      } catch (error) {
+        console.error("Error getting resume scores (POST):", error);
         res.status(500).json({ message: "Failed to get resume scores" });
       }
     }

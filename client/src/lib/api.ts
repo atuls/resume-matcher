@@ -213,41 +213,70 @@ export async function getResumeScores(resumeIds: string[], jobDescriptionId: str
   try {
     console.log(`Fetching scores for ${resumeIds.length} resumes and job ${jobDescriptionId}`);
     
-    // Create the query string for the request
-    const queryString = resumeIds.map(id => `resumeId=${encodeURIComponent(id)}`).join('&');
-    const url = `/api/job-descriptions/${jobDescriptionId}/resume-scores?${queryString}`;
+    // Using POST endpoint to handle large numbers of resumeIds
+    const url = `/api/job-descriptions/${jobDescriptionId}/resume-scores`;
     
-    console.log("API request URL:", url);
+    // For small batches (under 20 resumes), use GET for simplicity
+    if (resumeIds.length <= 20) {
+      const queryString = resumeIds.map(id => `resumeId=${encodeURIComponent(id)}`).join('&');
+      const getUrl = `${url}?${queryString}`;
+      
+      console.log("Using GET for small batch, URL:", getUrl);
+      
+      const response = await fetch(getUrl, {
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        console.error("Resume scores API error (GET):", response.status, response.statusText);
+        throw new Error(`Failed to fetch resume scores: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return processScoreData(data);
+    }
+    
+    // For larger batches, use POST to avoid URL length limitations
+    console.log("Using POST for large batch of resumeIds");
     
     const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       credentials: "include",
+      body: JSON.stringify({ resumeIds }),
     });
     
     if (!response.ok) {
-      console.error("Resume scores API error:", response.status, response.statusText);
+      console.error("Resume scores API error (POST):", response.status, response.statusText);
       throw new Error(`Failed to fetch resume scores: ${response.status} ${response.statusText}`);
     }
     
     const data = await response.json();
-    console.log("Resume scores API response:", data);
-    
-    // Process the data to ensure dates are properly handled
-    const processedData: { [resumeId: string]: { score: number, matchedAt: Date } } = {};
-    
-    Object.keys(data).forEach(resumeId => {
-      if (data[resumeId] && typeof data[resumeId].score === 'number') {
-        processedData[resumeId] = {
-          score: data[resumeId].score,
-          matchedAt: new Date(data[resumeId].matchedAt)
-        };
-      }
-    });
-    
-    return processedData;
+    return processScoreData(data);
   } catch (error) {
     console.error("Error in getResumeScores:", error);
     throw error;
   }
+}
+
+// Helper function to process score data
+function processScoreData(data: any): { [resumeId: string]: { score: number, matchedAt: Date } } {
+  console.log("Processing score data:", data);
+  
+  const processedData: { [resumeId: string]: { score: number, matchedAt: Date } } = {};
+  
+  Object.keys(data).forEach(resumeId => {
+    if (data[resumeId] && typeof data[resumeId].score === 'number') {
+      processedData[resumeId] = {
+        score: data[resumeId].score,
+        matchedAt: new Date(data[resumeId].matchedAt)
+      };
+    }
+  });
+  
+  return processedData;
 }
 
 // Custom Prompt API
