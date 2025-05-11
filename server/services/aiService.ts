@@ -64,13 +64,25 @@ export async function analyzeResume(
   }>;
   candidateName?: string;
   candidateTitle?: string;
+  rawResponse?: any;
+  aiModel?: string;
 }> {
   try {
     // First try to use Claude if available
     if (isAnthropicApiKeyAvailable()) {
       try {
         console.log("Using Claude for resume analysis");
+        console.log("Resume text length:", resumeText.length);
+        console.log("Job description text length:", jobDescription.length);
+        console.log("Requirements count:", requirements.length);
+        
+        const startTime = Date.now();
         const claudeResult = await analyzeResumeWithClaude(resumeText, jobDescription);
+        const endTime = Date.now();
+        
+        console.log(`Claude analysis completed in ${(endTime - startTime) / 1000} seconds`);
+        console.log("Claude score:", claudeResult.score);
+        console.log("Matched requirements:", claudeResult.matchedRequirements.length);
         
         // Convert Claude's output format to our expected output format
         const skillMatches = claudeResult.matchedRequirements.map(item => ({
@@ -88,7 +100,9 @@ export async function analyzeResume(
           overallScore: claudeResult.score,
           skillMatches,
           candidateName,
-          candidateTitle: claudeResult.skills.join(', ') // Use skills as a fallback for title
+          candidateTitle: claudeResult.skills.join(', '), // Use skills as a fallback for title
+          rawResponse: claudeResult,
+          aiModel: "claude-3-7-sonnet-20250219"
         };
       } catch (error) {
         console.error("Error using Claude for resume analysis, falling back to OpenAI:", error);

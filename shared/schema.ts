@@ -91,7 +91,10 @@ export const analysisResults = pgTable("analysis_results", {
   resumeId: uuid("resume_id").notNull().references(() => resumes.id),
   overallScore: integer("overall_score").notNull(),
   skillMatches: jsonb("skill_matches").notNull(),
+  rawResponse: jsonb("raw_response"),
+  aiModel: text("ai_model"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const analysisResultsRelations = relations(analysisResults, ({ one }) => ({
