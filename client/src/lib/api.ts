@@ -396,6 +396,73 @@ export async function checkAIStatus(): Promise<{ available: boolean, message: st
   }
 }
 
+// Settings API
+export interface Setting {
+  id: string;
+  key: string;
+  value: string;
+  category: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export async function getSetting(key: string): Promise<Setting | null> {
+  try {
+    const response = await fetch(`/api/settings/${key}`, {
+      credentials: "include",
+    });
+    
+    if (response.status === 404) {
+      return null;
+    }
+    
+    if (!response.ok) {
+      throw new Error("Failed to fetch setting");
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error("Error fetching setting:", error);
+    return null;
+  }
+}
+
+export async function getSettingsByCategory(category: string): Promise<Setting[]> {
+  try {
+    const response = await fetch(`/api/settings/category/${category}`, {
+      credentials: "include",
+    });
+    
+    if (!response.ok) {
+      throw new Error("Failed to fetch settings");
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error("Error fetching settings:", error);
+    return [];
+  }
+}
+
+export async function saveSetting(key: string, value: string, category: string): Promise<Setting | null> {
+  try {
+    const response = await apiRequest("POST", "/api/settings", {
+      key,
+      value,
+      category
+    });
+    
+    if (!response.ok) {
+      throw new Error("Failed to save setting");
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error("Error saving setting:", error);
+    return null;
+  }
+}
+
 // Candidate-Job Connection APIs
 export async function getCandidateJobConnections(resumeId: string): Promise<CandidateJobConnection[]> {
   const response = await fetch(`/api/resumes/${resumeId}/job-connections`, {

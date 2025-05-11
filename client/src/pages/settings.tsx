@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { getSetting, saveSetting } from '@/lib/api';
 
 // Form schema for API settings
 const apiFormSchema = z.object({
@@ -60,7 +61,47 @@ const analysisFormSchema = z.object({
 
 export default function SettingsPage() {
   const [isApiLocked, setIsApiLocked] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  
+  // Load saved settings when component mounts
+  useEffect(() => {
+    async function loadSettings() {
+      setIsLoading(true);
+      try {
+        // Load analysis settings
+        const defaultModel = await getSetting('analysis_default_model');
+        const includeEvidence = await getSetting('analysis_include_evidence');
+        const scoreThreshold = await getSetting('analysis_score_threshold');
+        const analysisPrompt = await getSetting('analysis_prompt');
+        
+        // Update the form with saved values if they exist
+        if (defaultModel?.value) {
+          analysisForm.setValue('defaultModel', defaultModel.value);
+        }
+        
+        if (includeEvidence?.value) {
+          analysisForm.setValue('includeEvidence', includeEvidence.value === 'true');
+        }
+        
+        if (scoreThreshold?.value) {
+          analysisForm.setValue('scoreThreshold', parseInt(scoreThreshold.value));
+        }
+        
+        if (analysisPrompt?.value) {
+          analysisForm.setValue('analysisPrompt', analysisPrompt.value);
+        }
+      } catch (error) {
+        console.error("Error loading settings:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    loadSettings();
+  }, [
+    analysisForm.setValue
+  ]);
 
   // Form for API settings
   const apiForm = useForm<z.infer<typeof apiFormSchema>>({
@@ -115,11 +156,26 @@ export default function SettingsPage() {
   }
 
   // Handle analysis settings submission
-  function onAnalysisSubmit(values: z.infer<typeof analysisFormSchema>) {
-    toast({
-      title: "Analysis settings updated",
-      description: "Your analysis configuration has been saved.",
-    });
+  async function onAnalysisSubmit(values: z.infer<typeof analysisFormSchema>) {
+    try {
+      // Save each setting individually for flexibility
+      await saveSetting('analysis_default_model', values.defaultModel, 'analysis');
+      await saveSetting('analysis_include_evidence', values.includeEvidence.toString(), 'analysis');
+      await saveSetting('analysis_score_threshold', values.scoreThreshold.toString(), 'analysis');
+      await saveSetting('analysis_prompt', values.analysisPrompt, 'analysis');
+      
+      toast({
+        title: "Analysis settings updated",
+        description: "Your analysis configuration has been saved successfully.",
+      });
+    } catch (error) {
+      console.error("Error saving analysis settings:", error);
+      toast({
+        title: "Failed to save settings",
+        description: "There was an error saving your analysis settings. Please try again.",
+        variant: "destructive"
+      });
+    }
   }
 
   return (

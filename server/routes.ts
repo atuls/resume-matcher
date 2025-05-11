@@ -951,6 +951,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Settings API endpoints
+  app.get("/api/settings/:key", async (req: Request, res: Response) => {
+    try {
+      const setting = await storage.getSetting(req.params.key);
+      
+      if (!setting) {
+        return res.status(404).json({ message: "Setting not found" });
+      }
+      
+      res.json(setting);
+    } catch (error) {
+      console.error("Error fetching setting:", error);
+      res.status(500).json({ message: "Failed to fetch setting" });
+    }
+  });
+
+  app.get("/api/settings/category/:category", async (req: Request, res: Response) => {
+    try {
+      const settings = await storage.getSettingsByCategory(req.params.category);
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching settings by category:", error);
+      res.status(500).json({ message: "Failed to fetch settings" });
+    }
+  });
+
+  app.post("/api/settings", async (req: Request, res: Response) => {
+    try {
+      const { key, value, category } = req.body;
+      
+      if (!key || !value || !category) {
+        return res.status(400).json({ message: "Key, value, and category are required" });
+      }
+      
+      const setting = await storage.upsertSetting({
+        key,
+        value,
+        category
+      });
+      
+      res.json(setting);
+    } catch (error) {
+      console.error("Error saving setting:", error);
+      res.status(500).json({ message: "Failed to save setting" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
