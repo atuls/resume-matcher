@@ -163,6 +163,11 @@ export async function getResumeAnalysis(id: string): Promise<{
     company: string;
     period: string;
     description: string;
+    startDate?: string;
+    endDate?: string;
+    durationMonths?: number;
+    isCurrentJob?: boolean;
+    isContractRole?: boolean;
   }>;
   resumeId: string;
 }> {
@@ -172,6 +177,43 @@ export async function getResumeAnalysis(id: string): Promise<{
   
   if (!response.ok) {
     throw new Error("Failed to analyze resume");
+  }
+  
+  return response.json();
+}
+
+// Red flag analysis
+export interface RedFlagAnalysis {
+  hasJobHoppingHistory: boolean;
+  hasContractRoles: boolean;
+  isCurrentlyEmployed: boolean;
+  averageTenureMonths: number;
+  recentRoles: Array<{
+    title: string;
+    company: string;
+    durationMonths: number;
+    isContract: boolean;
+  }>;
+  redFlags: string[];
+  highlights: string[];
+  currentJobPosition?: string;
+}
+
+export async function getResumeRedFlagAnalysis(resumeId: string, jobDescriptionId?: string): Promise<{
+  resumeId: string;
+  jobDescriptionId: string | null;
+  analysis: RedFlagAnalysis;
+}> {
+  const url = jobDescriptionId 
+    ? `/api/resumes/${resumeId}/red-flag-analysis?jobDescriptionId=${encodeURIComponent(jobDescriptionId)}`
+    : `/api/resumes/${resumeId}/red-flag-analysis`;
+    
+  const response = await fetch(url, {
+    credentials: "include",
+  });
+  
+  if (!response.ok) {
+    throw new Error("Failed to get resume red flag analysis");
   }
   
   return response.json();

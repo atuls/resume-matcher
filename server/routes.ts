@@ -557,8 +557,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Extract work history and skills from resume content
-        const workHistory = await extractWorkHistory(resume.content);
-        const skills = await extractSkillsFromResume(resume.content);
+        const workHistory = await extractWorkHistory(resume.extractedText);
+        const skills = await extractSkillsFromResume(resume.extractedText);
         
         // Get job description content if provided
         let jobDescriptionContent = undefined;
@@ -566,7 +566,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (jobDescriptionId) {
           const jobDescription = await storage.getJobDescription(jobDescriptionId as string);
           if (jobDescription) {
-            jobDescriptionContent = jobDescription.content;
+            jobDescriptionContent = jobDescription.description;
           }
         }
         

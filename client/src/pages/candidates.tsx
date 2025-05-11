@@ -5,9 +5,18 @@ import type { Resume } from "@shared/schema";
 import { 
   Plus, Calendar, FileText, Trash2, AlertCircle, Filter, Search, 
   Briefcase, BarChart3, CircleDashed, CheckCircle, XCircle,
-  ChevronLeft
+  ChevronLeft, Award, AlertTriangle
 } from "lucide-react";
-import { getResumes, getJobDescriptions, deleteResume, getResumeScores, getJobDescription } from "@/lib/api";
+import { 
+  getResumes, 
+  getJobDescriptions, 
+  deleteResume, 
+  getResumeScores, 
+  getJobDescription,
+  getResumeRedFlagAnalysis,
+  RedFlagAnalysis
+} from "@/lib/api";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatDistanceToNow } from "date-fns";
 import ResumeUploader from "@/components/resume/uploader";
 import BatchMatchDialog from "@/components/resume/batch-match-dialog";
@@ -30,6 +39,11 @@ export default function CandidatesPage() {
   const [resumeScores, setResumeScores] = useState<{
     [resumeId: string]: { score: number, matchedAt: Date }
   }>({});
+  // State for red flag analysis
+  const [resumeAnalysis, setResumeAnalysis] = useState<{
+    [resumeId: string]: RedFlagAnalysis
+  }>({});
+  const [loadingAnalysis, setLoadingAnalysis] = useState<boolean>(false);
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const { toast } = useToast();
@@ -154,6 +168,50 @@ export default function CandidatesPage() {
     
     fetchScores();
   }, [selectedJobId, resumes, toast]);
+  
+  // Effect to fetch red flag analysis when job selection or resumes change
+  useEffect(() => {
+    const fetchAnalysis = async () => {
+      if (selectedJobId && resumes && resumes.length > 0) {
+        try {
+          setLoadingAnalysis(true);
+          // Create a temporary object to store analysis results
+          const tempAnalysis: {[resumeId: string]: RedFlagAnalysis} = {};
+          
+          // Process up to 10 resumes at a time to prevent overloading
+          const topResumes = resumes.slice(0, 10);
+          
+          // Create an array of promises to fetch analysis for each resume
+          const promises = topResumes.map(async (resume) => {
+            try {
+              const result = await getResumeRedFlagAnalysis(resume.id, selectedJobId);
+              tempAnalysis[resume.id] = result.analysis;
+            } catch (err) {
+              console.error(`Error analyzing resume ${resume.id}:`, err);
+              // Continue with other resumes even if one fails
+            }
+          });
+          
+          // Wait for all promises to resolve
+          await Promise.all(promises);
+          
+          setResumeAnalysis(tempAnalysis);
+        } catch (error) {
+          console.error("Error fetching red flag analysis:", error);
+          // Don't show a toast here as we're already showing one for scores if they fail
+        } finally {
+          setLoadingAnalysis(false);
+        }
+      } else {
+        setResumeAnalysis({});
+      }
+    };
+    
+    // Only fetch analysis if we have scores (to prevent duplicate API calls)
+    if (Object.keys(resumeScores).length > 0) {
+      fetchAnalysis();
+    }
+  }, [selectedJobId, resumes, resumeScores]);
   
   // Handle sorting toggle
   const handleSort = (field: string) => {
