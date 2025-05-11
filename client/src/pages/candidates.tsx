@@ -4,9 +4,10 @@ import { useToast } from "@/hooks/use-toast";
 import type { Resume } from "@shared/schema";
 import { 
   Plus, Calendar, FileText, Trash2, AlertCircle, Filter, Search, 
-  Briefcase, BarChart3, CircleDashed, CheckCircle, XCircle
+  Briefcase, BarChart3, CircleDashed, CheckCircle, XCircle,
+  ChevronLeft
 } from "lucide-react";
-import { getResumes, getJobDescriptions, deleteResume, getResumeScores } from "@/lib/api";
+import { getResumes, getJobDescriptions, deleteResume, getResumeScores, getJobDescription } from "@/lib/api";
 import { formatDistanceToNow } from "date-fns";
 import ResumeUploader from "@/components/resume/uploader";
 import BatchMatchDialog from "@/components/resume/batch-match-dialog";
@@ -19,11 +20,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useRoute, Link } from "wouter";
 
 export default function CandidatesPage() {
   const [showUploader, setShowUploader] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [resumeToDelete, setResumeToDelete] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [resumeScores, setResumeScores] = useState<{
@@ -33,6 +34,18 @@ export default function CandidatesPage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Check if we're on a job-specific route
+  const [jobMatch, jobParams] = useRoute("/jobs/:id/candidates");
+  const jobId = jobMatch ? jobParams.id : null;
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(jobId);
+  
+  // Set selected job when route changes
+  useEffect(() => {
+    if (jobId) {
+      setSelectedJobId(jobId);
+    }
+  }, [jobId]);
 
   // Fetch resumes
   const {
@@ -191,16 +204,40 @@ export default function CandidatesPage() {
     }
   };
 
+  // Fetch job details if we're on a job-specific route
+  const { data: jobDetail } = useQuery({
+    queryKey: [`/api/job-descriptions/${jobId}`],
+    queryFn: () => getJobDescription(jobId!),
+    enabled: !!jobId,
+  });
+
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Candidates</h1>
+        {jobId && jobDetail ? (
+          <div className="flex items-center">
+            <Link href="/jobs">
+              <Button variant="ghost" size="sm" className="mr-2">
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Back to Jobs
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold">Candidates for {jobDetail.title}</h1>
+              <p className="text-gray-500">{jobDetail.company}</p>
+            </div>
+          </div>
+        ) : (
+          <h1 className="text-2xl font-bold">Candidates</h1>
+        )}
+        
         <div className="flex space-x-2">
           {filteredResumes.length > 0 && (
             <BatchMatchDialog 
               resumes={resumes || []}
               filteredResumeIds={filteredResumes.map(r => r.id)}
               buttonVariant="outline"
+              preselectedJobId={jobId || undefined}
             />
           )}
           <Button onClick={() => setShowUploader(true)}>

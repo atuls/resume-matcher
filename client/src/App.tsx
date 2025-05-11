@@ -17,11 +17,20 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
+      
+      {/* Job routes */}
       <Route path="/jobs" component={JobsPage} />
+      <Route path="/jobs/:id" component={JobsPage} />
+      <Route path="/jobs/:id/candidates" component={CandidatesPage} />
+      <Route path="/jobs/:id/analytics" component={AnalyticsPage} />
+      
+      {/* Candidate routes */}
       <Route path="/candidates" component={CandidatesPage} />
+      <Route path="/resume/:id" component={ResumeProfilePage} />
+      
+      {/* Other routes */}
       <Route path="/analytics" component={AnalyticsPage} />
       <Route path="/settings" component={SettingsPage} />
-      <Route path="/resume/:id" component={ResumeProfilePage} />
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />
