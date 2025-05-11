@@ -18,12 +18,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import MatchJobDialog from "@/components/resume/match-job-dialog";
 import JobConnectionManager from "@/components/candidate/job-connection-manager";
 import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ResumeProfilePage() {
   const [, params] = useRoute<{ id: string }>("/resume/:id");
   const resumeId = params?.id;
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [resumeScore, setResumeScore] = useState<{score: number, matchedAt: Date} | null>(null);
+  const [analysisLoading, setAnalysisLoading] = useState<boolean>(false);
+  const { toast } = useToast();
 
   const { data: resume, isLoading: resumeLoading, isError: resumeError } = useQuery({
     queryKey: [`/api/resumes/${resumeId}`],
@@ -39,7 +42,7 @@ export default function ResumeProfilePage() {
   
   const { 
     data: analysis, 
-    isLoading: analysisLoading, 
+    isLoading: isAnalysisLoading, 
     isError: analysisError,
     refetch: refetchAnalysis
   } = useQuery({
@@ -211,13 +214,36 @@ export default function ResumeProfilePage() {
                       className="text-xs"
                       onClick={() => {
                         setForceRerun(true);
-                        refetchAnalysis().finally(() => {
-                          setForceRerun(false);
+                        setAnalysisLoading(true);
+                        
+                        toast({
+                          title: "Rerunning analysis...",
+                          description: "This might take a few moments",
                         });
+                        
+                        refetchAnalysis()
+                          .then(() => {
+                            toast({
+                              title: "Analysis completed",
+                              description: "Resume has been reanalyzed successfully",
+                              variant: "default",
+                            });
+                          })
+                          .catch((error) => {
+                            toast({
+                              title: "Analysis failed",
+                              description: error instanceof Error ? error.message : "An unexpected error occurred",
+                              variant: "destructive",
+                            });
+                          })
+                          .finally(() => {
+                            setForceRerun(false);
+                            setAnalysisLoading(false);
+                          });
                       }}
-                      disabled={analysisLoading}
+                      disabled={isAnalysisLoading || analysisLoading}
                     >
-                      {analysisLoading ? (
+                      {isAnalysisLoading || analysisLoading ? (
                         <>
                           <div className="mr-1.5 h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
                           Analyzing...
@@ -326,7 +352,7 @@ export default function ResumeProfilePage() {
                     <div>
                       <h3 className="font-medium text-lg">Top Skills</h3>
                       <div className="flex flex-wrap gap-2 mt-2">
-                        {analysisLoading ? (
+                        {isAnalysisLoading || analysisLoading ? (
                           <div className="flex gap-2">
                             {[1, 2, 3, 4, 5].map(i => (
                               <div key={i} className="h-8 w-20 bg-gray-200 animate-pulse rounded-full"></div>
