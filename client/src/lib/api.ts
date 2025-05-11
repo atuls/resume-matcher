@@ -201,7 +201,11 @@ export async function getResume(id: string): Promise<Resume & { extractedText: s
   return response.json();
 }
 
-export async function getResumeAnalysis(id: string, jobDescriptionId: string): Promise<{
+export async function getResumeAnalysis(
+  id: string, 
+  jobDescriptionId: string,
+  forceRerun: boolean = false
+): Promise<{
   analysis: {
     skills: string[];
     experience: string;
@@ -214,7 +218,8 @@ export async function getResumeAnalysis(id: string, jobDescriptionId: string): P
     }>;
   }
 }> {
-  const response = await fetch(`/api/resumes/${id}/analysis?jobDescriptionId=${jobDescriptionId}`, {
+  const url = `/api/resumes/${id}/analysis?jobDescriptionId=${jobDescriptionId}${forceRerun ? '&forceRerun=true' : ''}`;
+  const response = await fetch(url, {
     credentials: "include",
   });
   
