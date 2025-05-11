@@ -8,6 +8,23 @@ import {
 } from "@shared/schema";
 import { EnrichedAnalysisResult } from "@/types";
 
+// Define RedFlagAnalysis type
+export interface RedFlagAnalysis {
+  hasJobHoppingHistory: boolean;
+  hasContractRoles: boolean;
+  isCurrentlyEmployed: boolean;
+  averageTenureMonths: number;
+  recentRoles: Array<{
+    title: string;
+    company: string;
+    durationMonths: number;
+    isContract: boolean;
+  }>;
+  redFlags: string[];
+  highlights: string[];
+  currentJobPosition?: string;
+}
+
 // Job Description API
 export async function uploadJobDescription(file: File): Promise<JobDescription> {
   const formData = new FormData();
@@ -20,8 +37,7 @@ export async function uploadJobDescription(file: File): Promise<JobDescription> 
   });
   
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to upload job description: ${error}`);
+    throw new Error("Failed to upload job description");
   }
   
   return response.json();
@@ -39,7 +55,7 @@ export async function getJobDescriptions(): Promise<JobDescription[]> {
   return response.json();
 }
 
-export async function getJobDescription(id: string): Promise<JobDescription> {
+export async function getJobDescription(id: string): Promise<JobDescription & { requirements: JobRequirement[] }> {
   const response = await fetch(`/api/job-descriptions/${id}`, {
     credentials: "include",
   });
@@ -48,15 +64,25 @@ export async function getJobDescription(id: string): Promise<JobDescription> {
     throw new Error("Failed to fetch job description");
   }
   
-  return response.json();
+  const jobDescription = await response.json();
+  
+  // Fetch requirements for this job description
+  const requirementsResponse = await fetch(`/api/job-descriptions/${id}/requirements`, {
+    credentials: "include",
+  });
+  
+  if (!requirementsResponse.ok) {
+    throw new Error("Failed to fetch job requirements");
+  }
+  
+  const requirements = await requirementsResponse.json();
+  
+  return {
+    ...jobDescription,
+    requirements,
+  };
 }
 
-export async function deleteJobDescription(id: string): Promise<void> {
-  const response = await apiRequest("DELETE", `/api/job-descriptions/${id}`);
-  return;
-}
-
-// Job Requirements API
 export async function getJobRequirements(jobDescriptionId: string): Promise<JobRequirement[]> {
   const response = await fetch(`/api/job-descriptions/${jobDescriptionId}/requirements`, {
     credentials: "include",
@@ -69,20 +95,47 @@ export async function getJobRequirements(jobDescriptionId: string): Promise<JobR
   return response.json();
 }
 
-export async function analyzeJobRequirements(jobDescriptionId: string): Promise<{requirements: JobRequirement[]}> {
-  const response = await apiRequest("POST", `/api/job-descriptions/${jobDescriptionId}/analyze-requirements`);
+export async function deleteJobDescription(id: string): Promise<void> {
+  const response = await apiRequest("DELETE", `/api/job-descriptions/${id}`);
+  return;
+}
+
+export async function analyzeJobDescription(id: string): Promise<JobRequirement[]> {
+  const response = await apiRequest("POST", `/api/job-descriptions/${id}/analyze`);
+  
+  if (!response.ok) {
+    throw new Error("Failed to analyze job description");
+  }
+  
   return response.json();
 }
 
-export async function updateJobRequirement(
-  id: string, 
-  data: {
-    requirement?: string;
-    importance?: string;
-    tags?: string[];
+export async function analyzeJobRequirements(
+  jobDescriptionId: string,
+  requirements: { requirement: string; importance: string; tags: string[] }[]
+): Promise<JobRequirement[]> {
+  const response = await apiRequest("POST", `/api/job-descriptions/${jobDescriptionId}/requirements`, {
+    requirements,
+  });
+  
+  if (!response.ok) {
+    throw new Error("Failed to analyze job requirements");
   }
-): Promise<JobRequirement> {
+  
+  return response.json();
+}
+
+export async function updateJobRequirement(id: string, data: {
+  requirement: string;
+  importance: string;
+  tags: string[];
+}): Promise<JobRequirement> {
   const response = await apiRequest("PUT", `/api/job-requirements/${id}`, data);
+  
+  if (!response.ok) {
+    throw new Error("Failed to update job requirement");
+  }
+  
   return response.json();
 }
 
@@ -92,9 +145,13 @@ export async function deleteJobRequirement(id: string): Promise<void> {
 }
 
 // Resume API
-export async function uploadResume(file: File): Promise<Resume> {
+export async function uploadResume(file: File, options?: { customName?: string }): Promise<Resume> {
   const formData = new FormData();
   formData.append("file", file);
+  
+  if (options?.customName) {
+    formData.append("customName", options.customName);
+  }
   
   const response = await fetch("/api/resumes", {
     method: "POST",
@@ -103,33 +160,21 @@ export async function uploadResume(file: File): Promise<Resume> {
   });
   
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to upload resume: ${error}`);
+    throw new Error("Failed to upload resume");
   }
   
   return response.json();
 }
 
-// Multi-file resume upload API
 export async function uploadMultipleResumes(files: File[]): Promise<Resume[]> {
-  // We'll make sequential calls to keep the backend simple
-  const results: Resume[] = [];
-  
-  for (const file of files) {
-    try {
-      const resume = await uploadResume(file);
-      results.push(resume);
-    } catch (error) {
-      console.error(`Error uploading ${file.name}:`, error);
-      // Continue with other files even if one fails
-    }
+  // Using Promise.all to upload files in parallel
+  try {
+    const uploadPromises = files.map(file => uploadResume(file));
+    return await Promise.all(uploadPromises);
+  } catch (error) {
+    console.error("Error uploading multiple resumes:", error);
+    throw new Error("Failed to upload one or more resumes");
   }
-  
-  if (results.length === 0 && files.length > 0) {
-    throw new Error("Failed to upload any resumes");
-  }
-  
-  return results;
 }
 
 export async function getResumes(): Promise<Resume[]> {
@@ -144,7 +189,7 @@ export async function getResumes(): Promise<Resume[]> {
   return response.json();
 }
 
-export async function getResume(id: string): Promise<Resume> {
+export async function getResume(id: string): Promise<Resume & { extractedText: string }> {
   const response = await fetch(`/api/resumes/${id}`, {
     credentials: "include",
   });
@@ -156,47 +201,28 @@ export async function getResume(id: string): Promise<Resume> {
   return response.json();
 }
 
-export async function getResumeAnalysis(id: string): Promise<{
-  skills: string[];
-  workHistory: Array<{
-    title: string;
-    company: string;
-    period: string;
-    description: string;
-    startDate?: string;
-    endDate?: string;
-    durationMonths?: number;
-    isCurrentJob?: boolean;
-    isContractRole?: boolean;
-  }>;
-  resumeId: string;
+export async function getResumeAnalysis(id: string, jobDescriptionId: string): Promise<{
+  analysis: {
+    skills: string[];
+    experience: string;
+    education: string;
+    score: number;
+    matchedRequirements: Array<{
+      requirement: string;
+      matched: boolean;
+      confidence: number;
+    }>;
+  }
 }> {
-  const response = await fetch(`/api/resumes/${id}/analysis`, {
+  const response = await fetch(`/api/resumes/${id}/analysis?jobDescriptionId=${jobDescriptionId}`, {
     credentials: "include",
   });
   
   if (!response.ok) {
-    throw new Error("Failed to analyze resume");
+    throw new Error("Failed to fetch resume analysis");
   }
   
   return response.json();
-}
-
-// Red flag analysis
-export interface RedFlagAnalysis {
-  hasJobHoppingHistory: boolean;
-  hasContractRoles: boolean;
-  isCurrentlyEmployed: boolean;
-  averageTenureMonths: number;
-  recentRoles: Array<{
-    title: string;
-    company: string;
-    durationMonths: number;
-    isContract: boolean;
-  }>;
-  redFlags: string[];
-  highlights: string[];
-  currentJobPosition?: string;
 }
 
 export async function getResumeRedFlagAnalysis(resumeId: string, jobDescriptionId?: string): Promise<{
@@ -249,6 +275,31 @@ export async function getAnalysisResults(jobDescriptionId: string): Promise<Enri
   return response.json();
 }
 
+// Helper function to process score data with date conversion
+function processScoreData(data: any): { [resumeId: string]: { score: number, matchedAt: Date } } {
+  // Check if data is valid
+  if (!data || typeof data !== 'object') {
+    console.error('Invalid score data received:', data);
+    return {};
+  }
+  
+  // Convert strings to Date objects
+  const processed: { [resumeId: string]: { score: number, matchedAt: Date } } = {};
+  
+  console.log("Processing score data:", data);
+  
+  for (const [resumeId, scoreData] of Object.entries(data)) {
+    if (scoreData && typeof scoreData === 'object' && 'score' in scoreData && 'matchedAt' in scoreData) {
+      processed[resumeId] = {
+        score: (scoreData as any).score,
+        matchedAt: new Date((scoreData as any).matchedAt)
+      };
+    }
+  }
+  
+  return processed;
+}
+
 export async function getResumeScores(resumeIds: string[], jobDescriptionId: string): Promise<{
   [resumeId: string]: { score: number, matchedAt: Date }
 }> {
@@ -298,55 +349,42 @@ export async function getResumeScores(resumeIds: string[], jobDescriptionId: str
     const data = await response.json();
     return processScoreData(data);
   } catch (error) {
-    console.error("Error in getResumeScores:", error);
-    throw error;
+    console.error("Error fetching scores:", error);
+    return {};
   }
 }
 
-// Helper function to process score data
-function processScoreData(data: any): { [resumeId: string]: { score: number, matchedAt: Date } } {
-  console.log("Processing score data:", data);
-  
-  const processedData: { [resumeId: string]: { score: number, matchedAt: Date } } = {};
-  
-  Object.keys(data).forEach(resumeId => {
-    if (data[resumeId] && typeof data[resumeId].score === 'number') {
-      processedData[resumeId] = {
-        score: data[resumeId].score,
-        matchedAt: new Date(data[resumeId].matchedAt)
-      };
-    }
-  });
-  
-  return processedData;
-}
-
-// Custom Prompt API
-export async function generateCustomPrompt(
+// Custom prompt API
+export async function submitCustomPrompt(
+  resumeId: string, 
   jobDescriptionId: string, 
-  customInstructions: string
-): Promise<{prompt: string}> {
+  prompt: string
+): Promise<{
+  result: string;
+}> {
   const response = await apiRequest("POST", "/api/custom-prompt", {
+    resumeId,
     jobDescriptionId,
-    customInstructions,
+    prompt,
   });
   
   return response.json();
 }
 
-// Check if OpenAI API key is properly configured
-export async function checkAIServiceStatus(): Promise<{available: boolean, message: string}> {
+// AI Status API
+export async function checkAIStatus(): Promise<{ available: boolean, message: string }> {
   try {
     const response = await fetch("/api/ai-status", {
       credentials: "include",
     });
     
     if (!response.ok) {
-      return { available: false, message: "AI service is not properly configured" };
+      return { available: false, message: "AI service is not available" };
     }
     
     return response.json();
   } catch (error) {
+    console.error("Error checking AI status:", error);
     return { available: false, message: "Could not connect to AI service" };
   }
 }

@@ -5,7 +5,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Briefcase, ChevronRight, Search, FileText, X, Users, Loader2, AlertTriangle } from "lucide-react";
-import { getJobDescriptions, analyzeResumes, checkAIServiceStatus } from "@/lib/api";
+import { getJobDescriptions, analyzeResumes, checkAIStatus } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -39,7 +39,7 @@ export default function BatchMatchDialog({
   useEffect(() => {
     if (open && !aiStatus) {
       setCheckingAiStatus(true);
-      checkAIServiceStatus()
+      checkAIStatus()
         .then(status => {
           setAiStatus(status);
         })
@@ -155,7 +155,7 @@ export default function BatchMatchDialog({
     if (!aiStatus) {
       try {
         setCheckingAiStatus(true);
-        const status = await checkAIServiceStatus();
+        const status = await checkAIStatus();
         setAiStatus(status);
         
         if (!status.available) {
