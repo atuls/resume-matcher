@@ -349,9 +349,33 @@ export default function CandidatesPage() {
               ))}
             </SelectContent>
           </Select>
+          {!selectedJobId && (
+            <p className="text-xs text-amber-600 mt-2 flex items-center">
+              <AlertTriangle className="h-3 w-3 mr-1" />
+              Select a job to see match scores, red flags, and candidate highlights
+            </p>
+          )}
         </div>
       </div>
 
+      {selectedJobId && (
+        <div className="mb-6 bg-slate-50 border border-slate-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <div className="mr-3 mt-1 bg-primary/10 p-2 rounded-full">
+              <AlertCircle className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-medium text-slate-900">Enhanced candidate evaluation</h3>
+              <p className="text-sm text-slate-600 mt-1">
+                We've analyzed each candidate for this job. Look for the <span className="text-emerald-600 font-medium">highlights</span> column 
+                to see key strengths and the <span className="text-amber-600 font-medium">red flags</span> column to identify potential issues 
+                like job hopping, contract roles, and employment gaps.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {showUploader ? (
         <div className="mb-8">
           <ResumeUploader onSuccess={handleResumeUpload} buttonText="Upload Resume" />
