@@ -63,45 +63,6 @@ export default function SettingsPage() {
   const [isApiLocked, setIsApiLocked] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  
-  // Load saved settings when component mounts
-  useEffect(() => {
-    async function loadSettings() {
-      setIsLoading(true);
-      try {
-        // Load analysis settings
-        const defaultModel = await getSetting('analysis_default_model');
-        const includeEvidence = await getSetting('analysis_include_evidence');
-        const scoreThreshold = await getSetting('analysis_score_threshold');
-        const analysisPrompt = await getSetting('analysis_prompt');
-        
-        // Update the form with saved values if they exist
-        if (defaultModel?.value) {
-          analysisForm.setValue('defaultModel', defaultModel.value);
-        }
-        
-        if (includeEvidence?.value) {
-          analysisForm.setValue('includeEvidence', includeEvidence.value === 'true');
-        }
-        
-        if (scoreThreshold?.value) {
-          analysisForm.setValue('scoreThreshold', parseInt(scoreThreshold.value));
-        }
-        
-        if (analysisPrompt?.value) {
-          analysisForm.setValue('analysisPrompt', analysisPrompt.value);
-        }
-      } catch (error) {
-        console.error("Error loading settings:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    
-    loadSettings();
-  }, [
-    analysisForm.setValue
-  ]);
 
   // Form for API settings
   const apiForm = useForm<z.infer<typeof apiFormSchema>>({
@@ -177,6 +138,43 @@ export default function SettingsPage() {
       });
     }
   }
+  
+  // Load saved settings when component mounts
+  useEffect(() => {
+    async function loadSettings() {
+      setIsLoading(true);
+      try {
+        // Load analysis settings
+        const defaultModel = await getSetting('analysis_default_model');
+        const includeEvidence = await getSetting('analysis_include_evidence');
+        const scoreThreshold = await getSetting('analysis_score_threshold');
+        const analysisPrompt = await getSetting('analysis_prompt');
+        
+        // Update the form with saved values if they exist
+        if (defaultModel?.value) {
+          analysisForm.setValue('defaultModel', defaultModel.value);
+        }
+        
+        if (includeEvidence?.value) {
+          analysisForm.setValue('includeEvidence', includeEvidence.value === 'true');
+        }
+        
+        if (scoreThreshold?.value) {
+          analysisForm.setValue('scoreThreshold', parseInt(scoreThreshold.value));
+        }
+        
+        if (analysisPrompt?.value) {
+          analysisForm.setValue('analysisPrompt', analysisPrompt.value);
+        }
+      } catch (error) {
+        console.error("Error loading settings:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    loadSettings();
+  }, [analysisForm]);
 
   return (
     <>
