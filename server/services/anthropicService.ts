@@ -47,16 +47,18 @@ export async function extractSkillsWithClaude(text: string): Promise<string[]> {
     const response = await anthropic.messages.create({
       model: 'claude-3-7-sonnet-20250219', 
       max_tokens: 1000,
-      system: `You are a skilled HR professional with expertise in parsing resumes. 
-      Extract a comprehensive list of technical skills, soft skills, and qualifications from the resume.
-      Format your response as a valid JSON object with a single "skills" array containing string items.
+      system: `You are a skilled HR professional with expertise in parsing resumes.
+      IMPORTANT: You must output ONLY valid JSON with no other text. Do not add any explanations or notes before or after the JSON.
       
-      IMPORTANT: Your entire response must be a JSON object, with no additional text before or after.
+      Your task is to extract a comprehensive list of technical skills, soft skills, and qualifications from the resume.
+      Return a JSON object with a single "skills" array containing string items.
       
-      Example output format:
-      {"skills": ["skill1", "skill2", "skill3"]}`,
+      Example of correct output format:
+      {"skills": ["JavaScript", "React", "Node.js", "Communication", "Project Management"]}
+      
+      REMINDER: Output only valid JSON with no additional text.`,
       messages: [
-        { role: 'user', content: truncatedText }
+        { role: 'user', content: `Extract the skills from the following resume in JSON format only:\n\n${truncatedText}` }
       ]
     });
 
@@ -104,8 +106,10 @@ export async function extractWorkHistoryWithClaude(text: string): Promise<Array<
       model: 'claude-3-7-sonnet-20250219',
       max_tokens: 2000,
       system: `You are a skilled HR professional with expertise in parsing resumes.
-      Extract the work history from this resume.
-      Format your response as a valid JSON object with a single "workHistory" array containing objects with these properties:
+      IMPORTANT: You must output ONLY valid JSON with no other text. Do not add any explanations or notes before or after the JSON.
+      
+      Your task is to extract the work history from this resume.
+      Return a JSON object with a single "workHistory" array containing objects with these properties:
       - title: Job title (string)
       - company: Company name (string)
       - location: Location (string, optional)
@@ -115,9 +119,7 @@ export async function extractWorkHistoryWithClaude(text: string): Promise<Array<
       - durationMonths: Estimated duration in months (number, optional) 
       - isCurrentRole: Boolean indicating if this is their current role (boolean, optional)
       
-      IMPORTANT: Your entire response must be a valid JSON object, with no additional text before or after.
-      
-      Example output format:
+      Example of correct output format:
       {"workHistory": [
         {
           "title": "Software Engineer",
@@ -129,9 +131,11 @@ export async function extractWorkHistoryWithClaude(text: string): Promise<Array<
           "durationMonths": 24,
           "isCurrentRole": true
         }
-      ]}`,
+      ]}
+      
+      REMINDER: Output only valid JSON with no additional text.`,
       messages: [
-        { role: 'user', content: truncatedText }
+        { role: 'user', content: `Extract the work history from the following resume in JSON format only:\n\n${truncatedText}` }
       ]
     });
 
@@ -184,11 +188,13 @@ export async function analyzeResumeWithClaude(
     const response = await anthropic.messages.create({
       model: 'claude-3-7-sonnet-20250219',
       max_tokens: 2000,
-      system: `You are an expert resume analyst. You'll analyze a resume against a job description 
-      and determine how well the candidate matches the role. Extract key requirements from the job
-      description and check if the resume demonstrates those skills or experiences.
+      system: `You are an expert resume analyst. 
+      IMPORTANT: You must output ONLY valid JSON with no other text. Do not add any explanations or notes before or after the JSON.
       
-      Format your response as a valid JSON object with these properties:
+      Your task is to analyze a resume against a job description and determine how well the candidate matches the role.
+      Extract key requirements from the job description and check if the resume demonstrates those skills or experiences.
+      
+      Return a JSON object with these properties:
       - skills: Array of strings listing relevant skills found in the resume
       - experience: String summarizing relevant experience
       - education: String summarizing education background
@@ -198,9 +204,7 @@ export async function analyzeResumeWithClaude(
         - matched: Boolean indicating if the resume matches this requirement
         - confidence: Number from 0-1 indicating confidence in the match
       
-      IMPORTANT: Your entire response must be a valid JSON object, with no additional text before or after.
-      
-      Example output format:
+      Example of correct output format:
       {
         "skills": ["JavaScript", "React", "Node.js"],
         "experience": "5 years of frontend development experience",
@@ -218,11 +222,13 @@ export async function analyzeResumeWithClaude(
             "confidence": 0.9
           }
         ]
-      }`,
+      }
+      
+      REMINDER: Output only valid JSON with no additional text.`,
       messages: [
         { 
           role: 'user', 
-          content: `JOB DESCRIPTION:\n${truncatedJob}\n\nRESUME:\n${truncatedResume}` 
+          content: `Analyze this resume against the job description in JSON format only:\n\nJOB DESCRIPTION:\n${truncatedJob}\n\nRESUME:\n${truncatedResume}` 
         }
       ]
     });
