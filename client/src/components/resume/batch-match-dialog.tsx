@@ -1,15 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription 
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Briefcase, ChevronRight, Search, FileText, X, Users, Loader2 } from "lucide-react";
-import { getJobDescriptions, analyzeResumes } from "@/lib/api";
+import { Briefcase, ChevronRight, Search, FileText, X, Users, Loader2, AlertTriangle } from "lucide-react";
+import { getJobDescriptions, analyzeResumes, checkAIServiceStatus } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Resume } from "@shared/schema";
 
 interface BatchMatchDialogProps {

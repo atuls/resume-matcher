@@ -615,6 +615,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete connection" });
     }
   });
+  
+  // Check AI service status
+  app.get("/api/ai-status", async (_req: Request, res: Response) => {
+    try {
+      // Check if OpenAI API key is available
+      const openaiApiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
+      if (!openaiApiKey) {
+        return res.status(200).json({ 
+          available: false,
+          message: "OpenAI API key is not configured" 
+        });
+      }
+      
+      // Check if Mistral API key is available (optional)
+      const mistralApiKey = process.env.MISTRAL_API_KEY || process.env.VITE_MISTRAL_API_KEY;
+      
+      // If we have an API key, we can assume the service is available
+      return res.json({ 
+        available: true,
+        message: "AI service is properly configured",
+        providers: {
+          openai: true,
+          mistral: !!mistralApiKey
+        }
+      });
+    } catch (error) {
+      console.error("Error checking AI service status:", error);
+      res.status(500).json({ 
+        available: false,
+        message: "Failed to check AI service status"
+      });
+    }
+  });
 
   const httpServer = createServer(app);
 

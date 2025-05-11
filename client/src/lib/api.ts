@@ -236,6 +236,23 @@ export async function generateCustomPrompt(
   return response.json();
 }
 
+// Check if OpenAI API key is properly configured
+export async function checkAIServiceStatus(): Promise<{available: boolean, message: string}> {
+  try {
+    const response = await fetch("/api/ai-status", {
+      credentials: "include",
+    });
+    
+    if (!response.ok) {
+      return { available: false, message: "AI service is not properly configured" };
+    }
+    
+    return response.json();
+  } catch (error) {
+    return { available: false, message: "Could not connect to AI service" };
+  }
+}
+
 // Candidate-Job Connection APIs
 export async function getCandidateJobConnections(resumeId: string): Promise<CandidateJobConnection[]> {
   const response = await fetch(`/api/resumes/${resumeId}/job-connections`, {
