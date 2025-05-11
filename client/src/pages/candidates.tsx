@@ -101,11 +101,19 @@ export default function CandidatesPage() {
   };
 
   // Format date for display
-  const formatDate = (dateString: Date) => {
+  const formatDate = (dateInput: Date | string) => {
     try {
-      const date = new Date(dateString);
+      if (!dateInput) return 'Unknown date';
+      
+      // Ensure we have a Date object
+      const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+      
+      // Validate the date
+      if (isNaN(date.getTime())) return 'Invalid date';
+      
       return formatDistanceToNow(date, { addSuffix: true });
     } catch (error) {
+      console.warn('Date formatting error:', error, dateInput);
       return 'Invalid date';
     }
   };
@@ -122,11 +130,26 @@ export default function CandidatesPage() {
     const fetchScores = async () => {
       if (selectedJobId && resumes && resumes.length > 0) {
         try {
+          console.log("Fetching scores for job:", selectedJobId);
           const scores = await getResumeScores(
             resumes.map(r => r.id), 
             selectedJobId
           );
-          setResumeScores(scores);
+          
+          // Process the scores to ensure dates are properly handled
+          const processedScores: {
+            [resumeId: string]: { score: number, matchedAt: Date }
+          } = {};
+          
+          Object.keys(scores).forEach(resumeId => {
+            processedScores[resumeId] = {
+              score: scores[resumeId].score,
+              matchedAt: new Date(scores[resumeId].matchedAt)
+            };
+          });
+          
+          console.log("Processed scores:", processedScores);
+          setResumeScores(processedScores);
         } catch (error) {
           console.error("Error fetching scores:", error);
           setResumeScores({});
