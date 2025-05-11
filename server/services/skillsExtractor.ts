@@ -1,6 +1,11 @@
 import OpenAI from "openai";
+import { 
+  isAnthropicApiKeyAvailable,
+  extractSkillsWithClaude,
+  extractWorkHistoryWithClaude
+} from "./anthropicService";
 
-
+// The newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -23,13 +28,23 @@ export interface RedFlagAnalysis {
 }
 
 /**
- * Extract skills from resume text using OpenAI
+ * Extract skills from resume text using AI (OpenAI or Claude)
  * 
  * @param text The resume text to analyze
  * @returns An array of extracted skills
  */
 export async function extractSkillsFromResume(text: string): Promise<string[]> {
   try {
+    // Try Claude first if available
+    if (isAnthropicApiKeyAvailable()) {
+      try {
+        return await extractSkillsWithClaude(text);
+      } catch (error) {
+        console.error("Claude skills extraction failed, falling back to OpenAI:", error);
+        // Continue to OpenAI if Claude fails
+      }
+    }
+    
     // If OpenAI API key is not available, use fallback extraction
     if (!process.env.OPENAI_API_KEY) {
       return fallbackSkillsExtraction(text);
@@ -66,13 +81,13 @@ export async function extractSkillsFromResume(text: string): Promise<string[]> {
       return fallbackSkillsExtraction(text);
     }
   } catch (error) {
-    console.error("Error extracting skills with OpenAI:", error);
+    console.error("Error extracting skills with AI:", error);
     return fallbackSkillsExtraction(text);
   }
 }
 
 /**
- * Extract work history from resume text using OpenAI
+ * Extract work history from resume text using AI (OpenAI or Claude)
  * 
  * @param text The resume text to analyze
  * @returns An array of work experiences
@@ -89,6 +104,16 @@ export async function extractWorkHistory(text: string): Promise<Array<{
   description: string;
 }>> {
   try {
+    // Try Claude first if available
+    if (isAnthropicApiKeyAvailable()) {
+      try {
+        return await extractWorkHistoryWithClaude(text);
+      } catch (error) {
+        console.error("Claude work history extraction failed, falling back to OpenAI:", error);
+        // Continue to OpenAI if Claude fails
+      }
+    }
+    
     // If OpenAI API key is not available, use fallback extraction
     if (!process.env.OPENAI_API_KEY) {
       return fallbackWorkExtraction(text);
@@ -138,7 +163,7 @@ export async function extractWorkHistory(text: string): Promise<Array<{
       return fallbackWorkExtraction(text);
     }
   } catch (error) {
-    console.error("Error extracting work history with OpenAI:", error);
+    console.error("Error extracting work history with AI:", error);
     return fallbackWorkExtraction(text);
   }
 }
