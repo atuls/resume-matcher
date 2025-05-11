@@ -313,7 +313,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 matched: match.match === 'full' || match.match === 'partial',
                 confidence: match.confidence
               }))
-            }
+            },
+            rawResponse: existingAnalysis.rawResponse,
+            aiModel: existingAnalysis.aiModel || 'unknown'
           });
         }
         
@@ -362,7 +364,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               matched: match.match === 'full',
               confidence: match.confidence
             }))
-          }
+          },
+          rawResponse: analysisResult.rawResponse,
+          aiModel: analysisResult.aiModel || 'unknown'
         });
       }
       

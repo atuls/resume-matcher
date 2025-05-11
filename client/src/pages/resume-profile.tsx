@@ -359,9 +359,9 @@ export default function ResumeProfilePage() {
                               <div key={i} className="h-8 w-20 bg-gray-200 animate-pulse rounded-full"></div>
                             ))}
                           </div>
-                        ) : analysis?.skills ? (
+                        ) : analysis?.skills?.length ? (
                           // Display skills from analysis if available
-                          analysis.skills.slice(0, 7).map((skill) => (
+                          (analysis?.skills || []).slice(0, 7).map((skill) => (
                             <span key={skill} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
                               {skill}
                             </span>
@@ -476,9 +476,9 @@ export default function ResumeProfilePage() {
                         Failed to analyze work history. Please try again later.
                       </AlertDescription>
                     </Alert>
-                  ) : analysis && analysis.workHistory && analysis.workHistory.length > 0 ? (
+                  ) : analysis?.workHistory?.length > 0 ? (
                     <div className="space-y-6">
-                      {analysis.workHistory.map((job, index) => (
+                      {(analysis?.workHistory || []).map((job, index) => (
                         <div key={index} className="border-l-2 border-gray-200 pl-4 pb-2">
                           <div className="relative">
                             <div className={`absolute -left-6 mt-1 h-4 w-4 rounded-full ${index === 0 ? 'bg-primary' : 'bg-gray-400'}`}></div>
@@ -502,6 +502,38 @@ export default function ResumeProfilePage() {
                       <p className="text-gray-500">No work history detected in this resume.</p>
                     </div>
                   )}
+                </TabsContent>
+                
+                {/* Debug tab to show raw AI response */}
+                <TabsContent value="debug">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-medium text-lg">AI Model Debug Information</h3>
+                      <Badge variant="outline" className="ml-2">
+                        {analysis?.aiModel || 'No model info'}
+                      </Badge>
+                    </div>
+                    
+                    {analysis?.rawResponse ? (
+                      <div className="rounded-md border overflow-hidden">
+                        <div className="p-4 bg-gray-50 border-b">
+                          <h4 className="font-medium">Raw AI Response</h4>
+                          <p className="text-xs text-gray-500">This is for debugging purposes only</p>
+                        </div>
+                        <pre className="p-4 overflow-auto text-xs max-h-96 bg-black text-green-400">
+                          {JSON.stringify(analysis.rawResponse, null, 2)}
+                        </pre>
+                      </div>
+                    ) : isAnalysisLoading || analysisLoading ? (
+                      <div className="flex justify-center py-8">
+                        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">No raw response data available. Try re-analyzing this resume.</p>
+                      </div>
+                    )}
+                  </div>
                 </TabsContent>
               </CardContent>
             </Tabs>
