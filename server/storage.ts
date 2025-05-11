@@ -37,6 +37,7 @@ export interface IStorage {
   getAnalysisResultsByJob(jobDescriptionId: string): Promise<AnalysisResult[]>;
   getAnalysisResultForResume(resumeId: string, jobDescriptionId: string): Promise<AnalysisResult | undefined>;
   createAnalysisResult(result: InsertAnalysisResult): Promise<AnalysisResult>;
+  updateAnalysisResult(id: string, data: Partial<AnalysisResult>): Promise<AnalysisResult | undefined>;
   deleteAnalysisResult(id: string): Promise<boolean>;
   
   // Candidate-Job Connection methods
