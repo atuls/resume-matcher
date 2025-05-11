@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { getResume, getResumeAnalysis, getJobDescriptions, getResumeScores } from "@/lib/api";
 import { 
   User, FileText, Calendar, ArrowLeft, Mail, MapPin, Phone, Award, 
-  Briefcase, Code, AlertCircle, BarChart3, CheckCircle, XCircle 
+  Briefcase, Code, AlertCircle, BarChart3, CheckCircle, XCircle,
+  RefreshCw
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
@@ -43,9 +44,14 @@ export default function ResumeProfilePage() {
     refetch: refetchAnalysis
   } = useQuery({
     queryKey: analysisQueryKey,
-    queryFn: () => selectedJobId 
-      ? getResumeAnalysis(resumeId!, selectedJobId, forceRerun) 
-      : getResumeAnalysis(resumeId!),
+    queryFn: () => {
+      if (selectedJobId) {
+        return getResumeAnalysis(resumeId!, selectedJobId, forceRerun);
+      } else {
+        // If no job ID selected, just use base resume analysis
+        return getResumeAnalysis(resumeId!);
+      }
+    },
     enabled: !!resumeId,
   });
   
@@ -197,6 +203,34 @@ export default function ResumeProfilePage() {
               
               {selectedJobId && (
                 <div className="border border-gray-100 rounded-lg p-3 my-3 bg-gray-50">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-sm font-medium">Job Match Analysis</h3>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-xs"
+                      onClick={() => {
+                        setForceRerun(true);
+                        refetchAnalysis().finally(() => {
+                          setForceRerun(false);
+                        });
+                      }}
+                      disabled={analysisLoading}
+                    >
+                      {analysisLoading ? (
+                        <>
+                          <div className="mr-1.5 h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                          Analyzing...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="mr-1.5 h-3 w-3" />
+                          Force Rerun Analysis
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  
                   {resumeScore ? (
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
@@ -292,11 +326,34 @@ export default function ResumeProfilePage() {
                     <div>
                       <h3 className="font-medium text-lg">Top Skills</h3>
                       <div className="flex flex-wrap gap-2 mt-2">
-                        {['JavaScript', 'React', 'TypeScript', 'Node.js', 'Express', 'SQL', 'UI/UX'].map((skill) => (
-                          <span key={skill} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
-                            {skill}
-                          </span>
-                        ))}
+                        {analysisLoading ? (
+                          <div className="flex gap-2">
+                            {[1, 2, 3, 4, 5].map(i => (
+                              <div key={i} className="h-8 w-20 bg-gray-200 animate-pulse rounded-full"></div>
+                            ))}
+                          </div>
+                        ) : analysis?.skills ? (
+                          // Display skills from analysis if available
+                          analysis.skills.slice(0, 7).map((skill) => (
+                            <span key={skill} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
+                              {skill}
+                            </span>
+                          ))
+                        ) : selectedJobId && analysis?.analysis?.skills ? (
+                          // Display skills from job match analysis if available
+                          analysis.analysis.skills.slice(0, 7).map((skill) => (
+                            <span key={skill} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
+                              {skill}
+                            </span>
+                          ))
+                        ) : (
+                          // Fallback to dummy skills
+                          ['JavaScript', 'React', 'TypeScript', 'Node.js', 'Express', 'SQL', 'UI/UX'].map((skill) => (
+                            <span key={skill} className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm">
+                              {skill}
+                            </span>
+                          ))
+                        )}
                       </div>
                     </div>
 

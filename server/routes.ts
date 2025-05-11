@@ -268,11 +268,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get resume basic analysis (skills and work history)
   app.get("/api/resumes/:id/analysis", async (req: Request, res: Response) => {
     try {
-      // Check if job description ID is provided
+      // Check if job description ID is provided and valid
       const jobDescriptionId = req.query.jobDescriptionId as string;
       const forceRerun = req.query.forceRerun === 'true';
       
-      if (jobDescriptionId) {
+      // UUID validation regex
+      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      
+      if (jobDescriptionId && isValidUUID.test(jobDescriptionId)) {
         // If job description ID is provided, delegate to resume-job analysis
         const resumeId = req.params.id;
         const resume = await storage.getResume(resumeId);
