@@ -111,10 +111,18 @@ export async function analyzeResume(
     }
     
     // Fallback to OpenAI
+    console.log("Falling back to OpenAI for resume analysis");
     const requirementsText = requirements
       .map(r => `- ${r.requirement} (${r.importance})`)
       .join('\n');
 
+    console.log("Resume text length:", resumeText.length);
+    console.log("Job description text length:", jobDescription.length);
+    console.log("Requirements count:", requirements.length);
+    
+    console.log("Using OpenAI gpt-4o-mini for analysis");
+    const startTime = Date.now();
+    
     // Using gpt-4o-mini as requested by the user - more cost-effective while still providing good analysis
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -140,9 +148,20 @@ export async function analyzeResume(
       ],
       response_format: { type: "json_object" }
     });
+    
+    const endTime = Date.now();
+    console.log(`OpenAI analysis completed in ${(endTime - startTime) / 1000} seconds`);
 
     const result = JSON.parse(response.choices[0].message.content || '{"overallScore": 0, "skillMatches": []}');
-    return result;
+    console.log("OpenAI score:", result.overallScore);
+    console.log("OpenAI skill matches:", result.skillMatches?.length || 0);
+    
+    // Return result with raw response and model info
+    return {
+      ...result,
+      rawResponse: JSON.parse(response.choices[0].message.content || '{}'),
+      aiModel: "gpt-4o-mini"
+    };
   } catch (error) {
     console.error('Error analyzing resume:', error);
     throw new Error('Failed to analyze resume with AI');

@@ -330,18 +330,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Save or update the analysis result
         if (existingAnalysis && forceRerun) {
-          // If it exists and we're force rerunning, update it
+          // If it exists and we're force rerunning, update it with raw response for debugging
           await storage.updateAnalysisResult(existingAnalysis.id, {
             overallScore: analysisResult.overallScore,
-            skillMatches: analysisResult.skillMatches
+            skillMatches: analysisResult.skillMatches,
+            rawResponse: analysisResult.rawResponse || null,
+            aiModel: analysisResult.aiModel || 'unknown',
+            updatedAt: new Date()
           });
         } else {
-          // Otherwise create a new one
+          // Otherwise create a new one with raw response for debugging
           await storage.createAnalysisResult({
             resumeId,
             jobDescriptionId,
             overallScore: analysisResult.overallScore,
-            skillMatches: analysisResult.skillMatches
+            skillMatches: analysisResult.skillMatches,
+            rawResponse: analysisResult.rawResponse || null,
+            aiModel: analysisResult.aiModel || 'unknown'
           });
         }
         
@@ -503,12 +508,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }))
           );
 
-          // Save analysis result
+          // Save analysis result with raw response and model info for debugging
           const resultData = {
             jobDescriptionId,
             resumeId,
             overallScore: analysisResult.overallScore,
             skillMatches: analysisResult.skillMatches,
+            rawResponse: analysisResult.rawResponse || null,
+            aiModel: analysisResult.aiModel || 'unknown'
           };
 
           const savedResult = await storage.createAnalysisResult(resultData);
