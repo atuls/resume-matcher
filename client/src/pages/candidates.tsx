@@ -131,28 +131,21 @@ export default function CandidatesPage() {
       if (selectedJobId && resumes && resumes.length > 0) {
         try {
           console.log("Fetching scores for job:", selectedJobId);
+          // Our enhanced getResumeScores function now handles date conversion
           const scores = await getResumeScores(
             resumes.map(r => r.id), 
             selectedJobId
           );
-          
-          // Process the scores to ensure dates are properly handled
-          const processedScores: {
-            [resumeId: string]: { score: number, matchedAt: Date }
-          } = {};
-          
-          Object.keys(scores).forEach(resumeId => {
-            processedScores[resumeId] = {
-              score: scores[resumeId].score,
-              matchedAt: new Date(scores[resumeId].matchedAt)
-            };
-          });
-          
-          console.log("Processed scores:", processedScores);
-          setResumeScores(processedScores);
+          setResumeScores(scores);
         } catch (error) {
           console.error("Error fetching scores:", error);
           setResumeScores({});
+          // Show error toast for better user feedback
+          toast({
+            title: "Error loading match scores",
+            description: "Unable to load candidate match scores. Please try again.",
+            variant: "destructive"
+          });
         }
       } else {
         setResumeScores({});
@@ -160,7 +153,7 @@ export default function CandidatesPage() {
     };
     
     fetchScores();
-  }, [selectedJobId, resumes]);
+  }, [selectedJobId, resumes, toast]);
   
   // Handle sorting toggle
   const handleSort = (field: string) => {

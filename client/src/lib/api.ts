@@ -210,17 +210,44 @@ export async function getAnalysisResults(jobDescriptionId: string): Promise<Enri
 export async function getResumeScores(resumeIds: string[], jobDescriptionId: string): Promise<{
   [resumeId: string]: { score: number, matchedAt: Date }
 }> {
-  const response = await fetch(`/api/job-descriptions/${jobDescriptionId}/resume-scores?${
-    resumeIds.map(id => `resumeId=${encodeURIComponent(id)}`).join('&')
-  }`, {
-    credentials: "include",
-  });
-  
-  if (!response.ok) {
-    throw new Error("Failed to fetch resume scores");
+  try {
+    console.log(`Fetching scores for ${resumeIds.length} resumes and job ${jobDescriptionId}`);
+    
+    // Create the query string for the request
+    const queryString = resumeIds.map(id => `resumeId=${encodeURIComponent(id)}`).join('&');
+    const url = `/api/job-descriptions/${jobDescriptionId}/resume-scores?${queryString}`;
+    
+    console.log("API request URL:", url);
+    
+    const response = await fetch(url, {
+      credentials: "include",
+    });
+    
+    if (!response.ok) {
+      console.error("Resume scores API error:", response.status, response.statusText);
+      throw new Error(`Failed to fetch resume scores: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log("Resume scores API response:", data);
+    
+    // Process the data to ensure dates are properly handled
+    const processedData: { [resumeId: string]: { score: number, matchedAt: Date } } = {};
+    
+    Object.keys(data).forEach(resumeId => {
+      if (data[resumeId] && typeof data[resumeId].score === 'number') {
+        processedData[resumeId] = {
+          score: data[resumeId].score,
+          matchedAt: new Date(data[resumeId].matchedAt)
+        };
+      }
+    });
+    
+    return processedData;
+  } catch (error) {
+    console.error("Error in getResumeScores:", error);
+    throw error;
   }
-  
-  return response.json();
 }
 
 // Custom Prompt API
