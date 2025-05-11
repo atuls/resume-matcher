@@ -530,6 +530,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Candidate-Job Connection endpoints
+  
+  // Get all connections for a resume
+  app.get("/api/resumes/:id/job-connections", async (req: Request, res: Response) => {
+    try {
+      const connections = await storage.getCandidateJobConnections({ resumeId: req.params.id });
+      res.json(connections);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch job connections" });
+    }
+  });
+
+  // Get all candidates connected to a job
+  app.get("/api/job-descriptions/:id/candidates", async (req: Request, res: Response) => {
+    try {
+      const connections = await storage.getCandidateJobConnections({ jobDescriptionId: req.params.id });
+      
+      // Fetch the full resume data for each connection
+      const candidates = await Promise.all(
+        connections.map(async (conn) => {
+          const resume = await storage.getResume(conn.resumeId);
+          return {
+            connection: conn,
+            resume
+          };
+        })
+      );
+      
+      res.json(candidates);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch candidates for job" });
+    }
+  });
+
+  // Create a connection between resume and job
+  app.post("/api/candidate-connections", async (req: Request, res: Response) => {
+    try {
+      const { resumeId, jobDescriptionId, status, notes } = req.body;
+      
+      // Validate the data
+      const connectionData = insertCandidateJobConnectionSchema.parse({
+        resumeId,
+        jobDescriptionId,
+        status: status || "pending",
+        notes: notes || null
+      });
+      
+      const connection = await storage.createCandidateJobConnection(connectionData);
+      res.status(201).json(connection);
+    } catch (error) {
+      console.error("Error creating connection:", error);
+      res.status(500).json({ message: "Failed to create connection", error: error.message });
+    }
+  });
+
+  // Update a connection
+  app.put("/api/candidate-connections/:id", async (req: Request, res: Response) => {
+    try {
+      const { status, notes } = req.body;
+      const connection = await storage.updateCandidateJobConnection(req.params.id, { status, notes });
+      
+      if (!connection) {
+        return res.status(404).json({ message: "Connection not found" });
+      }
+      
+      res.json(connection);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update connection" });
+    }
+  });
+
+  // Delete a connection
+  app.delete("/api/candidate-connections/:id", async (req: Request, res: Response) => {
+    try {
+      const success = await storage.deleteCandidateJobConnection(req.params.id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Connection not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete connection" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

@@ -297,25 +297,31 @@ export class DatabaseStorage implements IStorage {
     const { eq, and, desc } = await import('drizzle-orm');
     const { candidateJobConnections } = await import('@shared/schema');
 
-    let query = db.select().from(candidateJobConnections);
+    // Start with a basic query
+    let baseQuery = db.select().from(candidateJobConnections);
     
+    // Apply filters
     if (filters) {
-      const conditions = [];
-      
-      if (filters.resumeId) {
-        conditions.push(eq(candidateJobConnections.resumeId, filters.resumeId));
-      }
-      
-      if (filters.jobDescriptionId) {
-        conditions.push(eq(candidateJobConnections.jobDescriptionId, filters.jobDescriptionId));
-      }
-      
-      if (conditions.length > 0) {
-        query = query.where(and(...conditions));
+      if (filters.resumeId && filters.jobDescriptionId) {
+        // Both resume and job filters
+        baseQuery = baseQuery.where(
+          and(
+            eq(candidateJobConnections.resumeId, filters.resumeId),
+            eq(candidateJobConnections.jobDescriptionId, filters.jobDescriptionId)
+          )
+        );
+      } else if (filters.resumeId) {
+        // Just resume filter
+        baseQuery = baseQuery.where(eq(candidateJobConnections.resumeId, filters.resumeId));
+      } else if (filters.jobDescriptionId) {
+        // Just job filter
+        baseQuery = baseQuery.where(eq(candidateJobConnections.jobDescriptionId, filters.jobDescriptionId));
       }
     }
     
-    return query.orderBy(desc(candidateJobConnections.createdAt));
+    // Execute the query with sorting
+    const result = await baseQuery.orderBy(desc(candidateJobConnections.createdAt));
+    return result;
   }
 
   async createCandidateJobConnection(connection: InsertCandidateJobConnection): Promise<CandidateJobConnection> {

@@ -3,7 +3,8 @@ import {
   JobDescription, 
   JobRequirement, 
   Resume,
-  AnalysisResult 
+  AnalysisResult,
+  CandidateJobConnection
 } from "@shared/schema";
 import { EnrichedAnalysisResult } from "@/types";
 
@@ -233,4 +234,58 @@ export async function generateCustomPrompt(
   });
   
   return response.json();
+}
+
+// Candidate-Job Connection APIs
+export async function getCandidateJobConnections(resumeId: string): Promise<CandidateJobConnection[]> {
+  const response = await fetch(`/api/resumes/${resumeId}/job-connections`, {
+    credentials: "include",
+  });
+  
+  if (!response.ok) {
+    throw new Error("Failed to fetch job connections");
+  }
+  
+  return response.json();
+}
+
+export async function getJobCandidates(jobDescriptionId: string): Promise<{
+  connection: CandidateJobConnection;
+  resume: Resume;
+}[]> {
+  const response = await fetch(`/api/job-descriptions/${jobDescriptionId}/candidates`, {
+    credentials: "include",
+  });
+  
+  if (!response.ok) {
+    throw new Error("Failed to fetch candidates for job");
+  }
+  
+  return response.json();
+}
+
+export async function createCandidateJobConnection(data: {
+  resumeId: string;
+  jobDescriptionId: string;
+  status?: string;
+  notes?: string;
+}): Promise<CandidateJobConnection> {
+  const response = await apiRequest("POST", "/api/candidate-connections", data);
+  return response.json();
+}
+
+export async function updateCandidateJobConnection(
+  id: string,
+  data: {
+    status?: string;
+    notes?: string;
+  }
+): Promise<CandidateJobConnection> {
+  const response = await apiRequest("PUT", `/api/candidate-connections/${id}`, data);
+  return response.json();
+}
+
+export async function deleteCandidateJobConnection(id: string): Promise<void> {
+  await apiRequest("DELETE", `/api/candidate-connections/${id}`);
+  return;
 }
