@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { isAnthropicApiKeyAvailable, analyzeResumeWithClaude } from "./anthropicService";
+import { storage } from "../storage";
 
 // Create OpenAI client with API key from environment variables
 // The newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
@@ -16,9 +17,22 @@ export async function analyzeJobDescription(jobDescription: string): Promise<{
   }>;
 }> {
   try {
+    // Try to get model from settings
+    let model = "gpt-4o-mini";  // Default model
+    try {
+      const modelSetting = await storage.getSetting('analysis_default_model');
+      if (modelSetting?.value) {
+        model = modelSetting.value;
+        console.log(`Using custom model from settings for job description analysis: ${model}`);
+      }
+    } catch (error) {
+      console.log("Error fetching model setting:", error);
+      // Continue with default model if there's an error
+    }
+    
     // Using gpt-4o-mini as requested by the user - more cost-effective while still providing good analysis
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: model,
       messages: [
         {
           role: "system",
@@ -120,12 +134,41 @@ export async function analyzeResume(
     console.log("Job description text length:", jobDescription.length);
     console.log("Requirements count:", requirements.length);
     
-    console.log("Using OpenAI gpt-4o-mini for analysis");
+    // Try to get custom prompt from settings
+    let customPrompt = null;
+    try {
+      const promptSetting = await storage.getSetting('analysis_prompt');
+      if (promptSetting?.value) {
+        customPrompt = promptSetting.value
+          .replace('{JOB_DESCRIPTION}', jobDescription)
+          .replace('{REQUIREMENTS}', requirementsText)
+          .replace('{RESUME}', resumeText);
+        console.log("Using custom analysis prompt from settings");
+      }
+    } catch (error) {
+      console.log("Error fetching custom prompt:", error);
+      // Continue with default prompt if there's an error
+    }
+    
+    // Try to get model from settings
+    let model = "gpt-4o-mini";  // Default model
+    try {
+      const modelSetting = await storage.getSetting('analysis_default_model');
+      if (modelSetting?.value) {
+        model = modelSetting.value;
+        console.log(`Using custom model from settings: ${model}`);
+      }
+    } catch (error) {
+      console.log("Error fetching model setting:", error);
+      // Continue with default model if there's an error
+    }
+    
+    console.log(`Using OpenAI ${model} for analysis`);
     const startTime = Date.now();
     
-    // Using gpt-4o-mini as requested by the user - more cost-effective while still providing good analysis
+    // Using prompt either from settings or default
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: model,
       messages: [
         {
           role: "system",
@@ -135,7 +178,7 @@ export async function analyzeResume(
         },
         {
           role: "user",
-          content:
+          content: customPrompt || 
             `Please analyze this resume against the following job requirements:\n\n` +
             `JOB DESCRIPTION:\n${jobDescription}\n\n` +
             `SPECIFIC REQUIREMENTS:\n${requirementsText}\n\n` +
@@ -160,7 +203,7 @@ export async function analyzeResume(
     return {
       ...result,
       rawResponse: JSON.parse(response.choices[0].message.content || '{}'),
-      aiModel: "gpt-4o-mini"
+      aiModel: model
     };
   } catch (error) {
     console.error('Error analyzing resume:', error);
