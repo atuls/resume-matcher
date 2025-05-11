@@ -199,17 +199,7 @@ export async function extractWorkHistoryWithClaude(text: string): Promise<Array<
 export async function analyzeResumeWithClaude(
   resumeText: string,
   jobDescription: string
-): Promise<{
-  skills: string[];
-  experience: string;
-  education: string;
-  score: number;
-  matchedRequirements: Array<{
-    requirement: string;
-    matched: boolean;
-    confidence: number;
-  }>;
-}> {
+): Promise<ResumeAnalysisResult> {
   try {
     // Truncate texts if they're too long (Claude has context length limits)
     const truncatedResume = resumeText.length > 30000 ? resumeText.substring(0, 30000) + '...' : resumeText;
@@ -292,8 +282,9 @@ export async function analyzeResumeWithClaude(
       let result;
       try {
         result = JSON.parse(jsonText);
-      } catch (jsonError) {
-        console.error("Initial JSON parsing failed:", jsonError);
+      } catch (error) {
+        const jsonError = error as Error;
+        console.error("Initial JSON parsing failed:", jsonError.message);
         
         // Try a more thorough approach to find valid JSON with balanced braces
         let braceCount = 0;

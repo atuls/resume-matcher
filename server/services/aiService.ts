@@ -179,13 +179,13 @@ export async function analyzeResume(
         {
           role: "user",
           content: customPrompt || 
-            `Please analyze this resume against the following job requirements:\n\n` +
+            `Please analyze this resume against the following job requirements and return your analysis in JSON format:\n\n` +
             `JOB DESCRIPTION:\n${jobDescription}\n\n` +
             `SPECIFIC REQUIREMENTS:\n${requirementsText}\n\n` +
             `RESUME:\n${resumeText}\n\n` +
             `Provide the candidate's name and job title if you can identify them. Then evaluate each requirement with a match level (full, partial, none), confidence score (0-1), and evidence from the resume.\n\n` +
             `Calculate an overall match score (0-100) based on requirements importance and match level.\n\n` +
-            `Return in the following JSON format:\n` +
+            `Return your analysis as JSON in the following format:\n` +
             `{"candidateName": "string", "candidateTitle": "string", "overallScore": number, "skillMatches": [{"requirement": "string", "match": "full|partial|none", "confidence": number, "evidence": "string"}]}`
         }
       ],
