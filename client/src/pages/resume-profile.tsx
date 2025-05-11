@@ -30,13 +30,22 @@ export default function ResumeProfilePage() {
     enabled: !!resumeId,
   });
 
+  // State for force rerunning analysis
+  const [forceRerun, setForceRerun] = useState<boolean>(false);
+  
+  // Query parameters for analysis
+  const analysisQueryKey = [`/api/resumes/${resumeId}/analysis`, selectedJobId, forceRerun];
+  
   const { 
     data: analysis, 
     isLoading: analysisLoading, 
-    isError: analysisError 
+    isError: analysisError,
+    refetch: refetchAnalysis
   } = useQuery({
-    queryKey: [`/api/resumes/${resumeId}/analysis`],
-    queryFn: () => getResumeAnalysis(resumeId!),
+    queryKey: analysisQueryKey,
+    queryFn: () => selectedJobId 
+      ? getResumeAnalysis(resumeId!, selectedJobId, forceRerun) 
+      : getResumeAnalysis(resumeId!),
     enabled: !!resumeId,
   });
   

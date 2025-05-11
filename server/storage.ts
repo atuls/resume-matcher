@@ -270,6 +270,23 @@ export class DatabaseStorage implements IStorage {
     return newResult;
   }
   
+  async updateAnalysisResult(id: string, data: Partial<AnalysisResult>): Promise<AnalysisResult | undefined> {
+    const { db } = await import('./db');
+    const { eq } = await import('drizzle-orm');
+    const { analysisResults } = await import('@shared/schema');
+    
+    // Remove updatedAt from data since we'll set it separately
+    const { updatedAt, ...updateData } = data;
+    
+    const [updatedResult] = await db
+      .update(analysisResults)
+      .set(updateData)
+      .where(eq(analysisResults.id, id))
+      .returning();
+      
+    return updatedResult;
+  }
+  
   async deleteAnalysisResult(id: string): Promise<boolean> {
     const { db } = await import('./db');
     const { eq } = await import('drizzle-orm');

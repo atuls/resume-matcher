@@ -265,8 +265,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get resume basic analysis (skills and work history)
   app.get("/api/resumes/:id/analysis", async (req: Request, res: Response) => {
     try {
+      // Check if job description ID is provided
+      const jobDescriptionId = req.query.jobDescriptionId as string;
+      const forceRerun = req.query.forceRerun === 'true';
+      
+      if (jobDescriptionId) {
+        // If job description ID is provided, delegate to resume-job analysis
+        const resumeId = req.params.id;
+        const resume = await storage.getResume(resumeId);
+        if (!resume) {
+          return res.status(404).json({ message: "Resume not found" });
+        }
+        
+        // Get job description
+        const jobDescription = await storage.getJobDescription(jobDescriptionId);
+        if (!jobDescription) {
+          return res.status(404).json({ message: "Job description not found" });
+        }
+        
+        // Get job requirements
+        const requirements = await storage.getJobRequirements(jobDescriptionId);
+        if (requirements.length === 0) {
+          return res.status(400).json({
+            message: "No requirements found. Please analyze the job description first."
+          });
+        }
+        
+        // Check if we have an existing analysis result
+        const existingAnalysis = await storage.getAnalysisResultForResume(resumeId, jobDescriptionId);
+        
+        // Use existing analysis unless force rerun is requested
+        if (existingAnalysis && !forceRerun) {
+          return res.json({
+            analysis: {
+              skills: existingAnalysis.skillMatches.map(match => match.requirement),
+              experience: "Experience from previous analysis",
+              education: "Education from previous analysis",
+              score: existingAnalysis.overallScore,
+              matchedRequirements: existingAnalysis.skillMatches.map(match => ({
+                requirement: match.requirement,
+                matched: match.match === 'full' || match.match === 'partial',
+                confidence: match.confidence
+              }))
+            }
+          });
+        }
+        
+        // Analyze resume against job description
+        const analysisResult = await analyzeResume(
+          resume.extractedText,
+          jobDescription.description,
+          requirements.map(r => ({
+            requirement: r.requirement,
+            importance: r.importance,
+            tags: r.tags || []
+          }))
+        );
+        
+        // Save or update the analysis result
+        if (existingAnalysis && forceRerun) {
+          // If it exists and we're force rerunning, update it
+          await storage.updateAnalysisResult(existingAnalysis.id, {
+            overallScore: analysisResult.overallScore,
+            skillMatches: analysisResult.skillMatches
+          });
+        } else {
+          // Otherwise create a new one
+          await storage.createAnalysisResult({
+            resumeId,
+            jobDescriptionId,
+            overallScore: analysisResult.overallScore,
+            skillMatches: analysisResult.skillMatches
+          });
+        }
+        
+        // Format the response to match expected client format
+        return res.json({
+          analysis: {
+            skills: analysisResult.skillMatches.map(match => match.requirement),
+            experience: analysisResult.skillMatches.find(m => m.evidence)?.evidence || "Experience extracted from resume",
+            education: "Education extracted from resume",
+            score: analysisResult.overallScore,
+            matchedRequirements: analysisResult.skillMatches.map(match => ({
+              requirement: match.requirement,
+              matched: match.match === 'full',
+              confidence: match.confidence
+            }))
+          }
+        });
+      }
+      
+      // Basic resume analysis without job description
       const resume = await storage.getResume(req.params.id);
       if (!resume) {
         return res.status(404).json({ message: "Resume not found" });
