@@ -49,7 +49,12 @@ export async function extractSkillsWithClaude(text: string): Promise<string[]> {
       max_tokens: 1000,
       system: `You are a skilled HR professional with expertise in parsing resumes. 
       Extract a comprehensive list of technical skills, soft skills, and qualifications from the resume.
-      Format your response as a JSON object with a single "skills" array containing string items.`,
+      Format your response as a valid JSON object with a single "skills" array containing string items.
+      
+      IMPORTANT: Your entire response must be a JSON object, with no additional text before or after.
+      
+      Example output format:
+      {"skills": ["skill1", "skill2", "skill3"]}`,
       messages: [
         { role: 'user', content: truncatedText }
       ]
@@ -98,9 +103,9 @@ export async function extractWorkHistoryWithClaude(text: string): Promise<Array<
     const response = await anthropic.messages.create({
       model: 'claude-3-7-sonnet-20250219',
       max_tokens: 2000,
-      system: `You are a skilled HR professional with expertise in parsing resumes. 
+      system: `You are a skilled HR professional with expertise in parsing resumes.
       Extract the work history from this resume.
-      Format your response as a JSON object with a single "workHistory" array containing objects with these properties:
+      Format your response as a valid JSON object with a single "workHistory" array containing objects with these properties:
       - title: Job title (string)
       - company: Company name (string)
       - location: Location (string, optional)
@@ -108,7 +113,23 @@ export async function extractWorkHistoryWithClaude(text: string): Promise<Array<
       - endDate: End date (string, optional, use "Present" for current roles)
       - description: Summary of responsibilities and achievements (string)
       - durationMonths: Estimated duration in months (number, optional) 
-      - isCurrentRole: Boolean indicating if this is their current role (boolean, optional)`,
+      - isCurrentRole: Boolean indicating if this is their current role (boolean, optional)
+      
+      IMPORTANT: Your entire response must be a valid JSON object, with no additional text before or after.
+      
+      Example output format:
+      {"workHistory": [
+        {
+          "title": "Software Engineer",
+          "company": "Tech Company",
+          "location": "San Francisco, CA",
+          "startDate": "2020-01",
+          "endDate": "Present",
+          "description": "Developed applications using React and Node.js",
+          "durationMonths": 24,
+          "isCurrentRole": true
+        }
+      ]}`,
       messages: [
         { role: 'user', content: truncatedText }
       ]
@@ -167,7 +188,7 @@ export async function analyzeResumeWithClaude(
       and determine how well the candidate matches the role. Extract key requirements from the job
       description and check if the resume demonstrates those skills or experiences.
       
-      Format your response as a JSON object with these properties:
+      Format your response as a valid JSON object with these properties:
       - skills: Array of strings listing relevant skills found in the resume
       - experience: String summarizing relevant experience
       - education: String summarizing education background
@@ -175,7 +196,29 @@ export async function analyzeResumeWithClaude(
       - matchedRequirements: Array of objects with:
         - requirement: String describing the job requirement
         - matched: Boolean indicating if the resume matches this requirement
-        - confidence: Number from 0-1 indicating confidence in the match`,
+        - confidence: Number from 0-1 indicating confidence in the match
+      
+      IMPORTANT: Your entire response must be a valid JSON object, with no additional text before or after.
+      
+      Example output format:
+      {
+        "skills": ["JavaScript", "React", "Node.js"],
+        "experience": "5 years of frontend development experience",
+        "education": "Bachelor's in Computer Science",
+        "score": 85,
+        "matchedRequirements": [
+          {
+            "requirement": "JavaScript proficiency",
+            "matched": true,
+            "confidence": 0.95
+          },
+          {
+            "requirement": "5+ years experience",
+            "matched": true,
+            "confidence": 0.9
+          }
+        ]
+      }`,
       messages: [
         { 
           role: 'user', 

@@ -18,6 +18,8 @@ import {
   analyzeRedFlags,
   RedFlagAnalysis
 } from "./services/skillsExtractor";
+import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 import {
   analyzeRequirementsSchema,
   analyzeResumeSchema,
@@ -704,27 +706,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Test AI services with a simple prompt
+  app.post("/api/ai-test", async (req: Request, res: Response) => {
+    try {
+      const { prompt, provider } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Prompt is required" 
+        });
+      }
+      
+      // Test OpenAI
+      if (provider === 'openai' || !provider) {
+        if (!process.env.OPENAI_API_KEY) {
+          return res.status(200).json({
+            success: false,
+            message: "OpenAI API key is not configured"
+          });
+        }
+        
+        const openaiClient = new OpenAI({ 
+          apiKey: process.env.OPENAI_API_KEY 
+        });
+        
+        const response = await openaiClient.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [{ role: "user", content: prompt }],
+          max_tokens: 100
+        });
+        
+        return res.json({
+          success: true,
+          provider: 'openai',
+          response: response.choices[0].message.content
+        });
+      }
+      
+      // Test Anthropic
+      if (provider === 'anthropic') {
+        if (!process.env.ANTHROPIC_API_KEY) {
+          return res.status(200).json({
+            success: false,
+            message: "Anthropic API key is not configured"
+          });
+        }
+        
+        const anthropic = new Anthropic({
+          apiKey: process.env.ANTHROPIC_API_KEY
+        });
+        
+        const response = await anthropic.messages.create({
+          model: 'claude-3-7-sonnet-20250219',
+          max_tokens: 100,
+          messages: [{ role: 'user', content: prompt }]
+        });
+        
+        return res.json({
+          success: true,
+          provider: 'anthropic',
+          response: response.content[0].text
+        });
+      }
+      
+      return res.status(400).json({
+        success: false,
+        message: "Invalid provider specified. Use 'openai' or 'anthropic'"
+      });
+    } catch (error) {
+      console.error("Error testing AI service:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: `Failed to test AI service: ${(error as Error).message}` 
+      });
+    }
+  });
+  
   // Check AI service status
   app.get("/api/ai-status", async (_req: Request, res: Response) => {
     try {
       // Check if OpenAI API key is available
       const openaiApiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
-      if (!openaiApiKey) {
-        return res.status(200).json({ 
-          available: false,
-          message: "OpenAI API key is not configured" 
-        });
-      }
+      
+      // Check if Anthropic API key is available
+      const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
       
       // Check if Mistral API key is available (optional)
       const mistralApiKey = process.env.MISTRAL_API_KEY || process.env.VITE_MISTRAL_API_KEY;
       
-      // If we have an API key, we can assume the service is available
+      // Check if at least one primary AI service is available
+      const isPrimaryAIAvailable = !!openaiApiKey || !!anthropicApiKey;
+      
+      if (!isPrimaryAIAvailable) {
+        return res.status(200).json({ 
+          available: false,
+          message: "No AI service API keys are configured" 
+        });
+      }
+      
+      // If we have API keys, we can assume the services are available
       return res.json({ 
         available: true,
-        message: "AI service is properly configured",
+        message: "AI services are properly configured",
         providers: {
-          openai: true,
+          openai: !!openaiApiKey,
+          anthropic: !!anthropicApiKey,
           mistral: !!mistralApiKey
         }
       });
