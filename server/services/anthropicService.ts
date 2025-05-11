@@ -70,7 +70,15 @@ export async function extractSkillsWithClaude(text: string): Promise<string[]> {
     
     try {
       // We've already verified this is a TextBlock in the guard above
-      const result = JSON.parse((contentBlock as TextBlock).text);
+      let text = (contentBlock as TextBlock).text;
+      
+      // Claude sometimes wraps JSON in code blocks with ```json or ``` tags
+      // Remove these if present to extract the raw JSON
+      if (text.includes('```')) {
+        text = text.replace(/```json\s*|\s*```/g, '');
+      }
+      
+      const result = JSON.parse(text);
       return result.skills || [];
     } catch (error) {
       console.error("Failed to parse skills JSON from Claude:", error);
@@ -147,7 +155,15 @@ export async function extractWorkHistoryWithClaude(text: string): Promise<Array<
     
     try {
       // We've already verified this is a TextBlock in the guard above
-      const result = JSON.parse((contentBlock as TextBlock).text);
+      let text = (contentBlock as TextBlock).text;
+      
+      // Claude sometimes wraps JSON in code blocks with ```json or ``` tags
+      // Remove these if present to extract the raw JSON
+      if (text.includes('```')) {
+        text = text.replace(/```json\s*|\s*```/g, '');
+      }
+      
+      const result = JSON.parse(text);
       return result.workHistory || [];
     } catch (error) {
       console.error("Failed to parse work history JSON from Claude:", error);
@@ -241,7 +257,15 @@ export async function analyzeResumeWithClaude(
     
     try {
       // We've already verified this is a TextBlock in the guard above
-      const result = JSON.parse((contentBlock as TextBlock).text);
+      let text = (contentBlock as TextBlock).text;
+      
+      // Claude sometimes wraps JSON in code blocks with ```json or ``` tags
+      // Remove these if present to extract the raw JSON
+      if (text.includes('```')) {
+        text = text.replace(/```json\s*|\s*```/g, '');
+      }
+      
+      const result = JSON.parse(text);
       
       // Ensure we have all required fields
       if (!result.skills || !result.experience || !result.education || 
