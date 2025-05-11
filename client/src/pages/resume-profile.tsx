@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import MatchJobDialog from "@/components/resume/match-job-dialog";
+import JobConnectionManager from "@/components/candidate/job-connection-manager";
 import { useState, useEffect } from "react";
 
 export default function ResumeProfilePage() {
@@ -245,6 +246,15 @@ export default function ResumeProfilePage() {
                 <Code className="mr-2 h-4 w-4" />
                 Schedule Interview
               </Button>
+              
+              <Card className="mt-4">
+                <CardHeader className="py-2">
+                  <CardTitle className="text-md">Job Connections</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  {resumeId && <JobConnectionManager resumeId={resumeId} />}
+                </CardContent>
+              </Card>
             </CardContent>
           </Card>
         </div>
