@@ -199,10 +199,23 @@ export async function analyzeResume(
     console.log("OpenAI score:", result.overallScore);
     console.log("OpenAI skill matches:", result.skillMatches?.length || 0);
     
-    // Return result with raw response and model info
+    // Store the raw response with more details for debugging
+    const rawResponse = {
+      model: model,
+      rawText: response.choices[0].message.content,
+      parsedJson: result,
+      promptUsed: customPrompt || 'default prompt',
+      responseMetadata: {
+        finishReason: response.choices[0].finish_reason,
+        completionTokens: response.usage?.completion_tokens,
+        promptTokens: response.usage?.prompt_tokens
+      }
+    };
+    
+    // Return result with enhanced raw response and model info
     return {
       ...result,
-      rawResponse: JSON.parse(response.choices[0].message.content || '{}'),
+      rawResponse: rawResponse,
       aiModel: model
     };
   } catch (error) {

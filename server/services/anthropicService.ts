@@ -15,6 +15,20 @@ interface ToolUseBlock {
 
 type ContentBlock = TextBlock | ToolUseBlock;
 
+// Define the interface for our resume analysis result
+interface ResumeAnalysisResult {
+  skills: string[];
+  experience: string;
+  education: string;
+  score: number;
+  matchedRequirements: Array<{
+    requirement: string;
+    matched: boolean;
+    confidence: number;
+  }>;
+  rawResponse?: any; // Add this to allow the rawResponse property
+}
+
 // Type guard function to check if a ContentBlock is a TextBlock
 function isTextBlock(block: any): block is TextBlock {
   return block && 'type' in block && block.type === 'text' && 'text' in block;
@@ -273,12 +287,19 @@ export async function analyzeResumeWithClaude(
         throw new Error('Incomplete data in Claude response');
       }
       
+      // Store the original text response for debugging purposes
+      const rawResponse = {
+        rawText: text,
+        parsedJson: result
+      };
+      
       return {
         skills: result.skills,
         experience: result.experience,
         education: result.education,
         score: result.score,
-        matchedRequirements: result.matchedRequirements
+        matchedRequirements: result.matchedRequirements,
+        rawResponse
       };
     } catch (error) {
       console.error("Failed to parse resume analysis JSON from Claude:", error);
