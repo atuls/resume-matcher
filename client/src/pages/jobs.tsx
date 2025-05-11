@@ -98,6 +98,7 @@ function JobListing({ onJobSelect }: { onJobSelect: (id: string) => void }) {
 
 // Job detail component
 function JobDetail({ jobId }: { jobId: string }) {
+  // Get the root URL for navigation
   const [, navigate] = useRoute("/jobs/:id");
   
   // Fetch job details
@@ -127,10 +128,12 @@ function JobDetail({ jobId }: { jobId: string }) {
     return (
       <div className="text-center py-8">
         <p className="text-red-500">Job not found</p>
-        <Button onClick={() => navigate("/jobs")} variant="outline" className="mt-4">
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          Back to Jobs
-        </Button>
+        <Link href="/jobs">
+          <Button variant="outline" className="mt-4">
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            Back to Jobs
+          </Button>
+        </Link>
       </div>
     );
   }
@@ -161,7 +164,7 @@ function JobDetail({ jobId }: { jobId: string }) {
           <CardHeader>
             <CardTitle>Job Overview</CardTitle>
             <CardDescription>
-              {job.company} • {job.location || "Remote"}
+              {job.company || "Unknown Company"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -239,11 +242,11 @@ function JobDetail({ jobId }: { jobId: string }) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Company</span>
-                  <span className="font-medium">{job.company}</span>
+                  <span className="font-medium">{job.company || "Unknown"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Location</span>
-                  <span className="font-medium">{job.location || "Remote"}</span>
+                  <span className="text-gray-500">Job Type</span>
+                  <span className="font-medium">Full-time</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Uploaded</span>

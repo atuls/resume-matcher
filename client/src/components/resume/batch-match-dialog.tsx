@@ -16,6 +16,7 @@ interface BatchMatchDialogProps {
   resumes: Resume[];
   filteredResumeIds?: string[]; // Optional, to support filtered resumes
   buttonVariant?: "default" | "outline" | "secondary" | "destructive" | "ghost" | "link";
+  preselectedJobId?: string; // Optional, to support preselected job from route
 }
 
 export default function BatchMatchDialog({ 

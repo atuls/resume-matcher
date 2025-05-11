@@ -2,15 +2,24 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
-import { getJobDescriptions, getAnalysisResults } from "@/lib/api";
+import { getJobDescriptions, getAnalysisResults, getJobDescription } from "@/lib/api";
 import { useState, useEffect } from "react";
 import { EnrichedAnalysisResult, SkillMatch } from "@/types";
+import { useRoute, Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Sample colors for charts
 const COLORS = ['#2563eb', '#059669', '#d97706', '#dc2626', '#8b5cf6', '#ec4899'];
 
 export default function AnalyticsPage() {
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  // Check if we're on a job-specific route
+  const [jobMatch, jobParams] = useRoute("/jobs/:id/analytics");
+  const routeJobId = jobMatch ? jobParams.id : null;
+  
+  // Selected job for analytics (from route or manual selection)
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(routeJobId);
   
   // Fetch job descriptions
   const { data: jobDescriptions } = useQuery({
@@ -18,12 +27,26 @@ export default function AnalyticsPage() {
     queryFn: getJobDescriptions
   });
 
-  // Set first job as selected by default
+  // Fetch the specific job details if we're on a job route
+  const { data: jobDetail } = useQuery({
+    queryKey: [`/api/job-descriptions/${routeJobId}`],
+    queryFn: () => getJobDescription(routeJobId!),
+    enabled: !!routeJobId,
+  });
+
+  // Set first job as selected by default if not on a specific job route
   useEffect(() => {
     if (jobDescriptions && jobDescriptions.length > 0 && !selectedJobId) {
       setSelectedJobId(jobDescriptions[0].id);
     }
   }, [jobDescriptions, selectedJobId]);
+  
+  // Update selected job when route changes
+  useEffect(() => {
+    if (routeJobId) {
+      setSelectedJobId(routeJobId);
+    }
+  }, [routeJobId]);
 
   // Fetch analysis results for selected job
   const { data: analysisResults, isLoading: isLoadingResults } = useQuery<EnrichedAnalysisResult[]>({
@@ -90,18 +113,38 @@ export default function AnalyticsPage() {
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Analytics</h1>
-        <select 
-          className="p-2 border border-gray-300 rounded-md bg-white"
-          value={selectedJobId || ''}
-          onChange={(e) => setSelectedJobId(e.target.value)}
+        {jobMatch && jobDetail ? (
+          <div className="flex items-center">
+            <Link href={`/jobs/${routeJobId}`}>
+              <Button variant="ghost" size="sm" className="mr-2">
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Back to Job
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold">Analytics: {jobDetail.title}</h1>
+              <p className="text-gray-500">{jobDetail.company}</p>
+            </div>
+          </div>
+        ) : (
+          <h1 className="text-2xl font-bold">Analytics</h1>
+        )}
+        
+        <Select 
+          value={selectedJobId || ''} 
+          onValueChange={setSelectedJobId}
         >
-          {jobDescriptions?.map(job => (
-            <option key={job.id} value={job.id}>
-              {job.title}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-[220px]">
+            <SelectValue placeholder="Select a job" />
+          </SelectTrigger>
+          <SelectContent>
+            {jobDescriptions?.map(job => (
+              <SelectItem key={job.id} value={job.id}>
+                {job.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
