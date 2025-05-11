@@ -393,7 +393,8 @@ export default function SettingsPage() {
                           >
                             <option value="gpt-4o-mini">GPT-4o Mini (Default)</option>
                             <option value="gpt-4o">GPT-4o (Higher Quality)</option>
-                            <option value="claude-3-haiku">Claude 3 Haiku</option>
+                            <option value="claude-3-7-sonnet-20250219">Claude 3.7 Sonnet (New, Recommended)</option>
+                            <option value="claude-3-haiku">Claude 3 Haiku (Faster)</option>
                             <option value="mistral-large">Mistral Large</option>
                           </select>
                         </FormControl>
