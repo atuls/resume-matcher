@@ -327,7 +327,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             requirement: r.requirement,
             importance: r.importance,
             tags: r.tags || []
-          }))
+          }) as {
+            requirement: string;
+            importance: string;
+            tags: string[];
+          })
         );
         
         // Save or update the analysis result
@@ -508,8 +512,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             requirements.map((r) => ({
               requirement: r.requirement,
               importance: r.importance,
-              tags: r.tags,
-            }))
+              tags: r.tags || [],
+            }) as {
+              requirement: string;
+              importance: string;
+              tags: string[];
+            })
           );
 
           // Save analysis result with raw response and model info for debugging

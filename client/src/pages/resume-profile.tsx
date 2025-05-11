@@ -368,7 +368,7 @@ export default function ResumeProfilePage() {
                           ))
                         ) : selectedJobId && analysis?.analysis?.skills ? (
                           // Display skills from job match analysis if available
-                          analysis.analysis.skills.slice(0, 7).map((skill) => (
+                          (analysis?.analysis?.skills || []).slice(0, 7).map((skill) => (
                             <span key={skill} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
                               {skill}
                             </span>
@@ -416,13 +416,13 @@ export default function ResumeProfilePage() {
                         Failed to analyze skills. Please try again later.
                       </AlertDescription>
                     </Alert>
-                  ) : analysis && analysis.skills && analysis.skills.length > 0 ? (
+                  ) : analysis?.skills?.length > 0 ? (
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div className="bg-primary/5 p-4 rounded-lg">
                           <h4 className="font-medium mb-2">Technical Skills</h4>
                           <div className="flex flex-wrap gap-2">
-                            {analysis.skills
+                            {(analysis?.skills || [])
                               .filter(skill => !['communication', 'teamwork', 'leadership', 'problem solving', 
                                             'adaptability', 'time management', 'creativity', 'critical thinking',
                                             'collaboration', 'presentation'].includes(skill.toLowerCase()))
@@ -437,7 +437,7 @@ export default function ResumeProfilePage() {
                         <div className="bg-primary/5 p-4 rounded-lg">
                           <h4 className="font-medium mb-2">Soft Skills</h4>
                           <div className="flex flex-wrap gap-2">
-                            {analysis.skills
+                            {(analysis?.skills || [])
                               .filter(skill => ['communication', 'teamwork', 'leadership', 'problem solving', 
                                           'adaptability', 'time management', 'creativity', 'critical thinking',
                                           'collaboration', 'presentation'].includes(skill.toLowerCase()))
