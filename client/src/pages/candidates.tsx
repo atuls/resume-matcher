@@ -43,6 +43,8 @@ export default function CandidatesPage() {
   const [resumeAnalysis, setResumeAnalysis] = useState<{
     [resumeId: string]: RedFlagAnalysis
   }>({});
+  
+  // Loading state for red flag analysis
   const [loadingAnalysis, setLoadingAnalysis] = useState<boolean>(false);
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -360,17 +362,83 @@ export default function CandidatesPage() {
 
       {selectedJobId && (
         <div className="mb-6 bg-slate-50 border border-slate-200 rounded-lg p-4">
-          <div className="flex items-start">
-            <div className="mr-3 mt-1 bg-primary/10 p-2 rounded-full">
-              <AlertCircle className="h-5 w-5 text-primary" />
+          <div className="flex items-start justify-between">
+            <div className="flex items-start">
+              <div className="mr-3 mt-1 bg-primary/10 p-2 rounded-full">
+                <AlertCircle className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-medium text-slate-900">Enhanced candidate evaluation</h3>
+                <p className="text-sm text-slate-600 mt-1">
+                  View additional candidate insights in the <span className="text-emerald-600 font-medium">highlights</span> and 
+                  <span className="text-amber-600 font-medium"> red flags</span> columns. 
+                  These identify strengths and potential issues like job hopping, contract roles, and employment gaps.
+                </p>
+              </div>
             </div>
             <div>
-              <h3 className="font-medium text-slate-900">Enhanced candidate evaluation</h3>
-              <p className="text-sm text-slate-600 mt-1">
-                We've analyzed each candidate for this job. Look for the <span className="text-emerald-600 font-medium">highlights</span> column 
-                to see key strengths and the <span className="text-amber-600 font-medium">red flags</span> column to identify potential issues 
-                like job hopping, contract roles, and employment gaps.
-              </p>
+              <Button 
+                onClick={() => {
+                  // Set loading state
+                  setLoadingAnalysis(true);
+                  
+                  // Clear existing analysis data
+                  setResumeAnalysis({});
+                  
+                  // Fetch red flag analysis for each resume (limited to prevent overloading)
+                  const fetchAllAnalysis = async () => {
+                    try {
+                      const tempAnalysis: {[resumeId: string]: RedFlagAnalysis} = {};
+                      let processedCount = 0;
+                      
+                      // Process all visible resumes
+                      for (const resume of sortedResumes) {
+                        try {
+                          const result = await getResumeRedFlagAnalysis(resume.id, selectedJobId);
+                          tempAnalysis[resume.id] = result.analysis;
+                          processedCount++;
+                        } catch (err) {
+                          console.error(`Error analyzing resume ${resume.id}:`, err);
+                        }
+                      }
+                      
+                      setResumeAnalysis(tempAnalysis);
+                      
+                      toast({
+                        title: `Analysis complete`,
+                        description: `Analyzed ${processedCount} candidates for this job.`,
+                      });
+                    } catch (error) {
+                      console.error("Error in batch analysis:", error);
+                      toast({
+                        title: "Analysis failed",
+                        description: "Unable to complete candidate analysis. Please try again.",
+                        variant: "destructive"
+                      });
+                    } finally {
+                      setLoadingAnalysis(false);
+                    }
+                  };
+                  
+                  fetchAllAnalysis();
+                }}
+                disabled={loadingAnalysis}
+                variant="secondary"
+                size="sm"
+                className="whitespace-nowrap"
+              >
+                {loadingAnalysis ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <div className="mr-2">🔍</div>
+                    Run Complete Analysis
+                  </>
+                )}
+              </Button>
             </div>
           </div>
         </div>
@@ -555,7 +623,33 @@ export default function CandidatesPage() {
                             </span>
                           </div>
                         ) : (
-                          <span className="text-gray-400 text-sm">No data</span>
+                          <button
+                            onClick={() => {
+                              // Fetch analysis for just this resume
+                              const fetchSingleAnalysis = async () => {
+                                try {
+                                  setLoadingAnalysis(true);
+                                  const result = await getResumeRedFlagAnalysis(resume.id, selectedJobId);
+                                  setResumeAnalysis(prev => ({
+                                    ...prev,
+                                    [resume.id]: result.analysis
+                                  }));
+                                } catch (error) {
+                                  console.error(`Error analyzing resume ${resume.id}:`, error);
+                                } finally {
+                                  setLoadingAnalysis(false);
+                                }
+                              };
+                              
+                              fetchSingleAnalysis();
+                            }}
+                            className="text-primary text-xs hover:underline flex items-center"
+                          >
+                            <div className="mr-1">
+                              <CircleDashed className="h-3 w-3" />
+                            </div>
+                            Load data
+                          </button>
                         )}
                       </td>
                       
@@ -566,7 +660,7 @@ export default function CandidatesPage() {
                             <div className="h-3 w-32 bg-gray-200 animate-pulse rounded"></div>
                             <div className="h-3 w-24 bg-gray-200 animate-pulse rounded"></div>
                           </div>
-                        ) : resumeAnalysis[resume.id] && resumeAnalysis[resume.id].highlights.length > 0 ? (
+                        ) : resumeAnalysis[resume.id] && resumeAnalysis[resume.id].highlights && resumeAnalysis[resume.id].highlights.length > 0 ? (
                           <div>
                             <TooltipProvider>
                               <Tooltip>
@@ -586,8 +680,10 @@ export default function CandidatesPage() {
                               </Tooltip>
                             </TooltipProvider>
                           </div>
+                        ) : resumeAnalysis[resume.id] ? (
+                          <span className="text-gray-400 text-sm">No highlights found</span>
                         ) : (
-                          <span className="text-gray-400 text-sm">No highlights</span>
+                          <div className="h-4 w-8 bg-gray-100 rounded"></div>
                         )}
                       </td>
                       
@@ -598,7 +694,7 @@ export default function CandidatesPage() {
                             <div className="h-3 w-28 bg-gray-200 animate-pulse rounded"></div>
                             <div className="h-3 w-20 bg-gray-200 animate-pulse rounded"></div>
                           </div>
-                        ) : resumeAnalysis[resume.id] && resumeAnalysis[resume.id].redFlags.length > 0 ? (
+                        ) : resumeAnalysis[resume.id] && resumeAnalysis[resume.id].redFlags && resumeAnalysis[resume.id].redFlags.length > 0 ? (
                           <div>
                             <TooltipProvider>
                               <Tooltip>
@@ -618,8 +714,10 @@ export default function CandidatesPage() {
                               </Tooltip>
                             </TooltipProvider>
                           </div>
+                        ) : resumeAnalysis[resume.id] ? (
+                          <span className="text-gray-400 text-sm">No red flags found</span>
                         ) : (
-                          <span className="text-gray-400 text-sm">No red flags</span>
+                          <div className="h-4 w-8 bg-gray-100 rounded"></div>
                         )}
                       </td>
                     </>
