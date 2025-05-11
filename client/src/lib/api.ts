@@ -216,7 +216,9 @@ export async function getResumeAnalysis(
       matched: boolean;
       confidence: number;
     }>;
-  }
+  };
+  rawResponse?: any;
+  aiModel?: string;
 }> {
   const url = `/api/resumes/${id}/analysis?jobDescriptionId=${jobDescriptionId}${forceRerun ? '&forceRerun=true' : ''}`;
   const response = await fetch(url, {

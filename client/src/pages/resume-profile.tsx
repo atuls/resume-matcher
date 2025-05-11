@@ -337,6 +337,7 @@ export default function ResumeProfilePage() {
                   <TabsTrigger value="raw">Raw Text</TabsTrigger>
                   <TabsTrigger value="skills">Skills</TabsTrigger>
                   <TabsTrigger value="history">Work History</TabsTrigger>
+                  <TabsTrigger value="debug">Debug Info</TabsTrigger>
                 </TabsList>
               </CardHeader>
               <CardContent>
