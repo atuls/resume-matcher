@@ -31,6 +31,7 @@ export const jobDescriptions = pgTable("job_descriptions", {
 export const jobDescriptionsRelations = relations(jobDescriptions, ({ many }) => ({
   requirements: many(jobRequirements),
   analysisResults: many(analysisResults),
+  candidateConnections: many(candidateJobConnections),
 }));
 
 export const insertJobDescriptionSchema = createInsertSchema(jobDescriptions).omit({
@@ -75,6 +76,7 @@ export const resumes = pgTable("resumes", {
 
 export const resumesRelations = relations(resumes, ({ many }) => ({
   analysisResults: many(analysisResults),
+  jobConnections: many(candidateJobConnections),
 }));
 
 export const insertResumeSchema = createInsertSchema(resumes).omit({
@@ -108,6 +110,34 @@ export const insertAnalysisResultSchema = createInsertSchema(analysisResults).om
   createdAt: true,
 });
 
+// Candidate-Job Connection table
+export const candidateJobConnections = pgTable("candidate_job_connections", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  resumeId: uuid("resume_id").notNull().references(() => resumes.id),
+  jobDescriptionId: uuid("job_description_id").notNull().references(() => jobDescriptions.id),
+  status: text("status").notNull().default("pending"), // pending, matched, rejected, shortlisted
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const candidateJobConnectionsRelations = relations(candidateJobConnections, ({ one }) => ({
+  resume: one(resumes, {
+    fields: [candidateJobConnections.resumeId],
+    references: [resumes.id],
+  }),
+  jobDescription: one(jobDescriptions, {
+    fields: [candidateJobConnections.jobDescriptionId],
+    references: [jobDescriptions.id],
+  }),
+}));
+
+export const insertCandidateJobConnectionSchema = createInsertSchema(candidateJobConnections).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -123,6 +153,9 @@ export type InsertResume = z.infer<typeof insertResumeSchema>;
 
 export type AnalysisResult = typeof analysisResults.$inferSelect;
 export type InsertAnalysisResult = z.infer<typeof insertAnalysisResultSchema>;
+
+export type CandidateJobConnection = typeof candidateJobConnections.$inferSelect;
+export type InsertCandidateJobConnection = z.infer<typeof insertCandidateJobConnectionSchema>;
 
 // Additional validation schemas
 export const fileUploadSchema = z.object({

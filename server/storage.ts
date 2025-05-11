@@ -3,7 +3,8 @@ import {
   JobDescription, InsertJobDescription,
   JobRequirement, InsertJobRequirement,
   Resume, InsertResume,
-  AnalysisResult, InsertAnalysisResult
+  AnalysisResult, InsertAnalysisResult,
+  CandidateJobConnection, InsertCandidateJobConnection
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
