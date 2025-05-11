@@ -20,6 +20,19 @@ import {
 } from "./services/skillsExtractor";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
+import { isAnthropicApiKeyAvailable } from "./services/anthropicService";
+
+// Define TextBlock interface for Anthropic responses
+interface TextBlock {
+  type: 'text';
+  text: string;
+}
+
+// Type guard function to check if a block is a TextBlock
+function isTextBlock(block: any): block is TextBlock {
+  return block && 'type' in block && block.type === 'text' && 'text' in block;
+}
+
 import {
   analyzeRequirementsSchema,
   analyzeResumeSchema,
@@ -753,11 +766,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        const anthropic = new Anthropic({
+        const anthropicClient = new Anthropic({
           apiKey: process.env.ANTHROPIC_API_KEY
         });
         
-        const response = await anthropic.messages.create({
+        const response = await anthropicClient.messages.create({
           model: 'claude-3-7-sonnet-20250219',
           max_tokens: 100,
           messages: [{ role: 'user', content: prompt }]
@@ -766,7 +779,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({
           success: true,
           provider: 'anthropic',
-          response: response.content[0].text
+          response: isTextBlock(response.content[0]) ? (response.content[0] as TextBlock).text : "Response not in expected format"
         });
       }
       
