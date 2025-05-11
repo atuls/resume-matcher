@@ -35,35 +35,27 @@ export function isAnthropicApiKeyAvailable(): boolean {
 
 /**
  * Extract skills from resume text using Anthropic Claude
- *
-export function isAnthropicApiKeyAvailable(): boolean {
-  return !!process.env.ANTHROPIC_API_KEY;
-}
-
-/**
- * Extract skills from resume text using Anthropic Claude
  * 
  * @param text The resume text to analyze
  * @returns An array of extracted skills
  */
 export async function extractSkillsWithClaude(text: string): Promise<string[]> {
   try {
-    if (!isAnthropicApiKeyAvailable()) {
-      throw new Error('Anthropic API key not available');
-    }
-
-    const message = await anthropic.messages.create({
-      model: 'claude-3-7-sonnet-20250219',
-      max_tokens: 1024,
-      system: `You're a resume analysis AI. Extract ALL technical and soft skills from the resume text. 
-      Return ONLY a JSON object with a "skills" array, nothing else. Include programming languages, frameworks, tools, and soft skills.
-      Keep each skill short (1-3 words maximum) and lowercase.`,
+    // Truncate text if it's too long (Claude has context length limits)
+    const truncatedText = text.length > 50000 ? text.substring(0, 50000) + '...' : text;
+    
+    const response = await anthropic.messages.create({
+      model: 'claude-3-7-sonnet-20250219', 
+      max_tokens: 1000,
+      system: `You are a skilled HR professional with expertise in parsing resumes. 
+      Extract a comprehensive list of technical skills, soft skills, and qualifications from the resume.
+      Format your response as a JSON object with a single "skills" array containing string items.`,
       messages: [
-        { role: 'user', content: text.slice(0, 7000) }  // Limit to 7000 chars to avoid token limits
-      ],
+        { role: 'user', content: truncatedText }
+      ]
     });
 
-    const contentBlock = message.content[0];
+    const contentBlock = response.content[0];
     
     if (!contentBlock || !isTextBlock(contentBlock)) {
       throw new Error('Empty response from Claude or response in unexpected format');
@@ -79,7 +71,7 @@ export async function extractSkillsWithClaude(text: string): Promise<string[]> {
     }
   } catch (error) {
     console.error("Error extracting skills with Claude:", error);
-    throw error;
+    throw new Error(`Failed to extract skills with Claude: ${(error as Error).message}`);
   }
 }
 
@@ -92,45 +84,37 @@ export async function extractSkillsWithClaude(text: string): Promise<string[]> {
 export async function extractWorkHistoryWithClaude(text: string): Promise<Array<{
   title: string;
   company: string;
-  period: string;
+  location?: string;
   startDate?: string;
   endDate?: string;
-  durationMonths?: number;
-  isCurrentJob?: boolean;
-  isContractRole?: boolean;
   description: string;
+  durationMonths?: number;
+  isCurrentRole?: boolean;
 }>> {
   try {
-    if (!isAnthropicApiKeyAvailable()) {
-      throw new Error('Anthropic API key not available');
-    }
-
-    const message = await anthropic.messages.create({
+    // Truncate text if it's too long (Claude has context length limits)
+    const truncatedText = text.length > 50000 ? text.substring(0, 50000) + '...' : text;
+    
+    const response = await anthropic.messages.create({
       model: 'claude-3-7-sonnet-20250219',
-      max_tokens: 1536,
-      system: `You're a resume analysis AI. Extract ALL work experiences from the resume text. 
-      Return a JSON object with a "workHistory" array containing objects with these properties for each position:
-      - title: the job title
-      - company: the company name
-      - period: the time period (e.g., "2020 - 2023")
-      - startDate: formatted as YYYY-MM if available  
-      - endDate: formatted as YYYY-MM if available, or "Present" if it's a current job
-      - durationMonths: calculated duration in months (integer)
-      - isCurrentJob: boolean, true if this is their current job
-      - isContractRole: boolean, true if the role appears to be a contract, temporary, or freelance position  
-      - description: a brief description of the role and responsibilities
-      
-      For startDate and endDate, make your best estimate based on the text if exact dates aren't provided.
-      For durationMonths, calculate the approximate duration in months based on the dates.
-      If you cannot determine if it's a contract role, default to false for isContractRole.
-      If any information is truly missing, use null as the value.
-      If you can't find any work history, return an empty array.`,
+      max_tokens: 2000,
+      system: `You are a skilled HR professional with expertise in parsing resumes. 
+      Extract the work history from this resume.
+      Format your response as a JSON object with a single "workHistory" array containing objects with these properties:
+      - title: Job title (string)
+      - company: Company name (string)
+      - location: Location (string, optional)
+      - startDate: Start date (string, optional)
+      - endDate: End date (string, optional, use "Present" for current roles)
+      - description: Summary of responsibilities and achievements (string)
+      - durationMonths: Estimated duration in months (number, optional) 
+      - isCurrentRole: Boolean indicating if this is their current role (boolean, optional)`,
       messages: [
-        { role: 'user', content: text.slice(0, 7000) }  // Limit to 7000 chars to avoid token limits
-      ],
+        { role: 'user', content: truncatedText }
+      ]
     });
 
-    const contentBlock = message.content[0];
+    const contentBlock = response.content[0];
     
     if (!contentBlock || !isTextBlock(contentBlock)) {
       throw new Error('Empty response from Claude or response in unexpected format');
@@ -146,7 +130,7 @@ export async function extractWorkHistoryWithClaude(text: string): Promise<Array<
     }
   } catch (error) {
     console.error("Error extracting work history with Claude:", error);
-    throw error;
+    throw new Error(`Failed to extract work history with Claude: ${(error as Error).message}`);
   }
 }
 
@@ -158,7 +142,7 @@ export async function extractWorkHistoryWithClaude(text: string): Promise<Array<
  * @returns An analysis result with matching score and details
  */
 export async function analyzeResumeWithClaude(
-  resumeText: string, 
+  resumeText: string,
   jobDescription: string
 ): Promise<{
   skills: string[];
@@ -172,45 +156,35 @@ export async function analyzeResumeWithClaude(
   }>;
 }> {
   try {
-    if (!isAnthropicApiKeyAvailable()) {
-      throw new Error('Anthropic API key not available');
-    }
-
-    // Extract requirements from job description (simple approach)
-    const requirements = jobDescription
-      .split(/\n|\.|;/)
-      .filter(line => 
-        line.trim().length > 10 && 
-        /required|experience|skills|qualifications|proficiency|knowledge|degree|education/i.test(line)
-      )
-      .map(line => line.trim())
-      .slice(0, 8); // Limit to prevent token issues
-
-    const message = await anthropic.messages.create({
+    // Truncate texts if they're too long (Claude has context length limits)
+    const truncatedResume = resumeText.length > 30000 ? resumeText.substring(0, 30000) + '...' : resumeText;
+    const truncatedJob = jobDescription.length > 20000 ? jobDescription.substring(0, 20000) + '...' : jobDescription;
+    
+    const response = await anthropic.messages.create({
       model: 'claude-3-7-sonnet-20250219',
-      max_tokens: 2048,
-      system: `You're an expert resume analyzer comparing resumes to job descriptions. 
-      Provide a detailed analysis of how well the resume matches the job requirements.
-      Return ONLY a JSON object with these properties:
-      - skills: array of strings listing candidate's skills relevant to the job
-      - experience: string summarizing relevant experience
-      - education: string summarizing education 
-      - score: number between 0-100 representing overall match percentage
-      - matchedRequirements: array of objects with requirements from the job, each containing:
-        - requirement: string with the requirement text
-        - matched: boolean indicating if candidate meets this requirement
-        - confidence: number between 0-1 indicating match confidence`,
+      max_tokens: 2000,
+      system: `You are an expert resume analyst. You'll analyze a resume against a job description 
+      and determine how well the candidate matches the role. Extract key requirements from the job
+      description and check if the resume demonstrates those skills or experiences.
+      
+      Format your response as a JSON object with these properties:
+      - skills: Array of strings listing relevant skills found in the resume
+      - experience: String summarizing relevant experience
+      - education: String summarizing education background
+      - score: Number from 0-100 indicating overall match percentage
+      - matchedRequirements: Array of objects with:
+        - requirement: String describing the job requirement
+        - matched: Boolean indicating if the resume matches this requirement
+        - confidence: Number from 0-1 indicating confidence in the match`,
       messages: [
         { 
           role: 'user', 
-          content: `Job Description:\n${jobDescription.slice(0, 3000)}\n\nResume:\n${resumeText.slice(0, 5000)}\n\nAnalyze how well this resume matches the job description and extract key information.${
-            requirements.length > 0 ? `\n\nKey requirements to analyze:\n${requirements.join('\n')}` : ''
-          }`
+          content: `JOB DESCRIPTION:\n${truncatedJob}\n\nRESUME:\n${truncatedResume}` 
         }
-      ],
+      ]
     });
 
-    const contentBlock = message.content[0];
+    const contentBlock = response.content[0];
     
     if (!contentBlock || !isTextBlock(contentBlock)) {
       throw new Error('Empty response from Claude or response in unexpected format');
@@ -223,7 +197,7 @@ export async function analyzeResumeWithClaude(
       // Ensure we have all required fields
       if (!result.skills || !result.experience || !result.education || 
           typeof result.score !== 'number' || !result.matchedRequirements) {
-        throw new Error('Incomplete analysis results from Claude');
+        throw new Error('Incomplete data in Claude response');
       }
       
       return {
@@ -234,11 +208,11 @@ export async function analyzeResumeWithClaude(
         matchedRequirements: result.matchedRequirements
       };
     } catch (error) {
-      console.error("Failed to parse analysis JSON from Claude:", error);
+      console.error("Failed to parse resume analysis JSON from Claude:", error);
       throw error;
     }
   } catch (error) {
     console.error("Error analyzing resume with Claude:", error);
-    throw error;
+    throw new Error(`Failed to analyze resume with Claude: ${(error as Error).message}`);
   }
 }

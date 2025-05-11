@@ -75,7 +75,7 @@ export async function analyzeResume(
         // Convert Claude's output format to our expected output format
         const skillMatches = claudeResult.matchedRequirements.map(item => ({
           requirement: item.requirement,
-          match: item.matched ? 'full' : 'partial',
+          match: item.matched ? ('full' as const) : ('partial' as const),
           confidence: item.confidence,
           evidence: claudeResult.experience // Use experience as evidence
         }));

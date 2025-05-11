@@ -107,7 +107,22 @@ export async function extractWorkHistory(text: string): Promise<Array<{
     // Try Claude first if available
     if (isAnthropicApiKeyAvailable()) {
       try {
-        return await extractWorkHistoryWithClaude(text);
+        const claudeWorkHistory = await extractWorkHistoryWithClaude(text);
+        
+        // Convert Claude's format to our expected format
+        return claudeWorkHistory.map(job => ({
+          title: job.title,
+          company: job.company,
+          period: job.startDate && job.endDate ? `${job.startDate} - ${job.endDate}` : 'Not specified',
+          startDate: job.startDate,
+          endDate: job.endDate,
+          durationMonths: job.durationMonths,
+          isCurrentJob: job.isCurrentRole,
+          isContractRole: job.title.toLowerCase().includes('contract') || 
+                         job.title.toLowerCase().includes('freelance') || 
+                         job.title.toLowerCase().includes('consultant'),
+          description: job.description
+        }));
       } catch (error) {
         console.error("Claude work history extraction failed, falling back to OpenAI:", error);
         // Continue to OpenAI if Claude fails
