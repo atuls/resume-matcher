@@ -63,6 +63,7 @@ export default function BatchMatchDialog({
         return result;
       } catch (error) {
         clearInterval(progressInterval);
+        console.error("Error fetching scores:", error);
         throw error;
       }
     },
@@ -83,13 +84,23 @@ export default function BatchMatchDialog({
         setProgress(0);
       }, 1000);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       setProgress(0);
-      toast({
-        title: "Error matching resumes",
-        description: error.message,
-        variant: "destructive"
-      });
+      // Show a more specific message for API key failures
+      const errorMsg = error.message || "";
+      if (errorMsg.includes("API key") || errorMsg.toLowerCase().includes("openai")) {
+        toast({
+          title: "OpenAI API Key Required",
+          description: "Please add your OpenAI API key in the settings to use the matching feature.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Error matching resumes",
+          description: errorMsg,
+          variant: "destructive"
+        });
+      }
     }
   });
   
@@ -208,9 +219,24 @@ export default function BatchMatchDialog({
           )}
         </div>
         
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)} disabled={matchMutation.isPending}>
-            Cancel
+        <DialogFooter className="flex justify-between">
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              if (matchMutation.isPending) {
+                // If a mutation is in progress, this will act as a cancel button
+                matchMutation.reset();
+                setProgress(0);
+                toast({
+                  title: "Operation cancelled",
+                  description: "The batch matching process was cancelled."
+                });
+              } else {
+                setOpen(false);
+              }
+            }} 
+          >
+            {matchMutation.isPending ? "Stop Processing" : "Cancel"}
           </Button>
           <Button 
             onClick={handleBatchMatch}
@@ -219,7 +245,7 @@ export default function BatchMatchDialog({
             {matchMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Matching {resumeIds.length} {resumeIds.length === 1 ? 'resume' : 'resumes'}...
+                Processing {progress}%
               </>
             ) : (
               `Match ${resumeIds.length} ${resumeIds.length === 1 ? 'Resume' : 'Resumes'}`
