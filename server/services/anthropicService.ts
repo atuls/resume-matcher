@@ -272,6 +272,7 @@ export async function analyzeResumeWithClaude(
     try {
       // We've already verified this is a TextBlock in the guard above
       let text = (contentBlock as TextBlock).text;
+      console.log("Raw Claude response (first 100 chars):", text.substring(0, 100).replace(/\n/g, ' '));
       
       // Claude sometimes wraps JSON in code blocks with ```json or ``` tags
       // Remove these if present to extract the raw JSON
@@ -279,7 +280,50 @@ export async function analyzeResumeWithClaude(
         text = text.replace(/```json\s*|\s*```/g, '');
       }
       
-      const result = JSON.parse(text);
+      // Try to locate and extract JSON if Claude added explanatory text
+      let jsonText = text;
+      const jsonMatch = text.match(/(\{[\s\S]*\})/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[0];
+        console.log("JSON extracted using regex");
+      }
+      
+      // Try to parse the JSON
+      let result;
+      try {
+        result = JSON.parse(jsonText);
+      } catch (jsonError) {
+        console.error("Initial JSON parsing failed:", jsonError);
+        
+        // Try a more thorough approach to find valid JSON with balanced braces
+        let braceCount = 0;
+        let startIdx = -1;
+        
+        for (let i = 0; i < text.length; i++) {
+          if (text[i] === '{') {
+            if (braceCount === 0) startIdx = i;
+            braceCount++;
+          } else if (text[i] === '}') {
+            braceCount--;
+            if (braceCount === 0 && startIdx !== -1) {
+              // Found a potential JSON object
+              try {
+                const jsonCandidate = text.substring(startIdx, i + 1);
+                result = JSON.parse(jsonCandidate);
+                console.log("Found valid JSON using brace balancing");
+                break;
+              } catch (e) {
+                // Continue searching
+                console.log("Found balanced braces but invalid JSON, continuing search");
+              }
+            }
+          }
+        }
+        
+        if (!result) {
+          throw new Error("Could not extract valid JSON from Claude response: " + jsonError.message);
+        }
+      }
       
       // Ensure we have all required fields
       if (!result.skills || !result.experience || !result.education || 
