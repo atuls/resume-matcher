@@ -14,7 +14,9 @@ import {
 } from "./services/documentProcessor";
 import {
   extractSkillsFromResume,
-  extractWorkHistory
+  extractWorkHistory,
+  analyzeRedFlags,
+  RedFlagAnalysis
 } from "./services/skillsExtractor";
 import {
   analyzeRequirementsSchema,
@@ -539,6 +541,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
+  // API endpoint to get candidate red flag analysis 
+  app.get(
+    "/api/resumes/:id/red-flag-analysis",
+    async (req: Request, res: Response) => {
+      try {
+        const { id } = req.params;
+        const { jobDescriptionId } = req.query as { jobDescriptionId?: string };
+        
+        // Get the resume
+        const resume = await storage.getResume(id);
+        
+        if (!resume) {
+          return res.status(404).json({ message: "Resume not found" });
+        }
+        
+        // Extract work history and skills from resume content
+        const workHistory = await extractWorkHistory(resume.content);
+        const skills = await extractSkillsFromResume(resume.content);
+        
+        // Get job description content if provided
+        let jobDescriptionContent = undefined;
+        
+        if (jobDescriptionId) {
+          const jobDescription = await storage.getJobDescription(jobDescriptionId as string);
+          if (jobDescription) {
+            jobDescriptionContent = jobDescription.content;
+          }
+        }
+        
+        // Analyze for red flags
+        const analysis = analyzeRedFlags(workHistory, skills, jobDescriptionContent);
+        
+        res.json({
+          resumeId: id,
+          jobDescriptionId: jobDescriptionId || null,
+          analysis
+        });
+      } catch (error) {
+        console.error("Error getting red flag analysis:", error);
+        res.status(500).json({ message: "Failed to analyze resume for red flags" });
+      }
+    }
+  );
+  
   // Custom prompts endpoint
   app.post("/api/custom-prompt", async (req: Request, res: Response) => {
     try {
