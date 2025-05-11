@@ -401,19 +401,48 @@ export default function CandidatesPage() {
                   </div>
                 </th>
                 {selectedJobId && (
-                  <th 
-                    scope="col" 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onClick={() => handleSort('score')}
-                  >
-                    <div className="flex items-center">
-                      <BarChart3 className="h-4 w-4 mr-1 text-primary" />
-                      Match Score
-                      {sortField === 'score' && (
-                        <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                      )}
-                    </div>
-                  </th>
+                  <>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('score')}
+                    >
+                      <div className="flex items-center">
+                        <BarChart3 className="h-4 w-4 mr-1 text-primary" />
+                        Match Score
+                        {sortField === 'score' && (
+                          <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      <div className="flex items-center">
+                        <Briefcase className="h-4 w-4 mr-1 text-gray-500" />
+                        Current Position
+                      </div>
+                    </th>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      <div className="flex items-center">
+                        <Award className="h-4 w-4 mr-1 text-emerald-500" />
+                        Highlights
+                      </div>
+                    </th>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      <div className="flex items-center">
+                        <AlertTriangle className="h-4 w-4 mr-1 text-amber-500" />
+                        Red Flags
+                      </div>
+                    </th>
+                  </>
                 )}
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -449,43 +478,127 @@ export default function CandidatesPage() {
                     </div>
                   </td>
                   {selectedJobId && (
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {resumeScores[resume.id] ? (
-                        <div className="flex flex-col space-y-1">
-                          <div className="flex items-center">
-                            <Badge 
-                              variant={
-                                resumeScores[resume.id].score >= 80 ? "secondary" :
-                                resumeScores[resume.id].score >= 60 ? "default" :
-                                "outline"
-                              } 
-                              className={`mr-2 ${
-                                resumeScores[resume.id].score >= 80 ? "bg-emerald-500" : ""
+                    <>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {resumeScores[resume.id] ? (
+                          <div className="flex flex-col space-y-1">
+                            <div className="flex items-center">
+                              <Badge 
+                                variant={
+                                  resumeScores[resume.id].score >= 80 ? "secondary" :
+                                  resumeScores[resume.id].score >= 60 ? "default" :
+                                  "outline"
+                                } 
+                                className={`mr-2 ${
+                                  resumeScores[resume.id].score >= 80 ? "bg-emerald-500" : ""
+                                }`}
+                              >
+                                {resumeScores[resume.id].score}%
+                              </Badge>
+                              <span className="text-xs text-gray-500">
+                                {formatDate(resumeScores[resume.id].matchedAt)}
+                              </span>
+                            </div>
+                            <Progress 
+                              value={resumeScores[resume.id].score} 
+                              max={100}
+                              className={`h-1.5 ${
+                                resumeScores[resume.id].score >= 80 ? "bg-emerald-100" :
+                                resumeScores[resume.id].score >= 60 ? "bg-blue-100" :
+                                "bg-gray-100"
                               }`}
-                            >
-                              {resumeScores[resume.id].score}%
-                            </Badge>
-                            <span className="text-xs text-gray-500">
-                              {formatDate(resumeScores[resume.id].matchedAt)}
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex items-center text-gray-400">
+                            <CircleDashed className="h-4 w-4 mr-1" />
+                            <span className="text-sm">Not matched</span>
+                          </div>
+                        )}
+                      </td>
+                      
+                      {/* Current Position column */}
+                      <td className="px-6 py-4">
+                        {loadingAnalysis ? (
+                          <div className="h-4 w-24 bg-gray-200 animate-pulse rounded"></div>
+                        ) : resumeAnalysis[resume.id] ? (
+                          <div className="flex items-center text-sm">
+                            <Briefcase className="h-4 w-4 mr-1 text-gray-500" />
+                            <span className="font-medium">
+                              {resumeAnalysis[resume.id].currentJobPosition || 
+                               (resumeAnalysis[resume.id].isCurrentlyEmployed ? 
+                               "Employed" : "Unemployed")}
                             </span>
                           </div>
-                          <Progress 
-                            value={resumeScores[resume.id].score} 
-                            max={100}
-                            className={`h-1.5 ${
-                              resumeScores[resume.id].score >= 80 ? "bg-emerald-100" :
-                              resumeScores[resume.id].score >= 60 ? "bg-blue-100" :
-                              "bg-gray-100"
-                            }`}
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex items-center text-gray-400">
-                          <CircleDashed className="h-4 w-4 mr-1" />
-                          <span className="text-sm">Not matched</span>
-                        </div>
-                      )}
-                    </td>
+                        ) : (
+                          <span className="text-gray-400 text-sm">No data</span>
+                        )}
+                      </td>
+                      
+                      {/* Highlights column */}
+                      <td className="px-6 py-4">
+                        {loadingAnalysis ? (
+                          <div className="space-y-1">
+                            <div className="h-3 w-32 bg-gray-200 animate-pulse rounded"></div>
+                            <div className="h-3 w-24 bg-gray-200 animate-pulse rounded"></div>
+                          </div>
+                        ) : resumeAnalysis[resume.id] && resumeAnalysis[resume.id].highlights.length > 0 ? (
+                          <div>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="text-sm text-emerald-600 flex items-start cursor-help">
+                                    <Award className="h-4 w-4 mr-1 mt-0.5 flex-shrink-0" />
+                                    <span className="line-clamp-2">{resumeAnalysis[resume.id].highlights[0]}</span>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-sm">
+                                  <ul className="list-disc pl-5 space-y-1">
+                                    {resumeAnalysis[resume.id].highlights.map((highlight, idx) => (
+                                      <li key={idx} className="text-sm">{highlight}</li>
+                                    ))}
+                                  </ul>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-sm">No highlights</span>
+                        )}
+                      </td>
+                      
+                      {/* Red Flags column */}
+                      <td className="px-6 py-4">
+                        {loadingAnalysis ? (
+                          <div className="space-y-1">
+                            <div className="h-3 w-28 bg-gray-200 animate-pulse rounded"></div>
+                            <div className="h-3 w-20 bg-gray-200 animate-pulse rounded"></div>
+                          </div>
+                        ) : resumeAnalysis[resume.id] && resumeAnalysis[resume.id].redFlags.length > 0 ? (
+                          <div>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="text-sm text-amber-600 flex items-start cursor-help">
+                                    <AlertTriangle className="h-4 w-4 mr-1 mt-0.5 flex-shrink-0" />
+                                    <span className="line-clamp-2">{resumeAnalysis[resume.id].redFlags[0]}</span>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-sm">
+                                  <ul className="list-disc pl-5 space-y-1">
+                                    {resumeAnalysis[resume.id].redFlags.map((flag, idx) => (
+                                      <li key={idx} className="text-sm">{flag}</li>
+                                    ))}
+                                  </ul>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-sm">No red flags</span>
+                        )}
+                      </td>
+                    </>
                   )}
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end gap-2">
