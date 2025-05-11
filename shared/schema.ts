@@ -161,6 +161,9 @@ export const insertAppSettingsSchema = createInsertSchema(appSettings).omit({
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
+export type AppSettings = typeof appSettings.$inferSelect;
+export type InsertAppSettings = z.infer<typeof insertAppSettingsSchema>;
+
 export type JobDescription = typeof jobDescriptions.$inferSelect;
 export type InsertJobDescription = z.infer<typeof insertJobDescriptionSchema>;
 

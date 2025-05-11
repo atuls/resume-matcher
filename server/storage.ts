@@ -4,7 +4,8 @@ import {
   JobRequirement, InsertJobRequirement,
   Resume, InsertResume,
   AnalysisResult, InsertAnalysisResult,
-  CandidateJobConnection, InsertCandidateJobConnection
+  CandidateJobConnection, InsertCandidateJobConnection,
+  AppSettings, InsertAppSettings, appSettings
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -46,6 +47,12 @@ export interface IStorage {
   createCandidateJobConnection(connection: InsertCandidateJobConnection): Promise<CandidateJobConnection>;
   updateCandidateJobConnection(id: string, data: Partial<CandidateJobConnection>): Promise<CandidateJobConnection | undefined>;
   deleteCandidateJobConnection(id: string): Promise<boolean>;
+  
+  // Settings methods
+  getSetting(key: string): Promise<AppSettings | undefined>;
+  getSettingsByCategory(category: string): Promise<AppSettings[]>;
+  upsertSetting(setting: InsertAppSettings): Promise<AppSettings>;
+  deleteSetting(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -369,6 +376,77 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(candidateJobConnections)
       .where(eq(candidateJobConnections.id, id))
+      .returning();
+    
+    return result.length > 0;
+  }
+
+  // Settings methods
+  async getSetting(key: string): Promise<AppSettings | undefined> {
+    const { db } = await import('./db');
+    const { eq } = await import('drizzle-orm');
+    
+    const setting = await db.query.appSettings.findFirst({
+      where: eq(appSettings.key, key),
+    });
+    
+    return setting;
+  }
+
+  async getSettingsByCategory(category: string): Promise<AppSettings[]> {
+    const { db } = await import('./db');
+    const { eq } = await import('drizzle-orm');
+    
+    const settings = await db.query.appSettings.findMany({
+      where: eq(appSettings.category, category),
+    });
+    
+    return settings;
+  }
+
+  async upsertSetting(setting: InsertAppSettings): Promise<AppSettings> {
+    const { db } = await import('./db');
+    const { eq } = await import('drizzle-orm');
+    
+    // Check if setting exists
+    const existingSetting = await db.query.appSettings.findFirst({
+      where: eq(appSettings.key, setting.key),
+    });
+    
+    if (existingSetting) {
+      // Update existing setting
+      const [updated] = await db
+        .update(appSettings)
+        .set({ 
+          value: setting.value,
+          category: setting.category,
+          updatedAt: new Date()
+        })
+        .where(eq(appSettings.key, setting.key))
+        .returning();
+      
+      return updated;
+    } else {
+      // Create new setting
+      const [newSetting] = await db
+        .insert(appSettings)
+        .values({
+          ...setting,
+          id: randomUUID(),
+        })
+        .returning();
+      
+      return newSetting;
+    }
+  }
+
+  async deleteSetting(id: string): Promise<boolean> {
+    const { db } = await import('./db');
+    const { eq } = await import('drizzle-orm');
+    
+    const result = await db
+      .delete(appSettings)
+      .where(eq(appSettings.id, id))
       .returning();
     
     return result.length > 0;
