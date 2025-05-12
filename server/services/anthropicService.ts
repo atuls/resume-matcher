@@ -298,7 +298,19 @@ export async function analyzeResumeWithClaude(
       // Try to parse the JSON
       let result;
       try {
-        result = JSON.parse(jsonText);
+        // Attempt to normalize any potentially problematic values before parsing
+        const normalizedText = jsonText
+          // Fix unquoted values like partially, fully, etc.
+          .replace(/"matched"\s*:\s*partially/g, '"matched": "partial"')
+          .replace(/"matched"\s*:\s*fully/g, '"matched": "full"')
+          .replace(/"matched"\s*:\s*no/g, '"matched": "none"')
+          // Fix capitalized boolean values
+          .replace(/:\s*True/g, ': true')
+          .replace(/:\s*False/g, ': false')
+          // Fix missing quotes for string values between braces
+          .replace(/:\s*([a-zA-Z][a-zA-Z0-9_]*)\s*([,}])/g, ': "$1"$2');
+        
+        result = JSON.parse(normalizedText);
       } catch (error) {
         const jsonError = error as Error;
         console.error("Initial JSON parsing failed:", jsonError.message);
@@ -316,9 +328,19 @@ export async function analyzeResumeWithClaude(
             if (braceCount === 0 && startIdx !== -1) {
               // Found a potential JSON object
               try {
-                const jsonCandidate = text.substring(startIdx, i + 1);
+                let jsonCandidate = text.substring(startIdx, i + 1);
+                
+                // Apply the same normalization as in the first attempt
+                jsonCandidate = jsonCandidate
+                  .replace(/"matched"\s*:\s*partially/g, '"matched": "partial"')
+                  .replace(/"matched"\s*:\s*fully/g, '"matched": "full"')
+                  .replace(/"matched"\s*:\s*no/g, '"matched": "none"')
+                  .replace(/:\s*True/g, ': true')
+                  .replace(/:\s*False/g, ': false')
+                  .replace(/:\s*([a-zA-Z][a-zA-Z0-9_]*)\s*([,}])/g, ': "$1"$2');
+                
                 result = JSON.parse(jsonCandidate);
-                console.log("Found valid JSON using brace balancing");
+                console.log("Found valid JSON using brace balancing and normalization");
                 break;
               } catch (e) {
                 // Continue searching

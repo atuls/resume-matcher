@@ -155,8 +155,14 @@ export async function analyzeResume(
     try {
       const modelSetting = await storage.getSetting('analysis_default_model');
       if (modelSetting?.value) {
-        model = modelSetting.value;
-        console.log(`Using custom model from settings: ${model}`);
+        // Only use the model from settings if it's a valid OpenAI model
+        // Avoid using Claude models with OpenAI
+        if (!modelSetting.value.includes('claude')) {
+          model = modelSetting.value;
+          console.log(`Using custom model from settings: ${model}`);
+        } else {
+          console.log(`Ignoring Claude model for OpenAI: ${modelSetting.value}, using default ${model}`);
+        }
       }
     } catch (error) {
       console.log("Error fetching model setting:", error);
