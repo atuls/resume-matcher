@@ -83,7 +83,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           current: 1,
           total: 10, 
           progress: 10,
-          message: 'Test websocket message' 
+          resumeId: 'test-resume-id',
+          candidateName: 'John Test Candidate',
+          status: 'processing',
+          message: 'Processing candidate: John Test Candidate (1 of 10)' 
         };
         console.log(`Sending test event to client ${clientId}:`, testEvent);
         ws.send(JSON.stringify(testEvent));

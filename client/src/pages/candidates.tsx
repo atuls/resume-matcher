@@ -73,6 +73,9 @@ export default function CandidatesPage() {
     processedResumes: number;
     message: string;
     lastUpdated?: number;
+    currentResumeId?: string;
+    currentCandidateName?: string;
+    status?: string;
   }>({
     inProgress: false,
     totalResumes: 0,
