@@ -17,6 +17,9 @@ An AI-powered resume analysis platform that efficiently matches candidate resume
 - **Advanced Debugging**: Debug Info tab shows raw AI responses for troubleshooting
 - **On-demand Resume Analysis**: Analyze resumes only when needed to reduce API usage
 - **Performance Optimization**: Efficient handling of large candidate pools with optimized API usage
+- **Flexible AI Response Parsing**: Robust extraction of data from various LLM response formats
+- **Single-Prompt Analysis**: Unified prompt system for comprehensive resume evaluation
+- **Score Normalization**: Automatic conversion of different scoring scales (0-1, 0-10, 0-100)
 
 ## Tech Stack
 

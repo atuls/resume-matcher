@@ -4,6 +4,30 @@ All notable changes to the Resume Analyzer project will be documented in this fi
 
 ## [Unreleased]
 
+## [1.5.0] - 2024-05-12
+
+### Added
+- Enhanced AI response parser with support for multiple LLM response formats
+- Single-prompt analysis approach for comprehensive resume evaluation
+- Automatic score normalization between different scales (0-1, 0-10, 0-100)
+- Expanded pattern matching for skills and requirements extraction
+- Structured extraction of sections from AI responses for UI display
+- Support for snake_case, camelCase, and capitalized field names in AI responses
+
+### Changed
+- Improved Claude response parsing with more flexible field extraction
+- Reorganized AI service architecture to separate concerns (LLM calls vs parsing)
+- Enhanced error handling for JSON parsing with graceful fallbacks
+- More detailed logging of extracted data for debugging
+- Optimized data extraction from varied Claude response formats
+
+### Fixed
+- Fixed inconsistent score extraction from different LLM formats
+- Resolved issues where skills weren't properly extracted from nested structures
+- Fixed missing requirements extraction from alternative response formats
+- Eliminated default score of 50 when actual scores are available in responses
+- Improved candidate name extraction in batch processing
+
 ## [1.4.0] - 2024-05-12
 
 ### Added

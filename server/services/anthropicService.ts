@@ -399,7 +399,17 @@ export async function analyzeResumeWithClaude(
       }
       
       // Store the original text and parsed JSON for debugging
-      const rawResponse = {
+      // Define type with extractedSections to fix LSP error
+      const rawResponse: {
+        rawText: string;
+        parsedJson: any;
+        extractedSections?: {
+          redFlags: string;
+          summary: string;
+          skills: string;
+          workHistory: string;
+        }
+      } = {
         rawText: text,
         parsedJson: result
       };
