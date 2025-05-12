@@ -413,58 +413,110 @@ export default function ResumeProfilePage() {
                 </TabsList>
               </CardHeader>
               <CardContent>
-                <TabsContent value="overview">
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="font-medium text-lg">Summary</h3>
-                      <p className="text-gray-700 mt-2">{
-                        resume.extractedText.slice(0, 250).trim() + "..."
-                      }</p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-medium text-lg">Top Skills</h3>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {isAnalysisLoading || analysisLoading ? (
-                          <div className="flex gap-2">
-                            {[1, 2, 3, 4, 5].map(i => (
-                              <div key={i} className="h-8 w-20 bg-gray-200 animate-pulse rounded-full"></div>
-                            ))}
-                          </div>
-                        ) : analysis?.skills?.length ? (
-                          // Display skills from analysis if available
-                          (analysis?.skills || []).slice(0, 7).map((skill) => (
-                            <span key={skill} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
-                              {skill}
-                            </span>
-                          ))
-                        ) : selectedJobId && analysis?.analysis?.skills ? (
-                          // Display skills from job match analysis if available
-                          (analysis?.analysis?.skills || []).slice(0, 7).map((skill) => (
-                            <span key={skill} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
-                              {skill}
-                            </span>
-                          ))
-                        ) : (
-                          // Fallback to dummy skills
-                          ['JavaScript', 'React', 'TypeScript', 'Node.js', 'Express', 'SQL', 'UI/UX'].map((skill) => (
-                            <span key={skill} className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm">
-                              {skill}
-                            </span>
-                          ))
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="font-medium text-lg">Education</h3>
-                      <div className="mt-2 border-l-2 border-gray-200 pl-4">
-                        <div className="mb-2">
-                          <p className="font-medium">Bachelor of Science in Computer Science</p>
-                          <p className="text-sm text-gray-600">University of Technology</p>
-                          <p className="text-sm text-gray-500">2015 - 2019</p>
+                <TabsContent value="match-analysis">
+                  <div className="space-y-6">
+                    {/* Job match score section */}
+                    <div className="bg-gray-50 p-4 rounded-md border">
+                      <div className="flex justify-between items-center mb-3">
+                        <h3 className="font-medium text-lg">Job Match Analysis</h3>
+                        <div className="flex items-center">
+                          {selectedJobId && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="gap-1 mr-2"
+                              onClick={() => {
+                                setForceRerun(true);
+                                setAnalysisLoading(true);
+                                refetchAnalysis()
+                                  .then(() => {
+                                    setForceRerun(false);
+                                    toast({
+                                      title: "Analysis updated",
+                                      description: "Resume analysis has been refreshed.",
+                                    });
+                                  })
+                                  .catch((error) => {
+                                    toast({
+                                      title: "Analysis failed",
+                                      description: error instanceof Error ? error.message : "An unexpected error occurred",
+                                      variant: "destructive",
+                                    });
+                                  })
+                                  .finally(() => {
+                                    setAnalysisLoading(false);
+                                  });
+                              }}
+                              disabled={analysisLoading || isAnalysisLoading}
+                            >
+                              <RefreshCw className="h-4 w-4" />
+                              Force Rerun Analysis
+                            </Button>
+                          )}
                         </div>
                       </div>
+                      
+                      {!selectedJobId ? (
+                        <div className="text-center py-6 space-y-3">
+                          <div className="mx-auto w-16 h-16 flex items-center justify-center rounded-full bg-gray-100">
+                            <Briefcase className="h-8 w-8 text-gray-400" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-700">Select a job to analyze this resume against</p>
+                            <p className="text-sm text-gray-500 mt-1">Choose a job description to see how this candidate matches</p>
+                          </div>
+                          <MatchJobDialog resumeIds={[resumeId!]} onMatchComplete={() => {
+                            refetchAnalysis();
+                          }} />
+                        </div>
+                      ) : isAnalysisLoading || analysisLoading ? (
+                        <div className="py-8 text-center">
+                          <div className="flex flex-col items-center gap-2">
+                            <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+                            <p className="text-sm font-medium">Analyzing resume against job requirements...</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="mb-4">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-sm font-medium">Match Score</span>
+                              <span className="font-bold text-lg">{resumeScore?.score || analysis?.analysis?.score || 0}%</span>
+                            </div>
+                            <Progress value={resumeScore?.score || analysis?.analysis?.score || 0} className="h-3" />
+                            <p className="text-xs text-gray-500 mt-1">
+                              Matched {resumeScore ? formatDate(resumeScore.matchedAt) : 'recently'}
+                            </p>
+                          </div>
+                          
+                          <div className="border-t pt-3">
+                            <h4 className="text-sm font-medium mb-2">Matched Requirements</h4>
+                            <div className="space-y-2">
+                              {analysis?.analysis?.matchedRequirements ? (
+                                analysis.analysis.matchedRequirements.map((req) => (
+                                  <div key={req.requirement} className="flex items-center justify-between text-sm">
+                                    <div className="flex items-center">
+                                      {req.matched ? (
+                                        <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
+                                      ) : (
+                                        <XCircle className="h-4 w-4 mr-2 text-red-500" />
+                                      )}
+                                      <span className={req.matched ? "text-gray-900" : "text-gray-500"}>
+                                        {req.requirement}
+                                      </span>
+                                    </div>
+                                    <span className="text-xs font-medium bg-gray-100 px-2 py-1 rounded">
+                                      {Math.round(req.confidence * 100)}%
+                                    </span>
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-gray-500 text-sm italic">No requirement matching data available</p>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </TabsContent>
