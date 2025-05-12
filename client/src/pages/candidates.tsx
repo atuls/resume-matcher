@@ -36,10 +36,15 @@ import { formatDate, formatFileSize } from '@/lib/utils';
 export default function CandidatesPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const [, params] = useRoute('/candidates/:jobId?');
-  const jobId = params?.jobId;
+  const [candidatesMatch, candidatesParams] = useRoute('/candidates/:jobId?');
+  const [jobsMatch, jobsParams] = useRoute('/jobs/:id/candidates');
   
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(jobId);
+  // Get jobId from either route pattern
+  const jobId = jobsParams?.id || candidatesParams?.jobId;
+  
+  // Initialize with jobId from URL if available
+  const initialJobId = typeof jobId === 'string' ? jobId : null;
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(initialJobId);
   const [showUploader, setShowUploader] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [resumeScores, setResumeScores] = useState<{[resumeId: string]: { score: number, matchedAt: Date }}>({});
@@ -122,7 +127,15 @@ export default function CandidatesPage() {
       setLocation('/candidates');
     } else {
       setSelectedJobId(value);
-      setLocation(`/candidates/${value}`);
+      
+      // Maintain the current URL structure pattern
+      if (jobsMatch) {
+        // If we're already on a /jobs/:id/candidates route, stay with that pattern
+        setLocation(`/jobs/${value}/candidates`);
+      } else {
+        // Otherwise use the /candidates/:id pattern
+        setLocation(`/candidates/${value}`);
+      }
     }
   };
 
