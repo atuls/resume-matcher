@@ -72,11 +72,13 @@ export default function CandidatesPage() {
     totalResumes: number;
     processedResumes: number;
     message: string;
+    lastUpdated?: number;
   }>({
     inProgress: false,
     totalResumes: 0,
     processedResumes: 0,
-    message: ''
+    message: '',
+    lastUpdated: Date.now()
   });
   
   // Function to analyze a specific resume on demand
@@ -151,59 +153,112 @@ export default function CandidatesPage() {
       // Handle batch analysis events
       if (event.type === 'batchAnalysisStart') {
         console.log('BATCH ANALYSIS STARTED:', event);
-        setBatchAnalysisStatus({
+        
+        const newStatus = {
           inProgress: true,
           totalResumes: event.total || 0,
           processedResumes: 0,
-          message: event.message || 'Starting analysis...'
-        });
+          message: event.message || 'Starting analysis...',
+          lastUpdated: Date.now()
+        };
         
-        // Force React to update right away
-        setTimeout(() => {
-          console.log('Current batch status after start:', batchAnalysisStatus);
-        }, 0);
+        console.log('Setting batch status to:', newStatus);
+        setBatchAnalysisStatus(newStatus);
       } 
       else if (event.type === 'batchAnalysisProgress') {
-        console.log('BATCH ANALYSIS PROGRESS:', event);
-        setBatchAnalysisStatus(prev => ({
-          inProgress: true,
-          totalResumes: event.total || prev.totalResumes,
-          processedResumes: event.current || 0,
-          message: event.message || `Processed ${event.current}/${event.total} resumes`
-        }));
+        console.log('BATCH ANALYSIS PROGRESS EVENT RECEIVED:', event);
         
-        // Force React to update right away
-        setTimeout(() => {
-          console.log('Current batch status after progress:', batchAnalysisStatus);
-        }, 0);
+        // Use a callback to ensure we're working with the latest state
+        setBatchAnalysisStatus(prev => {
+          const newStatus = {
+            inProgress: true,
+            totalResumes: event.total || prev.totalResumes,
+            processedResumes: event.current || 0,
+            message: event.message || `Processed ${event.current}/${event.total} resumes`,
+            lastUpdated: Date.now()
+          };
+          
+          console.log('Updating batch status from:', prev);
+          console.log('Updating batch status to:', newStatus);
+          
+          return newStatus;
+        });
       } 
       else if (event.type === 'batchAnalysisComplete') {
         console.log('BATCH ANALYSIS COMPLETE:', event);
+        
+        // First show 100% completion state right away
+        const completionStatus = {
+          inProgress: true,
+          totalResumes: event.total || 0,
+          processedResumes: event.total || 0, // Set to total to show 100%
+          message: event.message || 'Processing complete!',
+          lastUpdated: Date.now()
+        };
+        
+        console.log('Setting completion status:', completionStatus);
+        setBatchAnalysisStatus(completionStatus);
+        
         // Refresh scores when batch analysis is complete
         if (selectedJobId && resumes) {
+          console.log('Fetching updated scores after batch completion...');
           const resumeIds = resumes.map(resume => resume.id);
+          
           getResumeScores(resumeIds, selectedJobId)
             .then(scores => {
+              console.log('Updated scores received:', Object.keys(scores).length);
               setResumeScores(scores);
               
-              // Show complete state briefly before hiding
-              setBatchAnalysisStatus({
-                inProgress: true,
-                totalResumes: event.total,
-                processedResumes: event.total,
-                message: event.message
-              });
-              
+              // After short delay, show final success and hide progress
               setTimeout(() => {
                 setLoadingAnalysis(false);
                 setBatchAnalysisStatus({
                   inProgress: false,
-                  totalResumes: event.total,
-                  processedResumes: event.total,
-                  message: 'Analysis complete!'
+                  totalResumes: event.total || 0,
+                  processedResumes: event.total || 0,
+                  message: `Analysis complete! Processed ${event.total || 0} resumes`,
+                  lastUpdated: Date.now()
+                });
+                
+                // Show success toast
+                toast({
+                  title: "Batch analysis complete",
+                  description: `Successfully analyzed ${event.total || 0} resumes.`,
                 });
               }, 1500);
+            })
+            .catch(err => {
+              console.error("Error fetching scores after batch completion:", err);
+              setLoadingAnalysis(false);
+              
+              // Show error state
+              setBatchAnalysisStatus({
+                inProgress: false,
+                totalResumes: event.total || 0,
+                processedResumes: event.total || 0,
+                message: 'Analysis complete with errors',
+                lastUpdated: Date.now()
+              });
+              
+              // Show error toast
+              toast({
+                title: "Error updating scores",
+                description: "There was a problem refreshing the score data.",
+                variant: "destructive"
+              });
             });
+        } else {
+          // Just hide progress if we don't have job or resumes
+          setTimeout(() => {
+            setLoadingAnalysis(false);
+            setBatchAnalysisStatus({
+              inProgress: false, 
+              totalResumes: 0,
+              processedResumes: 0,
+              message: '',
+              lastUpdated: Date.now()
+            });
+          }, 1500);
         }
       }
     };
