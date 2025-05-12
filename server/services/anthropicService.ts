@@ -424,9 +424,26 @@ export async function analyzeResumeWithClaude(
         typeof nestedObj.overallMatch === 'number' ? nestedObj.overallMatch : 
         null;
         
-      // If score is still null or not a number between 0-100, assign a default
-      if (score === null || typeof score !== 'number' || isNaN(score) || score < 0 || score > 100) {
+      // If score is still null or not a number, assign a default
+      if (score === null || typeof score !== 'number' || isNaN(score)) {
         score = 50; // Default middle score
+      } else {
+        // Normalize the score to 0-100 range
+        // If score is between 0-1, scale it to 0-100
+        if (score > 0 && score <= 1) {
+          console.log(`Scaling score from 0-1 range to 0-100: ${score} -> ${Math.round(score * 100)}`);
+          score = Math.round(score * 100);
+        } else if (score > 0 && score < 10) {
+          // If score is on a scale of 1-10, convert to 0-100
+          console.log(`Scaling score from 0-10 range to 0-100: ${score} -> ${Math.round(score * 10)}`);
+          score = Math.round(score * 10);
+        }
+        
+        // Ensure the final score is within 0-100 range
+        score = Math.max(0, Math.min(100, score));
+        
+        // Ensure it's an integer for database storage
+        score = Math.round(score);
       }
       
       // Extract matched requirements - check multiple possible locations and formats
