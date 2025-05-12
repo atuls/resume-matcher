@@ -416,12 +416,29 @@ export async function analyzeResumeWithClaude(
         nestedObj.candidateEducation ||
         "Education extracted from resume";
         
-      // Extract score - several possible locations
+      // Extract score - several possible locations (expanded to support more formats)
       let score = 
         typeof nestedObj.score === 'number' ? nestedObj.score : 
         typeof nestedObj.matchScore === 'number' ? nestedObj.matchScore :
+        typeof nestedObj.matching_score === 'number' ? nestedObj.matching_score :
+        typeof nestedObj.match_score === 'number' ? nestedObj.match_score :
         typeof nestedObj.overallScore === 'number' ? nestedObj.overallScore :
-        typeof nestedObj.overallMatch === 'number' ? nestedObj.overallMatch : 
+        typeof nestedObj.overallMatch === 'number' ? nestedObj.overallMatch :
+        typeof nestedObj.overall_score === 'number' ? nestedObj.overall_score :
+        typeof nestedObj.overall_match === 'number' ? nestedObj.overall_match :
+        // Check for scores in candidate evaluation nested objects
+        (nestedObj.candidateEvaluation && typeof nestedObj.candidateEvaluation.matchScore === 'number') ? 
+          nestedObj.candidateEvaluation.matchScore :
+        (nestedObj.candidateEvaluation && typeof nestedObj.candidateEvaluation.overallMatch === 'number') ? 
+          nestedObj.candidateEvaluation.overallMatch :
+        (nestedObj.candidateEvaluation && typeof nestedObj.candidateEvaluation.score === 'number') ? 
+          nestedObj.candidateEvaluation.score :
+        // Check for scores in skills match nested objects  
+        (nestedObj.skillsMatch && typeof nestedObj.skillsMatch.score === 'number') ? 
+          nestedObj.skillsMatch.score :
+        // Also check the root object for these fields (outside of nestedObj)
+        typeof result.matching_score === 'number' ? result.matching_score :
+        typeof result.match_score === 'number' ? result.match_score :
         null;
         
       // If score is still null or not a number, assign a default
