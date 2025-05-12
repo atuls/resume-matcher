@@ -97,15 +97,49 @@ export async function extractSkillsWithClaude(text: string, customPrompt?: strin
         text = text.replace(/```json\s*|\s*```/g, '');
       }
       
-      const result = JSON.parse(text);
-      return result.skills || [];
+      // Try to locate and extract JSON if Claude added explanatory text
+      let jsonText = text;
+      const jsonMatch = text.match(/(\{[\s\S]*\})/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[0];
+      }
+      
+      const result = JSON.parse(jsonText);
+      
+      // Check multiple possible locations for skills
+      let skills = result.skills;
+      
+      // If not found in the main skills field, try other common locations
+      if (!skills) {
+        skills = result.Skills ||                        // Capitalized field
+                result.candidate_skills ||               // Snake case
+                result.technical_skills ||               // Technical skills specific
+                result.professionalSkills ||             // CamelCase
+                result.keySkills ||                      // Another common field name
+                (result.candidateEvaluation && result.candidateEvaluation.skills);  // Nested in evaluation
+                
+        // If skills are still not found in common fields, try to extract from an array of skill objects
+        if (!skills && result.skill_matches && Array.isArray(result.skill_matches)) {
+          skills = result.skill_matches.map((s: any) => typeof s === 'string' ? s : s.name || s.skill || s.text);
+        }
+      }
+      
+      // Normalize skills to be an array of strings
+      if (!skills) return [];
+      if (!Array.isArray(skills)) return [String(skills)]; // Convert single item to array
+      
+      // If skills array contains objects instead of strings, extract the name
+      return skills.map((skill: any) => {
+        if (typeof skill === 'string') return skill;
+        return skill.name || skill.skill || skill.text || 'Unknown skill';
+      });
     } catch (error) {
       console.error("Failed to parse skills JSON from Claude:", error);
-      throw error;
+      return []; // Return empty array instead of throwing
     }
   } catch (error) {
     console.error("Error extracting skills with Claude:", error);
-    throw new Error(`Failed to extract skills with Claude: ${(error as Error).message}`);
+    return []; // Return empty array instead of throwing
   }
 }
 
@@ -440,18 +474,28 @@ export async function analyzeResumeWithClaude(
         });
       }
       
-      // Extract experience summary
+      // Extract experience summary - check for both camelCase and snake_case variations
       const experience = 
         nestedObj.experience || 
         nestedObj.workExperience ||
+        nestedObj.work_experience ||
         nestedObj.candidateExperience ||
+        nestedObj.candidate_experience ||
+        nestedObj.workHistory ||
+        nestedObj.work_history ||
+        nestedObj.Work_History ||  // Also check capitalized version
+        result.Work_History ||     // Check directly in the result object too
         "Experience extracted from resume";
       
-      // Extract education info
+      // Extract education information - check for both camelCase and snake_case variations
       const education = 
         nestedObj.education || 
         nestedObj.educationBackground ||
+        nestedObj.education_background ||
         nestedObj.candidateEducation ||
+        nestedObj.candidate_education ||
+        nestedObj.Education ||     // Check capitalized version
+        result.Education ||        // Check directly in the result object too
         "Education extracted from resume";
         
       // Extract score - several possible locations (expanded to support more formats)
@@ -550,6 +594,21 @@ export async function analyzeResumeWithClaude(
       }
       
       console.log(`Extracted from Claude response: score=${score}, skills count=${skills.length}, requirements count=${matchedRequirements.length}`);
+      
+      // Extract additional sections from parsed JSON for full analysis display
+      // These will be included in the rawResponse for UI to display
+      const redFlags = result.Red_Flags || result.red_flags || result.redFlags || '';
+      const summary = result.Summary || result.summary || '';
+      const skills_section = result.Skills || result.skills_section || '';
+      const work_history = result.Work_History || result.work_history || '';
+      
+      // Enhance the raw response with extracted data for UI display
+      rawResponse.extractedSections = {
+        redFlags,
+        summary,
+        skills: skills_section,
+        workHistory: work_history
+      };
       
       // Return the extracted data
       return {
