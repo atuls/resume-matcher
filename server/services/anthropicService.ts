@@ -17,6 +17,21 @@ interface ToolUseBlock {
 type ContentBlock = TextBlock | ToolUseBlock;
 
 // Define the interface for our resume analysis result
+// Define interface for the AI response sections
+interface ExtractedSections {
+  redFlags: string;
+  summary: string;
+  skills: string;
+  workHistory: string;
+}
+
+// Define interface for the raw response object
+interface RawResponse {
+  rawText: string;
+  parsedJson: any;
+  extractedSections?: ExtractedSections;
+}
+
 interface ResumeAnalysisResult {
   skills: string[];
   experience: string;
@@ -27,7 +42,7 @@ interface ResumeAnalysisResult {
     matched: boolean;
     confidence: number;
   }>;
-  rawResponse?: any; // Add this to allow the rawResponse property
+  rawResponse?: RawResponse; // Now properly typed
 }
 
 // Type guard function to check if a ContentBlock is a TextBlock
@@ -399,17 +414,7 @@ export async function analyzeResumeWithClaude(
       }
       
       // Store the original text and parsed JSON for debugging
-      // Define type with extractedSections to fix LSP error
-      const rawResponse: {
-        rawText: string;
-        parsedJson: any;
-        extractedSections?: {
-          redFlags: string;
-          summary: string;
-          skills: string;
-          workHistory: string;
-        }
-      } = {
+      const rawResponse: RawResponse = {
         rawText: text,
         parsedJson: result
       };

@@ -62,6 +62,9 @@ The application requires the following environment variables:
 
 1. Job descriptions and resumes are uploaded and parsed
 2. AI extracts structured data from unstructured text
-3. Matching algorithm compares candidate skills to job requirements
-4. Results are stored in database for quick retrieval 
-5. Visual interface displays match scores and detailed breakdowns
+3. Flexible parser handles various JSON response formats from different AI models
+4. Score normalization converts different scales (0-1, 0-10, 0-100) for consistent comparison
+5. Matching algorithm compares candidate skills to job requirements
+6. Results are stored in database for quick retrieval
+7. Visual interface displays match scores and detailed breakdowns in organized tabs
+8. Additional sections (Skills, Work History, Red Flags) are extracted for comprehensive analysis
