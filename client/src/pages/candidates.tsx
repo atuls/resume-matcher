@@ -4,7 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   BarChart3, Calendar, FileText, AlertTriangle, Briefcase,
   Filter, Search, AlertCircle, Award, RotateCcw, CircleDashed,
-  ChevronRight, CircleAlert, CircleCheck, Trash2
+  ChevronRight, CircleAlert, CircleCheck, Trash2, Activity
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -203,8 +203,9 @@ export default function CandidatesPage() {
           inProgress: true,
           totalResumes: event.total || 0,
           processedResumes: event.total || 0, // Set to total to show 100%
-          message: event.message || 'Processing complete!',
-          lastUpdated: Date.now()
+          message: event.message || `Processing complete! Analyzed ${event.total} resumes.`,
+          lastUpdated: Date.now(),
+          status: 'completed'
         };
         
         console.log('Setting completion status:', completionStatus);
@@ -228,7 +229,11 @@ export default function CandidatesPage() {
                   totalResumes: event.total || 0,
                   processedResumes: event.total || 0,
                   message: `Analysis complete! Processed ${event.total || 0} resumes`,
-                  lastUpdated: Date.now()
+                  lastUpdated: Date.now(),
+                  status: 'success',
+                  // Clear the current candidate since we're done
+                  currentCandidateName: undefined,
+                  currentResumeId: undefined
                 });
                 
                 // Show success toast
@@ -248,7 +253,11 @@ export default function CandidatesPage() {
                 totalResumes: event.total || 0,
                 processedResumes: event.total || 0,
                 message: 'Analysis complete with errors',
-                lastUpdated: Date.now()
+                lastUpdated: Date.now(),
+                status: 'error',
+                // Clear the current candidate since we're done
+                currentCandidateName: undefined,
+                currentResumeId: undefined
               });
               
               // Show error toast
@@ -612,11 +621,51 @@ export default function CandidatesPage() {
                       : 0} 
                     className="h-2 mb-2"
                   />
-                  {/* Debug info */}
-                  <div className="text-xs text-slate-500 mb-1">
-                    Last update: {new Date(batchAnalysisStatus.lastUpdated || Date.now()).toLocaleTimeString()}
+                  
+                  {/* Currently processing candidate */}
+                  {batchAnalysisStatus.currentCandidateName && (
+                    <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-md p-2 mb-2">
+                      <div className="animate-pulse">
+                        <Activity className="h-4 w-4 text-blue-500" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-blue-700">
+                          Currently analyzing: <span className="font-semibold">{batchAnalysisStatus.currentCandidateName}</span>
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Success completion message */}
+                  {batchAnalysisStatus.status === 'success' && (
+                    <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-md p-2 mb-2">
+                      <CircleCheck className="h-4 w-4 text-green-500" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-green-700">
+                          Analysis completed successfully
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Error message */}
+                  {batchAnalysisStatus.status === 'error' && (
+                    <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-md p-2 mb-2">
+                      <AlertCircle className="h-4 w-4 text-red-500" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-red-700">
+                          Analysis completed with errors
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs text-slate-500">{batchAnalysisStatus.message}</p>
+                    <span className="text-xs text-slate-400">
+                      Last update: {new Date(batchAnalysisStatus.lastUpdated || Date.now()).toLocaleTimeString()}
+                    </span>
                   </div>
-                  <p className="text-xs text-slate-500">{batchAnalysisStatus.message}</p>
                 </div>
               )}
             </div>
