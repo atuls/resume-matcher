@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getResume, getResumeAnalysis, getJobDescriptions, getResumeScores, updateResumeContactedStatus } from "@/lib/api";
+import { getResume, getResumeAnalysis, getJobDescriptions, getResumeScores, updateResumeContactedStatus, getResumeRedFlagAnalysis } from "@/lib/api";
 import { 
   User, FileText, Calendar, ArrowLeft, Mail, MapPin, Phone, Award, 
   Briefcase, Code, AlertCircle, BarChart3, CheckCircle, XCircle,
@@ -27,6 +27,7 @@ export default function ResumeProfilePage() {
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [resumeScore, setResumeScore] = useState<{score: number, matchedAt: Date} | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState<boolean>(false);
+  const [redFlagLoading, setRedFlagLoading] = useState<boolean>(false);
   const [isContactedLoading, setIsContactedLoading] = useState<boolean>(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -56,6 +57,26 @@ export default function ResumeProfilePage() {
       } else {
         // If no job ID selected, just use base resume analysis
         return getResumeAnalysis(resumeId!);
+      }
+    },
+    enabled: !!resumeId,
+  });
+  
+  // Red flag analysis query
+  const redFlagQueryKey = [`/api/resumes/${resumeId}/red-flag-analysis`, selectedJobId];
+  
+  const { 
+    data: redFlagData, 
+    isLoading: isRedFlagLoading, 
+    isError: redFlagError,
+    refetch: refetchRedFlagAnalysis
+  } = useQuery({
+    queryKey: redFlagQueryKey,
+    queryFn: () => {
+      if (selectedJobId) {
+        return getResumeRedFlagAnalysis(resumeId!, selectedJobId);
+      } else {
+        return getResumeRedFlagAnalysis(resumeId!);
       }
     },
     enabled: !!resumeId,
@@ -387,6 +408,7 @@ export default function ResumeProfilePage() {
                   <TabsTrigger value="raw">Raw Text</TabsTrigger>
                   <TabsTrigger value="skills">Skills</TabsTrigger>
                   <TabsTrigger value="history">Work History</TabsTrigger>
+                  <TabsTrigger value="red-flags">Red Flags</TabsTrigger>
                   <TabsTrigger value="debug">Debug Info</TabsTrigger>
                 </TabsList>
               </CardHeader>
@@ -550,6 +572,203 @@ export default function ResumeProfilePage() {
                   ) : (
                     <div className="text-center py-8">
                       <p className="text-gray-500">No work history detected in this resume.</p>
+                    </div>
+                  )}
+                </TabsContent>
+                
+                {/* Red Flags tab to show candidate potential issues */}
+                <TabsContent value="red-flags">
+                  {isRedFlagLoading || redFlagLoading ? (
+                    <div className="flex justify-center items-center h-36">
+                      <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full"></div>
+                      <span className="ml-3 text-sm">Analyzing candidate profile...</span>
+                    </div>
+                  ) : redFlagError ? (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Failed to load red flag analysis. Please try again later.
+                      </AlertDescription>
+                    </Alert>
+                  ) : redFlagData ? (
+                    <div className="space-y-6">
+                      {/* Overall summary */}
+                      <div className="space-y-3">
+                        <h3 className="text-lg font-medium flex items-center">
+                          <AlertTriangle className="h-5 w-5 mr-2 text-amber-500" />
+                          Candidate Overview
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div className="bg-gray-50 p-3 rounded-lg">
+                            <div className="text-sm text-gray-500">Current Employment</div>
+                            <div className="font-medium flex items-center">
+                              {redFlagData.analysis.isCurrentlyEmployed ? (
+                                <>
+                                  <CheckCircle className="h-4 w-4 mr-1.5 text-green-500" />
+                                  Currently Employed
+                                </>
+                              ) : (
+                                <>
+                                  <XCircle className="h-4 w-4 mr-1.5 text-gray-400" />
+                                  Not Employed
+                                </>
+                              )}
+                            </div>
+                            {redFlagData.analysis.currentJobPosition && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                {redFlagData.analysis.currentJobPosition}
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="bg-gray-50 p-3 rounded-lg">
+                            <div className="text-sm text-gray-500">Avg. Job Tenure</div>
+                            <div className="font-medium flex items-center">
+                              <Briefcase className="h-4 w-4 mr-1.5 text-gray-500" />
+                              {redFlagData.analysis.averageTenureMonths} months
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {redFlagData.analysis.averageTenureMonths < 12 ? (
+                                "Short average tenure"
+                              ) : redFlagData.analysis.averageTenureMonths < 24 ? (
+                                "Moderate average tenure"
+                              ) : (
+                                "Good average tenure"
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="bg-gray-50 p-3 rounded-lg">
+                            <div className="text-sm text-gray-500">Job Stability</div>
+                            <div className="font-medium flex items-center">
+                              {redFlagData.analysis.hasJobHoppingHistory ? (
+                                <>
+                                  <AlertCircle className="h-4 w-4 mr-1.5 text-amber-500" />
+                                  Job Hopping Detected
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle className="h-4 w-4 mr-1.5 text-green-500" />
+                                  Stable Job History
+                                </>
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {redFlagData.analysis.hasContractRoles ? 
+                                "Has held contract roles" : 
+                                "No contract roles detected"}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Recent roles section */}
+                      {redFlagData.analysis.recentRoles && redFlagData.analysis.recentRoles.length > 0 && (
+                        <div className="space-y-3">
+                          <h3 className="text-lg font-medium flex items-center">
+                            <Briefcase className="h-5 w-5 mr-2 text-gray-500" />
+                            Recent Positions
+                          </h3>
+                          <div className="space-y-2">
+                            {redFlagData.analysis.recentRoles.map((role, index) => (
+                              <div key={index} className="border rounded-lg p-3">
+                                <div className="flex justify-between">
+                                  <div className="font-medium">{role.title}</div>
+                                  <div className="text-sm text-gray-500">
+                                    {role.durationMonths} months
+                                  </div>
+                                </div>
+                                <div className="text-sm flex justify-between">
+                                  <div className="text-gray-600">{role.company}</div>
+                                  {role.isContract && (
+                                    <Badge variant="outline" className="text-xs">Contract</Badge>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Red flags section */}
+                      {redFlagData.analysis.redFlags && redFlagData.analysis.redFlags.length > 0 && (
+                        <div className="space-y-3">
+                          <h3 className="text-lg font-medium flex items-center">
+                            <AlertTriangle className="h-5 w-5 mr-2 text-amber-500" />
+                            Potential Concerns
+                          </h3>
+                          <div className="space-y-2">
+                            {redFlagData.analysis.redFlags.map((flag, index) => (
+                              <Alert key={index} variant="outline" className="border-amber-200 bg-amber-50">
+                                <AlertCircle className="h-4 w-4 text-amber-500" />
+                                <AlertDescription className="text-amber-800">
+                                  {flag}
+                                </AlertDescription>
+                              </Alert>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Highlights section */}
+                      {redFlagData.analysis.highlights && redFlagData.analysis.highlights.length > 0 && (
+                        <div className="space-y-3">
+                          <h3 className="text-lg font-medium flex items-center">
+                            <Sparkles className="h-5 w-5 mr-2 text-blue-500" />
+                            Candidate Highlights
+                          </h3>
+                          <div className="space-y-2">
+                            {redFlagData.analysis.highlights.map((highlight, index) => (
+                              <Alert key={index} variant="outline" className="border-blue-200 bg-blue-50">
+                                <CheckCircle className="h-4 w-4 text-blue-500" />
+                                <AlertDescription className="text-blue-800">
+                                  {highlight}
+                                </AlertDescription>
+                              </Alert>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-gray-500">
+                      <AlertCircle className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                      <p>No analysis results available.</p>
+                      {selectedJobId && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="mt-4"
+                          onClick={() => {
+                            setRedFlagLoading(true);
+                            toast({
+                              title: "Running analysis...",
+                              description: "Analyzing candidate profile for potential red flags",
+                            });
+                            
+                            refetchRedFlagAnalysis()
+                              .then(() => {
+                                toast({
+                                  title: "Analysis complete",
+                                  description: "The red flag analysis has been successfully completed",
+                                });
+                              })
+                              .catch((error) => {
+                                toast({
+                                  title: "Analysis failed",
+                                  description: error instanceof Error ? error.message : "An unexpected error occurred",
+                                  variant: "destructive",
+                                });
+                              })
+                              .finally(() => {
+                                setRedFlagLoading(false);
+                              });
+                          }}
+                          disabled={redFlagLoading}
+                        >
+                          Run Analysis
+                        </Button>
+                      )}
                     </div>
                   )}
                 </TabsContent>
