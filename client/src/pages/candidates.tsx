@@ -138,7 +138,15 @@ export default function CandidatesPage() {
     websocketService.connect();
     
     // Handle batch analysis events
-    const handleBatchEvent = (event: BatchAnalysisEvent) => {
+    const handleBatchEvent = (event: any) => {
+      // Check if it's a batch analysis event
+      if (
+        !event.type || 
+        !['batchAnalysisStart', 'batchAnalysisProgress', 'batchAnalysisComplete', 'batchAnalysisResumeStatus'].includes(event.type)
+      ) {
+        return;
+      }
+      
       console.log('WebSocket batch analysis event:', event);
       
       if (event.type === 'batchAnalysisStart') {
@@ -187,16 +195,18 @@ export default function CandidatesPage() {
       }
     };
     
-    // Register for batch analysis events
-    websocketService.addEventListener('batchAnalysisStart', handleBatchEvent);
-    websocketService.addEventListener('batchAnalysisProgress', handleBatchEvent);
-    websocketService.addEventListener('batchAnalysisComplete', handleBatchEvent);
+    // Register for batch analysis events with type assertion
+    websocketService.addEventListener('batchAnalysisStart', handleBatchEvent as any);
+    websocketService.addEventListener('batchAnalysisProgress', handleBatchEvent as any);
+    websocketService.addEventListener('batchAnalysisComplete', handleBatchEvent as any);
+    websocketService.addEventListener('all', handleBatchEvent as any); // Listen to all events
     
     // Cleanup on unmount
     return () => {
-      websocketService.removeEventListener('batchAnalysisStart', handleBatchEvent);
-      websocketService.removeEventListener('batchAnalysisProgress', handleBatchEvent);
-      websocketService.removeEventListener('batchAnalysisComplete', handleBatchEvent);
+      websocketService.removeEventListener('batchAnalysisStart', handleBatchEvent as any);
+      websocketService.removeEventListener('batchAnalysisProgress', handleBatchEvent as any);
+      websocketService.removeEventListener('batchAnalysisComplete', handleBatchEvent as any);
+      websocketService.removeEventListener('all', handleBatchEvent as any);
     };
   }, [selectedJobId, resumes]);
   
