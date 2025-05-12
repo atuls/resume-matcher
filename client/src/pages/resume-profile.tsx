@@ -1,12 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getResume, getResumeAnalysis, getJobDescriptions, getResumeScores } from "@/lib/api";
+import { getResume, getResumeAnalysis, getJobDescriptions, getResumeScores, updateResumeContactedStatus } from "@/lib/api";
 import { 
   User, FileText, Calendar, ArrowLeft, Mail, MapPin, Phone, Award, 
   Briefcase, Code, AlertCircle, BarChart3, CheckCircle, XCircle,
-  RefreshCw
+  RefreshCw, UserCheck, Sparkles, AlertTriangle
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
@@ -15,6 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import MatchJobDialog from "@/components/resume/match-job-dialog";
 import JobConnectionManager from "@/components/candidate/job-connection-manager";
 import { useState, useEffect } from "react";
@@ -26,7 +27,9 @@ export default function ResumeProfilePage() {
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [resumeScore, setResumeScore] = useState<{score: number, matchedAt: Date} | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState<boolean>(false);
+  const [isContactedLoading, setIsContactedLoading] = useState<boolean>(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: resume, isLoading: resumeLoading, isError: resumeError } = useQuery({
     queryKey: [`/api/resumes/${resumeId}`],
@@ -82,6 +85,36 @@ export default function ResumeProfilePage() {
     
     fetchScore();
   }, [selectedJobId, resumeId]);
+
+  // Function to toggle contacted status
+  const handleContactedToggle = async (checked: boolean) => {
+    if (!resumeId) return;
+    
+    try {
+      setIsContactedLoading(true);
+      
+      // Update the status in the database
+      await updateResumeContactedStatus(resumeId, checked);
+      
+      // Invalidate the query to refresh the data
+      queryClient.invalidateQueries({ queryKey: [`/api/resumes/${resumeId}`] });
+      
+      toast({
+        title: checked ? "Marked as contacted" : "Marked as not contacted",
+        description: checked 
+          ? "Candidate has been marked as contacted in Rippling" 
+          : "Candidate has been marked as not contacted in Rippling",
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to update status",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsContactedLoading(false);
+    }
+  };
 
   const formatDate = (dateString: Date) => {
     try {
@@ -306,6 +339,23 @@ export default function ResumeProfilePage() {
                   )}
                 </div>
               )}
+              
+              <div className="border border-gray-200 rounded-lg p-3 my-3 bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <UserCheck className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm font-medium">Contacted in Rippling</span>
+                  </div>
+                  <Switch 
+                    checked={resume?.contactedInRippling || false}
+                    onCheckedChange={handleContactedToggle}
+                    disabled={isContactedLoading}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Mark this candidate as contacted in Rippling
+                </p>
+              </div>
               
               <Button className="w-full" variant="outline" >
                 <Mail className="mr-2 h-4 w-4" />
