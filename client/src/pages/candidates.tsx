@@ -65,6 +65,37 @@ export default function CandidatesPage() {
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
   const [resumeToDelete, setResumeToDelete] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [analysingResumeId, setAnalysingResumeId] = useState<string | null>(null);
+  
+  // Function to analyze a specific resume on demand
+  const handleAnalyzeResume = (resumeId: string) => {
+    if (!selectedJobId) return;
+    
+    setAnalysingResumeId(resumeId);
+    
+    getResumeRedFlagAnalysis(resumeId, selectedJobId)
+      .then(data => {
+        setResumeAnalysis(prev => ({
+          ...prev,
+          [resumeId]: data.analysis
+        }));
+        toast({
+          title: "Analysis complete",
+          description: "Resume analysis has been successfully completed."
+        });
+      })
+      .catch(err => {
+        console.error("Error analyzing resume:", err);
+        toast({
+          title: "Analysis failed",
+          description: "Failed to analyze the resume. Please try again later.",
+          variant: "destructive"
+        });
+      })
+      .finally(() => {
+        setAnalysingResumeId(null);
+      });
+  };
   
   // Fetch resumes
   const {
@@ -104,40 +135,17 @@ export default function CandidatesPage() {
           console.log("Fetched scores:", scores);
           setResumeScores(scores);
           
-          // For each resume, get red flag analysis
-          const analysisPromises = resumeIds.map(resumeId => 
-            getResumeRedFlagAnalysis(resumeId, selectedJobId)
-              .then(data => ({
-                resumeId,
-                analysis: data.analysis
-              }))
-              .catch(() => null)
-          );
-          
-          return Promise.all(analysisPromises);
-        })
-        .then(results => {
-          // Filter out null results and create a map of resume ID to analysis
-          const analysisMap = results
-            .filter(result => result !== null)
-            .reduce((map: {[resumeId: string]: any}, result: any) => {
-              if (result) {
-                map[result.resumeId] = result.analysis;
-              }
-              return map;
-            }, {});
-            
-          setResumeAnalysis(analysisMap);
+          // Don't automatically fetch red flag analysis for all resumes
+          // This was causing hundreds of API calls and rate limiting
+          setLoadingAnalysis(false);
         })
         .catch(err => {
           console.error("Error fetching resume data:", err);
           toast({
             title: "Error",
-            description: "Failed to load resume analysis data",
+            description: "Failed to load resume scores",
             variant: "destructive"
           });
-        })
-        .finally(() => {
           setLoadingAnalysis(false);
         });
     } else {
@@ -336,7 +344,11 @@ export default function CandidatesPage() {
                 </Button>
               </div>
             </div>
-          ) : null}
+          ) : (
+            <div className="mb-6">
+              <Button onClick={() => setShowUploader(true)}>Upload Resume</Button>
+            </div>
+          )}
 
           {isLoading ? (
             <div className="text-center py-8">
@@ -494,8 +506,11 @@ export default function CandidatesPage() {
                       </td>
                       <td className="px-6 py-4">
                         {selectedJobId ? (
-                          loadingAnalysis ? (
-                            <div className="h-4 w-24 bg-gray-200 animate-pulse rounded"></div>
+                          analysingResumeId === resume.id ? (
+                            <div className="flex items-center">
+                              <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full mr-2"></div>
+                              <span className="text-sm text-gray-500">Analyzing...</span>
+                            </div>
                           ) : resumeAnalysis[resume.id] ? (
                             <div className="flex items-center text-sm">
                               <Briefcase className="h-4 w-4 mr-1 text-gray-500" />
@@ -510,6 +525,7 @@ export default function CandidatesPage() {
                               variant="ghost" 
                               size="sm" 
                               className="text-xs h-7 px-2 text-primary"
+                              onClick={() => handleAnalyzeResume(resume.id)}
                             >
                               <RotateCcw className="h-3 w-3 mr-1" />
                               Analyze
@@ -524,8 +540,11 @@ export default function CandidatesPage() {
                       </td>
                       <td className="px-6 py-4">
                         {selectedJobId ? (
-                          loadingAnalysis ? (
-                            <div className="h-4 w-24 bg-gray-200 animate-pulse rounded"></div>
+                          analysingResumeId === resume.id ? (
+                            <div className="flex items-center">
+                              <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full mr-2"></div>
+                              <span className="text-sm text-gray-500">Analyzing...</span>
+                            </div>
                           ) : resumeAnalysis[resume.id]?.highlights?.length ? (
                             <div className="flex flex-col gap-1">
                               {(resumeAnalysis[resume.id].highlights || []).slice(0, 2).map((highlight, i) => (
@@ -541,8 +560,18 @@ export default function CandidatesPage() {
                                 </div>
                               )}
                             </div>
-                          ) : (
+                          ) : resumeAnalysis[resume.id] ? (
                             <div className="text-gray-400 text-sm">No highlights found</div>
+                          ) : (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-xs h-7 px-2 text-primary"
+                              onClick={() => handleAnalyzeResume(resume.id)}
+                            >
+                              <RotateCcw className="h-3 w-3 mr-1" />
+                              Analyze
+                            </Button>
                           )
                         ) : (
                           <div className="flex items-center text-gray-400">
@@ -553,8 +582,11 @@ export default function CandidatesPage() {
                       </td>
                       <td className="px-6 py-4">
                         {selectedJobId ? (
-                          loadingAnalysis ? (
-                            <div className="h-4 w-24 bg-gray-200 animate-pulse rounded"></div>
+                          analysingResumeId === resume.id ? (
+                            <div className="flex items-center">
+                              <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full mr-2"></div>
+                              <span className="text-sm text-gray-500">Analyzing...</span>
+                            </div>
                           ) : resumeAnalysis[resume.id]?.redFlags?.length ? (
                             <div className="flex flex-col gap-1">
                               {(resumeAnalysis[resume.id].redFlags || []).slice(0, 2).map((flag, i) => (
@@ -570,8 +602,18 @@ export default function CandidatesPage() {
                                 </div>
                               )}
                             </div>
-                          ) : (
+                          ) : resumeAnalysis[resume.id] ? (
                             <div className="text-gray-400 text-sm">No red flags found</div>
+                          ) : (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-xs h-7 px-2 text-primary"
+                              onClick={() => handleAnalyzeResume(resume.id)}
+                            >
+                              <RotateCcw className="h-3 w-3 mr-1" />
+                              Analyze
+                            </Button>
                           )
                         ) : (
                           <div className="flex items-center text-gray-400">
@@ -580,17 +622,15 @@ export default function CandidatesPage() {
                           </div>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-                            onClick={() => confirmDelete(resume.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-gray-500 hover:text-red-600"
+                          onClick={() => confirmDelete(resume.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -598,39 +638,20 @@ export default function CandidatesPage() {
               </table>
             </div>
           ) : (
-            <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
-              <div className="mx-auto w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                <FileText className="h-6 w-6 text-gray-400" />
+            <div className="text-center py-8 border border-dashed border-gray-300 rounded-lg bg-gray-50">
+              <div className="mx-auto w-16 h-16 flex items-center justify-center rounded-full bg-gray-100 mb-4">
+                <FileText className="h-8 w-8 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-1">No resumes found</h3>
-              <p className="text-gray-500 mb-6">Upload some resumes to get started with candidate analysis</p>
+              <p className="text-gray-500 mb-4">Upload resumes to get started with candidate analysis.</p>
               <Button onClick={() => setShowUploader(true)}>
-                Upload Resumes
+                Upload Resume
               </Button>
             </div>
           )}
-          
-          <div className="mt-6 flex justify-between items-center">
-            <div>
-              {resumes && resumes.length > 0 && (
-                <p className="text-sm text-gray-500">
-                  Showing {sortedResumes.length} of {resumes.length} resumes
-                </p>
-              )}
-            </div>
-            
-            <div className="flex-shrink-0">
-              <Button 
-                onClick={() => setShowUploader(true)}
-                className="ml-3"
-              >
-                Upload Resumes
-              </Button>
-            </div>
-          </div>
         </div>
       </div>
-      
+
       {/* Delete confirmation dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
@@ -649,7 +670,7 @@ export default function CandidatesPage() {
               onClick={() => resumeToDelete && deleteMutation.mutate(resumeToDelete)}
               disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isPending ? "Deleting..." : "Delete Resume"}
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
             </Button>
           </DialogFooter>
         </DialogContent>
