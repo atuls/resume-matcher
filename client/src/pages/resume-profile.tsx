@@ -773,35 +773,98 @@ export default function ResumeProfilePage() {
                   )}
                 </TabsContent>
                 
-                {/* Debug tab to show raw AI response */}
+                {/* Debug tab to show all raw LLM responses */}
                 <TabsContent value="debug">
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     <div className="flex justify-between items-center">
-                      <h3 className="font-medium text-lg">AI Model Debug Information</h3>
-                      <Badge variant="outline" className="ml-2">
-                        {analysis?.aiModel || 'No model info'}
+                      <h3 className="font-medium text-lg">Resume Analysis LLM Responses</h3>
+                      <Badge variant="secondary" className="ml-2">
+                        Resume ID: {resumeId}
                       </Badge>
                     </div>
                     
-                    {analysis?.rawResponse ? (
-                      <div className="rounded-md border overflow-hidden">
-                        <div className="p-4 bg-gray-50 border-b">
-                          <h4 className="font-medium">Raw AI Response</h4>
-                          <p className="text-xs text-gray-500">This is for debugging purposes only</p>
+                    {/* Skills Analysis Response */}
+                    <div className="rounded-md border overflow-hidden">
+                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                        <div>
+                          <h4 className="font-medium">Skills & Requirements Analysis</h4>
+                          <p className="text-xs text-gray-500">Resume analysis against job requirements</p>
                         </div>
-                        <pre className="p-4 overflow-auto text-xs max-h-96 bg-black text-green-400">
+                        <Badge className="bg-blue-500 text-white">
+                          {analysis?.aiModel || 'No model info'}
+                        </Badge>
+                      </div>
+                      {analysis?.rawResponse ? (
+                        <pre className="p-4 overflow-auto text-xs max-h-80 bg-black text-green-400">
                           {JSON.stringify(analysis.rawResponse, null, 2)}
                         </pre>
+                      ) : isAnalysisLoading || analysisLoading ? (
+                        <div className="flex justify-center py-8">
+                          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <p className="text-gray-500">No raw response data available. Try re-analyzing this resume.</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Red Flags Analysis Response */}
+                    <div className="rounded-md border overflow-hidden">
+                      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                        <div>
+                          <h4 className="font-medium">Red Flags & Work History Analysis</h4>
+                          <p className="text-xs text-gray-500">Algorithm-based evaluation of work patterns</p>
+                        </div>
+                        <Badge variant="secondary">Date-based Algorithm</Badge>
                       </div>
-                    ) : isAnalysisLoading || analysisLoading ? (
-                      <div className="flex justify-center py-8">
-                        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <p className="text-gray-500">No raw response data available. Try re-analyzing this resume.</p>
-                      </div>
-                    )}
+                      {redFlagData ? (
+                        <div className="space-y-4 p-4">
+                          <div>
+                            <h4 className="text-sm font-medium mb-2">Work History Extracted:</h4>
+                            <pre className="text-xs overflow-auto max-h-80 p-3 bg-gray-50 rounded-md">
+                              {JSON.stringify(redFlagData.analysis.recentRoles, null, 2)}
+                            </pre>
+                          </div>
+                          
+                          <div>
+                            <h4 className="text-sm font-medium mb-2">Analysis Results:</h4>
+                            <pre className="text-xs overflow-auto max-h-80 p-3 bg-gray-50 rounded-md">
+                              {JSON.stringify({
+                                hasJobHoppingHistory: redFlagData.analysis.hasJobHoppingHistory,
+                                hasContractRoles: redFlagData.analysis.hasContractRoles,
+                                isCurrentlyEmployed: redFlagData.analysis.isCurrentlyEmployed,
+                                averageTenureMonths: redFlagData.analysis.averageTenureMonths,
+                                redFlags: redFlagData.analysis.redFlags,
+                                highlights: redFlagData.analysis.highlights,
+                                currentJobPosition: redFlagData.analysis.currentJobPosition
+                              }, null, 2)}
+                            </pre>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <p className="text-gray-500">No red flags analysis data available.</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Request Current APIs button */}
+                    <div className="flex justify-end">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          toast({
+                            title: "Debug Info",
+                            description: "All LLM responses are now displayed in this tab.",
+                          });
+                        }}
+                      >
+                        <AlertCircle className="mr-2 h-4 w-4" />
+                        Refresh Data
+                      </Button>
+                    </div>
                   </div>
                 </TabsContent>
               </CardContent>
