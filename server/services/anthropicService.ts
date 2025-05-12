@@ -395,12 +395,50 @@ export async function analyzeResumeWithClaude(
         result.jobRequirements ||
         result;
         
-      // Extract skills - check multiple possible locations  
-      const skills = 
+      // Extract skills - check multiple possible locations and formats
+      let skills = 
+        // Check various property names that might contain skills lists
         nestedObj.skills || 
         nestedObj.candidateSkills || 
-        (nestedObj.resumeSkills && Array.isArray(nestedObj.resumeSkills) ? nestedObj.resumeSkills : null) ||
+        nestedObj.candidate_skills ||
+        nestedObj.resumeSkills ||
+        nestedObj.resume_skills ||
+        nestedObj.technical_skills ||
+        nestedObj.professionalSkills ||
+        nestedObj.professional_skills ||
+        nestedObj.keySkills ||
+        nestedObj.key_skills ||
+        // Check for skills in another common structure
+        (nestedObj.skillsMatch && nestedObj.skillsMatch.skills) ||
+        (nestedObj.skills_match && nestedObj.skills_match.skills) ||
+        // Check for skills in resume analysis section
+        (nestedObj.resumeAnalysis && nestedObj.resumeAnalysis.skills) ||
+        (nestedObj.resume_analysis && nestedObj.resume_analysis.skills) ||
+        // Also look at skillMatches arrays if they exist
+        (Array.isArray(nestedObj.skillMatches) ? nestedObj.skillMatches.map((m: any) => 
+          m.skill || m.name || m.requirement 
+        ) : null) ||
+        // Also look at skill_matches arrays for snake_case formatting
+        (Array.isArray(nestedObj.skill_matches) ? nestedObj.skill_matches.map((m: any) => 
+          m.skill || m.name || m.requirement
+        ) : null) ||
+        // Look directly in result.skills if nestedObj doesn't have it
+        result.skills ||
+        // Look for other snake_case variations
+        result.candidate_skills ||
+        result.resume_skills ||
         [];
+      
+      // Normalize skills to always be an array of strings
+      if (!Array.isArray(skills)) {
+        skills = [];
+      } else if (skills.length > 0 && typeof skills[0] !== 'string') {
+        // If skills array contains objects instead of strings, try to extract the skill names
+        skills = skills.map((skill: any) => {
+          if (typeof skill === 'string') return skill;
+          return skill.name || skill.skill || skill.text || 'Unknown skill';
+        });
+      }
       
       // Extract experience summary
       const experience = 
@@ -470,7 +508,36 @@ export async function analyzeResumeWithClaude(
           requirement: req.requirement || req.name || req.text || "Requirement",
           matched: req.matched || req.isMatched || req.match === 'full' || req.match === true,
           confidence: typeof req.confidence === 'number' ? req.confidence : 0.5
-        })) : 
+        })) :
+        // Try extracting from job_requirements field (snake_case format) 
+        Array.isArray(nestedObj.job_requirements) ? nestedObj.job_requirements.map((req: any) => ({
+          requirement: req.requirement || req.name || req.text || req.skill || "Requirement",
+          matched: req.matched || req.isMatched || req.match === 'full' || req.match === true || req.present === true,
+          confidence: typeof req.confidence === 'number' ? req.confidence : (typeof req.match_percentage === 'number' ? req.match_percentage / 100 : 0.5)
+        })) :
+        // Try extracting from "matched_requirements" (another common format)
+        Array.isArray(nestedObj.matched_requirements) ? nestedObj.matched_requirements.map((req: any) => ({
+          requirement: req.requirement || req.name || req.text || "Requirement",
+          matched: true, // If it's in matched_requirements, it's matched
+          confidence: typeof req.confidence === 'number' ? req.confidence : (typeof req.score === 'number' ? req.score / 100 : 0.9)
+        })) :
+        // Try extracting from "required_skills" or "skills_match" (common in newer Claude responses)
+        Array.isArray(nestedObj.required_skills) ? nestedObj.required_skills.map((req: any) => ({
+          requirement: typeof req === 'string' ? req : (req.skill || req.name || "Skill requirement"),
+          matched: typeof req === 'string' ? true : (req.matched || req.present || req.has || true),
+          confidence: typeof req === 'string' ? 0.8 : (req.confidence || req.score || 0.8)
+        })) :
+        Array.isArray(nestedObj.skills_match) ? nestedObj.skills_match.map((req: any) => ({
+          requirement: typeof req === 'string' ? req : (req.skill || req.name || "Skill match"),
+          matched: typeof req === 'string' ? true : (req.matched || req.present || true),
+          confidence: typeof req === 'string' ? 0.8 : (req.confidence || req.score || 0.8)
+        })) :
+        // Try searching for requirements in the claude response summary (fallback approach)
+        (nestedObj.summary || nestedObj.Summary) ? [{
+          requirement: "Job requirements from summary",
+          matched: true,
+          confidence: 0.7
+        }] :
         [];
       
       // If we still don't have requirements, create a default entry
