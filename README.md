@@ -15,6 +15,8 @@ An AI-powered resume analysis platform that efficiently matches candidate resume
 - **Multi-model AI Support**: Choose between OpenAI GPT or Anthropic Claude for analysis
 - **Customizable Analysis Prompts**: Configure how AI models analyze resumes via settings
 - **Advanced Debugging**: Debug Info tab shows raw AI responses for troubleshooting
+- **On-demand Resume Analysis**: Analyze resumes only when needed to reduce API usage
+- **Performance Optimization**: Efficient handling of large candidate pools with optimized API usage
 
 ## Tech Stack
 
@@ -49,7 +51,9 @@ The application requires the following environment variables:
 3. **Match Resumes with Jobs**: Use the "Match with Job" feature to score candidates
 4. **Batch Matching**: Use "Match All with Job" to process multiple resumes at once
 5. **View Matches**: Browse candidates with their match scores, sort by score to find best matches
-6. **View Details**: Click on a resume to see detailed candidate information and job-specific scores
+6. **On-demand Analysis**: Click the "Analyze" button for any candidate to view their position details, highlights, and red flags
+7. **Efficient Processing**: Analyze only the candidates you're interested in to reduce API usage and speed up processing
+8. **View Details**: Click on a resume to see detailed candidate information and job-specific scores
 
 ## Data Flow
 

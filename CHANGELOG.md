@@ -4,6 +4,25 @@ All notable changes to the Resume Analyzer project will be documented in this fi
 
 ## [Unreleased]
 
+## [1.4.0] - 2024-05-12
+
+### Added
+- On-demand resume analysis with "Analyze" buttons to reduce API usage
+- Loading indicators for analysis in progress
+- Responsive table layout with horizontal scrolling
+- Improved table column visibility for all screen sizes
+
+### Changed
+- Optimized API usage by avoiding automatic analysis of all resumes
+- Enhanced table display with fixed column widths and better spacing
+- Improved overall user experience with clear visual cues for analysis status
+
+### Fixed
+- Eliminated redundant red-flag API calls when loading resumes
+- Fixed table layout issues where columns were not properly displayed
+- Resolved API rate limit issues by implementing on-demand analysis
+- Fixed navigation issues between different URL patterns for candidate pages
+
 ## [1.3.0] - 2024-05-11
 
 ### Added
