@@ -647,11 +647,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           );
 
           // Save analysis result with raw response and model info for debugging
+          // Ensure we have a valid score for the database (not null)
+          const overallScore = 
+            analysisResult.overallScore !== undefined && 
+            analysisResult.overallScore !== null && 
+            !isNaN(analysisResult.overallScore) 
+              ? analysisResult.overallScore 
+              : 50; // Default to middle score if missing
+
           const resultData = {
             jobDescriptionId,
             resumeId,
-            overallScore: analysisResult.overallScore,
-            skillMatches: analysisResult.skillMatches,
+            overallScore: overallScore,
+            skillMatches: Array.isArray(analysisResult.skillMatches) ? analysisResult.skillMatches : [],
             rawResponse: analysisResult.rawResponse || null,
             aiModel: analysisResult.aiModel || 'unknown'
           };

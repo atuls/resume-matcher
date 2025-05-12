@@ -222,51 +222,58 @@ export async function analyzeResumeWithClaude(
     const truncatedResume = resumeText.length > 30000 ? resumeText.substring(0, 30000) + '...' : resumeText;
     const truncatedJob = jobDescription.length > 20000 ? jobDescription.substring(0, 20000) + '...' : jobDescription;
     
-    const response = await anthropic.messages.create({
-      model: 'claude-3-7-sonnet-20250219',
-      max_tokens: 2000,
-      system: `You are Claude, an AI assistant by Anthropic and you are an expert resume analyst. 
-      IMPORTANT: You must output ONLY valid JSON with no other text. Do not add any explanations, commands, or notes before or after the JSON.
-      DO NOT start your output with "GPT" or any instruction to another AI.
-      
-      Your task is to analyze a resume against a job description and determine how well the candidate matches the role.
-      Extract key requirements from the job description and check if the resume demonstrates those skills or experiences.
-      
-      Return a JSON object with these properties:
-      - skills: Array of strings listing relevant skills found in the resume
-      - experience: String summarizing relevant experience
-      - education: String summarizing education background
-      - score: Number from 0-100 indicating overall match percentage (must be a numeric value)
-      - matchedRequirements: Array of objects with:
-        - requirement: String describing the job requirement
-        - matched: Boolean indicating if the resume matches this requirement
-        - confidence: Number from 0-1 indicating confidence in the match
-      
-      Example of correct output format:
-      {
-        "skills": ["JavaScript", "React", "Node.js"],
-        "experience": "5 years of frontend development experience",
-        "education": "Bachelor's in Computer Science",
-        "score": 85,
-        "matchedRequirements": [
-          {
-            "requirement": "JavaScript proficiency",
-            "matched": true,
-            "confidence": 0.95
-          },
-          {
-            "requirement": "5+ years experience",
-            "matched": true,
-            "confidence": 0.9
-          }
-        ]
+    // Try to get custom prompt from settings for Claude
+    let systemPrompt = '';
+    let userPrompt = '';
+    try {
+      // First, try to get the Claude-specific prompt
+      const claudePromptSetting = await storage.getSetting('claude_analysis_prompt');
+      if (claudePromptSetting?.value) {
+        systemPrompt = claudePromptSetting.value;
+        console.log("Using Claude-specific prompt from settings");
+        
+        // Use a simplified user prompt when we have a custom system prompt
+        userPrompt = `JOB DESCRIPTION:\n${truncatedJob}\n\nRESUME:\n${truncatedResume}`;
+      } else {
+        // Fall back to the general analysis prompt if no Claude-specific one exists
+        const generalPromptSetting = await storage.getSetting('analysis_prompt');
+        if (generalPromptSetting?.value) {
+          // If using the general prompt, put instructions in system and content in user message
+          systemPrompt = "You are Claude. Your task is to analyze a resume against a job description and provide analysis in valid JSON format only. Do not include any explanations or notes.";
+          userPrompt = generalPromptSetting.value
+            .replace('{JOB_DESCRIPTION}', truncatedJob)
+            .replace('{RESUME}', truncatedResume);
+          console.log("Using general analysis prompt from settings for Claude");
+        } else {
+          throw new Error('No analysis prompt found in settings');
+        }
       }
-      
-      FINAL REMINDER: Reply with ONLY valid JSON. Do not include any instructions, explanations or additional text.`,
+    } catch (error) {
+      console.error("Error loading custom Claude prompt:", error);
+      throw new Error('Failed to load analysis prompt from settings');
+    }
+    
+    // Get the model from settings if available
+    let model = 'claude-3-7-sonnet-20250219'; // Default model
+    try {
+      const modelSetting = await storage.getSetting('claude_model');
+      if (modelSetting?.value && modelSetting.value.includes('claude')) {
+        model = modelSetting.value;
+        console.log(`Using custom Claude model from settings: ${model}`);
+      }
+    } catch (error) {
+      console.log("Error fetching Claude model setting, using default:", error);
+    }
+    
+    // Make the API call with the settings-based prompts
+    const response = await anthropic.messages.create({
+      model: model,
+      max_tokens: 2000,
+      system: systemPrompt,
       messages: [
         { 
           role: 'user', 
-          content: `Analyze this resume against the job description in JSON format only:\n\nJOB DESCRIPTION:\n${truncatedJob}\n\nRESUME:\n${truncatedResume}` 
+          content: userPrompt
         }
       ]
     });
