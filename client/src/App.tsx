@@ -26,6 +26,7 @@ function Router() {
       
       {/* Candidate routes */}
       <Route path="/candidates" component={CandidatesPage} />
+      <Route path="/candidates/:jobId" component={CandidatesPage} />
       <Route path="/resume/:id" component={ResumeProfilePage} />
       
       {/* Other routes */}
