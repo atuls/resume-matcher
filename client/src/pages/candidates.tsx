@@ -29,12 +29,12 @@ import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { queryClient } from '@/lib/queryClient';
 
-import ResumeUploader from '@/components/resume/upload-dialog';
+import ResumeUploader from '@/components/resume/uploader';
 import { getJobDescriptions, getResumes, getResumeScores, deleteResume } from '@/lib/api';
 import { formatDate, formatFileSize } from '@/lib/utils';
 
 export default function CandidatesPage() {
-  const toast = useToast();
+  const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [, params] = useRoute('/candidates/:jobId?');
   const jobId = params?.jobId;
