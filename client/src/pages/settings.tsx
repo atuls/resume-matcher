@@ -584,6 +584,48 @@ REMINDER: Output only valid JSON with no additional text.`,
                     )}
                   />
 
+                  <FormField
+                    control={analysisForm.control}
+                    name="workHistoryPrompt"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Work History Extraction Prompt</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            placeholder="Enter instructions for extracting work history..."
+                            className="min-h-[150px]"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Customize the prompt used to extract work history from resumes.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={analysisForm.control}
+                    name="skillsPrompt"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Skills Extraction Prompt</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            placeholder="Enter instructions for extracting skills..."
+                            className="min-h-[150px]"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Customize the prompt used to extract skills from resumes.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   <Button type="submit">Save Analysis Settings</Button>
                 </form>
               </Form>
