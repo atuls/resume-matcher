@@ -359,7 +359,7 @@ export default function CandidatesPage() {
           )}
         </div>
       </div>
-      
+
       {!selectedJobId && (
         <div className="bg-amber-50 border border-amber-200 rounded-md px-4 py-3 mb-6">
           <div className="flex">
@@ -371,14 +371,12 @@ export default function CandidatesPage() {
                 Job selection needed
               </h3>
               <div className="mt-1 text-sm text-amber-700">
-                <p>Please select a job from the dropdown menu to view full candidate analysis including match scores, current positions, highlights, and red flags.</p>
+                <p>To see additional columns (Match Score, Current Position, Highlights, and Red Flags), please select a job from the dropdown menu above.</p>
               </div>
             </div>
           </div>
         </div>
       )}
-
-      {/* Enhanced candidate evaluation section removed as requested */}
       
       {showUploader ? (
         <div className="mb-8">
