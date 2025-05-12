@@ -660,33 +660,77 @@ export default function ResumeProfilePage() {
                 </TabsContent>
                 
                 <TabsContent value="history">
-                  {analysisLoading ? (
+                  {redFlagLoading || isRedFlagLoading ? (
                     <div className="flex justify-center items-center h-36">
                       <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full"></div>
                       <span className="ml-3 text-sm">Analyzing work history...</span>
                     </div>
-                  ) : analysisError ? (
+                  ) : redFlagError ? (
                     <Alert variant="destructive">
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription>
                         Failed to analyze work history. Please try again later.
                       </AlertDescription>
                     </Alert>
-                  ) : analysis?.workHistory?.length > 0 ? (
+                  ) : redFlagData?.analysis?.recentRoles && redFlagData.analysis.recentRoles.length > 0 ? (
                     <div className="space-y-6">
-                      {(analysis?.workHistory || []).map((job, index) => (
-                        <div key={index} className="border-l-2 border-gray-200 pl-4 pb-2">
+                      {redFlagData.analysis.recentRoles.map((job, index) => (
+                        <div key={index} className="border-l-2 border-gray-200 pl-4 pb-4">
                           <div className="relative">
                             <div className={`absolute -left-6 mt-1 h-4 w-4 rounded-full ${index === 0 ? 'bg-primary' : 'bg-gray-400'}`}></div>
-                            <h4 className="font-medium">{job.title}</h4>
-                            <p className="text-sm text-gray-600">{job.company}</p>
-                            <p className="text-sm text-gray-500">{job.period}</p>
-                            <p className="mt-2 text-sm text-gray-700">
-                              {job.description}
-                            </p>
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h4 className="font-medium">{job.title}</h4>
+                                <p className="text-sm text-gray-600">{job.company}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-medium">{job.durationMonths} months</p>
+                                {job.isContract && (
+                                  <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-amber-200 text-xs">Contract</Badge>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Additional work details if available would go here */}
                           </div>
                         </div>
                       ))}
+                      
+                      {/* Work history stats */}
+                      <div className="bg-gray-50 rounded-lg p-4 mt-4">
+                        <h4 className="font-medium mb-2">Career Summary</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div className="bg-white p-3 rounded border">
+                            <div className="text-sm text-gray-500">Average Tenure</div>
+                            <div className="font-medium">
+                              {redFlagData.analysis.averageTenureMonths} months
+                            </div>
+                          </div>
+                          <div className="bg-white p-3 rounded border">
+                            <div className="text-sm text-gray-500">Employment Status</div>
+                            <div className="font-medium flex items-center">
+                              {redFlagData.analysis.isCurrentlyEmployed ? (
+                                <>
+                                  <CheckCircle className="h-4 w-4 mr-1.5 text-green-500" />
+                                  Currently Employed
+                                </>
+                              ) : (
+                                <>
+                                  <XCircle className="h-4 w-4 mr-1.5 text-gray-400" />
+                                  Not Employed
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <div className="bg-white p-3 rounded border">
+                            <div className="text-sm text-gray-500">Contract Experience</div>
+                            <div className="font-medium">
+                              {redFlagData.analysis.hasContractRoles ? "Yes" : "No"}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
                       <div className="mt-4">
                         <p className="text-sm text-gray-500 italic">
                           Note: Work history is extracted from resume content using AI and may require verification.
@@ -696,6 +740,35 @@ export default function ResumeProfilePage() {
                   ) : (
                     <div className="text-center py-8">
                       <p className="text-gray-500">No work history detected in this resume.</p>
+                      {selectedJobId && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="mt-4"
+                          onClick={() => {
+                            setRedFlagLoading(true);
+                            refetchRedFlagAnalysis()
+                              .then(() => {
+                                toast({
+                                  title: "Analysis updated",
+                                  description: "Work history analysis has been refreshed.",
+                                });
+                              })
+                              .catch((error) => {
+                                toast({
+                                  title: "Analysis failed",
+                                  description: error instanceof Error ? error.message : "An unexpected error occurred",
+                                  variant: "destructive",
+                                });
+                              })
+                              .finally(() => {
+                                setRedFlagLoading(false);
+                              });
+                          }}
+                        >
+                          Run Work History Analysis
+                        </Button>
+                      )}
                     </div>
                   )}
                 </TabsContent>
