@@ -177,11 +177,20 @@ export async function extractWorkHistoryWithClaude(text: string): Promise<Array<
         text = text.replace(/```json\s*|\s*```/g, '');
       }
       
+      // Sometimes Claude starts with explanatory text like "I'll extract..." - let's clean that up
+      // Find the first { character to identify the start of JSON
+      const jsonStartIndex = text.indexOf('{');
+      if (jsonStartIndex > 0) {
+        text = text.substring(jsonStartIndex);
+      }
+      
       const result = JSON.parse(text);
       return result.workHistory || [];
     } catch (error) {
       console.error("Failed to parse work history JSON from Claude:", error);
-      throw error;
+      // Instead of throwing error, return empty array as fallback
+      console.warn("Returning empty work history array due to JSON parsing error");
+      return [];
     }
   } catch (error) {
     console.error("Error extracting work history with Claude:", error);
