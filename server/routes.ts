@@ -265,6 +265,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Update resume's "Contacted in Rippling" status
+  app.patch("/api/resumes/:id/contacted", async (req: Request, res: Response) => {
+    try {
+      const resumeId = req.params.id;
+      const { contacted } = req.body as { contacted: boolean };
+      
+      // Validate input
+      if (typeof contacted !== 'boolean') {
+        return res.status(400).json({ message: "Invalid input: 'contacted' must be a boolean" });
+      }
+      
+      // Get current resume to ensure it exists
+      const resume = await storage.getResume(resumeId);
+      if (!resume) {
+        return res.status(404).json({ message: "Resume not found" });
+      }
+      
+      // Update the resume
+      const updatedResume = await storage.updateResume(resumeId, {
+        contactedInRippling: contacted
+      });
+      
+      res.json(updatedResume);
+    } catch (error) {
+      console.error("Error updating resume contacted status:", error);
+      res.status(500).json({ message: "Error updating resume" });
+    }
+  });
+  
   // Get resume basic analysis (skills and work history)
   app.get("/api/resumes/:id/analysis", async (req: Request, res: Response) => {
     try {

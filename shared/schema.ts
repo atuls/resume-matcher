@@ -71,6 +71,7 @@ export const resumes = pgTable("resumes", {
   fileName: text("file_name").notNull(),
   fileSize: integer("file_size").notNull(),
   fileType: text("file_type").notNull(),
+  contactedInRippling: boolean("contacted_in_rippling").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

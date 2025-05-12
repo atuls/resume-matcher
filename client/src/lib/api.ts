@@ -201,6 +201,23 @@ export async function getResume(id: string): Promise<Resume & { extractedText: s
   return response.json();
 }
 
+export async function updateResumeContactedStatus(id: string, contacted: boolean): Promise<Resume> {
+  const response = await fetch(`/api/resumes/${id}/contacted`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({ contacted }),
+  });
+  
+  if (!response.ok) {
+    throw new Error("Failed to update resume contacted status");
+  }
+  
+  return response.json();
+}
+
 export async function getResumeAnalysis(
   id: string, 
   jobDescriptionId: string,
