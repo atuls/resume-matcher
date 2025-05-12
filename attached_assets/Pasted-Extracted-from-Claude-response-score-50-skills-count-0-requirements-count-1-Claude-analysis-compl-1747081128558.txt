@@ -1,0 +1,69 @@
+Extracted from Claude response: score=50, skills count=0, requirements count=1
+Claude analysis completed in 13.479 seconds
+Claude score: 50
+Matched requirements: 1
+Using Claude for resume analysis
+Resume text length: 8733
+Job description text length: 7332
+Requirements count: 14
+Using general analysis prompt from settings for Claude
+Raw Claude response (first 100 chars): {   "jobRequirements": {     "role": "Brand Partnerships Manager (Sales Executive)",     "essentialQ
+JSON extracted using regex
+Standard fields not found, attempting to extract from nested structure
+Extracted from Claude response: score=50, skills count=0, requirements count=1
+Claude analysis completed in 13.618 seconds
+Claude score: 50
+Matched requirements: 1
+Using Claude for resume analysis
+Resume text length: 7391
+Job description text length: 7332
+Requirements count: 14
+Using general analysis prompt from settings for Claude
+Raw Claude response (first 100 chars): {   "jobRequirementsSummary": {     "role": "Brand Partnerships Manager (Sales Executive)",     "ess
+JSON extracted using regex
+Standard fields not found, attempting to extract from nested structure
+Extracted from Claude response: score=50, skills count=0, requirements count=1
+Claude analysis completed in 15.563 seconds
+Claude score: 50
+Matched requirements: 1
+Using Claude for resume analysis
+Resume text length: 2683
+Job description text length: 7332
+Requirements count: 14
+Using general analysis prompt from settings for Claude
+Raw Claude response (first 100 chars): {   "jobRequirements": {     "role": "Brand Partnerships Manager (Sales Executive)",     "essentialQ
+JSON extracted using regex
+Standard fields not found, attempting to extract from nested structure
+Extracted from Claude response: score=50, skills count=0, requirements count=1
+Claude analysis completed in 16.291 seconds
+Claude score: 50
+Matched requirements: 1
+Using Claude for resume analysis
+Resume text length: 7200
+Job description text length: 7332
+Requirements count: 14
+Using general analysis prompt from settings for Claude
+Raw Claude response (first 100 chars): {   "jobAnalysis": {     "title": "Brand Partnerships Manager (Sales Executive)",     "essentialRequ
+JSON extracted using regex
+Standard fields not found, attempting to extract from nested structure
+Extracted from Claude response: score=50, skills count=0, requirements count=1
+Claude analysis completed in 14.764 seconds
+Claude score: 50
+Matched requirements: 1
+Using Claude for resume analysis
+Resume text length: 6090
+Job description text length: 7332
+Requirements count: 14
+Using general analysis prompt from settings for Claude
+Raw Claude response (first 100 chars): {   "jobRequirements": {     "role": "Brand Partnerships Manager (Sales Executive)",     "keyRespons
+JSON extracted using regex
+Standard fields not found, attempting to extract from nested structure
+Extracted from Claude response: score=50, skills count=0, requirements count=1
+Claude analysis completed in 18.197 seconds
+Claude score: 50
+Matched requirements: 1
+Using Claude for resume analysis
+Resume text length: 6678
+Job description text length: 7332
+Requirements count: 14
+Using general analysis prompt from settings for Claude

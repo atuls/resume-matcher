@@ -170,12 +170,20 @@ export default function CandidatesPage() {
         
         // Use a callback to ensure we're working with the latest state
         setBatchAnalysisStatus(prev => {
+          // Format the message with candidate name if available
+          let progressMessage = event.message;
+          if (event.candidateName) {
+            progressMessage = `Processed ${event.current}/${event.total} resumes (Latest: ${event.candidateName})`;
+          }
+          
           const newStatus = {
             inProgress: true,
             totalResumes: event.total || prev.totalResumes,
             processedResumes: event.current || 0,
-            message: event.message || `Processed ${event.current}/${event.total} resumes`,
-            lastUpdated: Date.now()
+            message: progressMessage,
+            lastUpdated: Date.now(),
+            currentResumeId: event.resumeId,
+            currentCandidateName: event.candidateName
           };
           
           console.log('Updating batch status from:', prev);

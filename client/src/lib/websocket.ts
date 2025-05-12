@@ -5,8 +5,8 @@
 // Event types for batch analysis
 export type BatchAnalysisEvent = 
   | { type: 'batchAnalysisStart', jobId: string, total: number, message: string }
-  | { type: 'batchAnalysisProgress', jobId: string, current: number, total: number, progress: number, message: string }
-  | { type: 'batchAnalysisResumeStatus', jobId: string, resumeId: string, status: string, message: string, score?: number }
+  | { type: 'batchAnalysisProgress', jobId: string, current: number, total: number, progress: number, message: string, resumeId?: string, candidateName?: string, status?: string }
+  | { type: 'batchAnalysisResumeStatus', jobId: string, resumeId: string, status: string, message: string, score?: number, candidateName?: string }
   | { type: 'batchAnalysisComplete', jobId: string, total: number, successful: number, failed: number, message: string };
 
 export type WebSocketEvent = BatchAnalysisEvent | { type: 'info', message: string };

@@ -85,6 +85,7 @@ export async function analyzeResume(
     // First try to use Claude if available
     if (isAnthropicApiKeyAvailable()) {
       try {
+        // We don't have access to candidate name here, so just log basic info
         console.log("Using Claude for resume analysis");
         console.log("Resume text length:", resumeText.length);
         console.log("Job description text length:", jobDescription.length);
