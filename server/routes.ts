@@ -944,24 +944,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         for (let i = 0; i < resumeIds.length; i++) {
           const resumeId = resumeIds[i];
           
-          // Send progress update with more details
-          const progressEvent = {
-            type: 'batchAnalysisProgress',
-            jobId: jobDescriptionId,
-            current: i + 1,
-            total: resumeIds.length,
-            resumeId,
-            status: 'processing',
-            progress: Math.round(((i + 1) / resumeIds.length) * 100),
-            message: `Processing resume ${i+1}/${resumeIds.length}...`
-          };
-          
-          console.log('Sending progress event:', progressEvent);
-          broadcastUpdate(progressEvent);
-          
           try {
             // Get the resume
             const resume = await storage.getResume(resumeId);
+            
             if (!resume) {
               console.error(`Resume ${resumeId} not found, skipping`);
               
@@ -978,7 +964,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
               continue;
             }
             
-            console.log(`Analyzing resume ${i+1}/${resumeIds.length}: ${resumeId}`);
+            const candidateName = resume?.candidateName || 'Unknown candidate';
+            
+            // Create progress event with candidate name
+            const progressEvent = {
+              type: 'batchAnalysisProgress',
+              jobId: jobDescriptionId,
+              current: i + 1,
+              total: resumeIds.length,
+              resumeId,
+              candidateName: candidateName,
+              status: 'processing',
+              progress: Math.round(((i + 1) / resumeIds.length) * 100),
+              message: `Processing resume ${i+1}/${resumeIds.length} - ${candidateName}...`
+            };
+            
+            console.log(`Batch analysis progress: ${i+1}/${resumeIds.length} - Processing resume for ${candidateName} (${resumeId})`);
+            
+            // Send the progress update
+            broadcastUpdate(progressEvent);
+            
+            // Make sure the event is sent to all clients
+            setTimeout(() => {
+              // Re-send after a small delay in case the first broadcast didn't reach all clients
+              broadcastUpdate({
+                ...progressEvent,
+                message: `Analyzing resume for ${candidateName} (${i+1}/${resumeIds.length})...`
+              });
+            }, 100);
+            
+            console.log(`Analyzing resume ${i+1}/${resumeIds.length}: ${resumeId} (${candidateName})`);
             
             // Run job match analysis
             try {
@@ -1086,20 +1101,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           } catch (error) {
             console.error(`Error processing resume ${resumeId}:`, error);
+            
+            // Send error status update
+            broadcastUpdate({
+              type: 'batchAnalysisResumeStatus',
+              jobId: jobDescriptionId,
+              resumeId,
+              status: 'error',
+              message: `Error processing resume: ${error instanceof Error ? error.message : String(error)}`
+            });
           }
           
           // Update the completed count
           completed++;
           
+          // Get the resume again in case we need it after error handling
+          let candidateInfo = "Unknown candidate";
+          try {
+            const resumeInfo = await storage.getResume(resumeId);
+            candidateInfo = resumeInfo?.candidateName || "Unknown candidate";
+          } catch (e) {
+            // Use default name if we can't get the resume
+          }
+          
+          // Get candidate name for the log
+          const completedCandidateName = candidateInfo;
+          
+          console.log(`✅ Completed analysis ${completed}/${resumeIds.length} for ${completedCandidateName} (${resumeId})`);
+          
           // Send progress update
-          broadcastUpdate({
+          const completionEvent = {
             type: 'batchAnalysisProgress',
             jobId: jobDescriptionId,
             current: completed,
             total: resumeIds.length,
+            resumeId,
+            candidateName: completedCandidateName,
+            status: 'completed',
             progress: Math.round((completed / resumeIds.length) * 100),
-            message: `Processed ${completed}/${resumeIds.length} resumes`
-          });
+            message: `Processed ${completed}/${resumeIds.length} resumes (latest: ${completedCandidateName})`
+          };
+          
+          // Send the update
+          broadcastUpdate(completionEvent);
+          
+          // Send again after a small delay to ensure UI receives it
+          setTimeout(() => {
+            broadcastUpdate(completionEvent);
+          }, 300);
         }
         
         // Create and send completion event via WebSocket

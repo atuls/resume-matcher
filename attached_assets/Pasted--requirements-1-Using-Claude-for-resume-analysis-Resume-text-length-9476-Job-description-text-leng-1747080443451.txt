@@ -1,0 +1,66 @@
+ requirements: 1
+Using Claude for resume analysis
+Resume text length: 9476
+Job description text length: 7332
+Requirements count: 14
+Using general analysis prompt from settings for Claude
+Raw Claude response (first 100 chars): {   "jobRequirements": {     "essentialQualifications": [       "5+ years in sales or partnerships r
+JSON extracted using regex
+Standard fields not found, attempting to extract from nested structure
+Extracted from Claude response: score=50, skills count=0, requirements count=1
+Claude analysis completed in 17.844 seconds
+Claude score: 50
+Matched requirements: 1
+Using Claude for resume analysis
+Resume text length: 2184
+Job description text length: 7332
+Requirements count: 14
+Using general analysis prompt from settings for Claude
+Raw Claude response (first 100 chars): {   "jobRequirements": {     "role": "Brand Partnerships Manager (Sales Executive)",     "requiredSk
+JSON extracted using regex
+Standard fields not found, attempting to extract from nested structure
+Extracted from Claude response: score=50, skills count=0, requirements count=1
+Claude analysis completed in 10.747 seconds
+Claude score: 50
+Matched requirements: 1
+Using Claude for resume analysis
+Resume text length: 4172
+Job description text length: 7332
+Requirements count: 14
+Using general analysis prompt from settings for Claude
+Raw Claude response (first 100 chars): {   "match_score": 85,   "key_strengths": [     "7+ years of experience in sales, partnerships, and 
+JSON extracted using regex
+Standard fields not found, attempting to extract from nested structure
+Extracted from Claude response: score=50, skills count=0, requirements count=1
+Claude analysis completed in 8.348 seconds
+Claude score: 50
+Matched requirements: 1
+Using Claude for resume analysis
+Resume text length: 3365
+Job description text length: 7332
+Requirements count: 14
+Using general analysis prompt from settings for Claude
+Raw Claude response (first 100 chars): {   "jobAnalysis": {     "title": "Brand Partnerships Manager (Sales Executive)",     "keyRequiremen
+JSON extracted using regex
+Standard fields not found, attempting to extract from nested structure
+Extracted from Claude response: score=50, skills count=0, requirements count=1
+Claude analysis completed in 11.709 seconds
+Claude score: 50
+Matched requirements: 1
+Using Claude for resume analysis
+Resume text length: 5445
+Job description text length: 7332
+Requirements count: 14
+Using general analysis prompt from settings for Claude
+Raw Claude response (first 100 chars): {   "candidateEvaluation": {     "keyRequirementsMatch": {       "salesExperience": {         "requi
+JSON extracted using regex
+Standard fields not found, attempting to extract from nested structure
+Extracted from Claude response: score=50, skills count=0, requirements count=1
+Claude analysis completed in 15.229 seconds
+Claude score: 50
+Matched requirements: 1
+Using Claude for resume analysis
+Resume text length: 7754
+Job description text length: 7332
+Requirements count: 14
+Using general analysis prompt from settings for Claude
