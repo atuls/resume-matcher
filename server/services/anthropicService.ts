@@ -51,17 +51,16 @@ export function isAnthropicApiKeyAvailable(): boolean {
  * Extract skills from resume text using Anthropic Claude
  * 
  * @param text The resume text to analyze
+ * @param customPrompt Optional custom prompt to override the default
  * @returns An array of extracted skills
  */
-export async function extractSkillsWithClaude(text: string): Promise<string[]> {
+export async function extractSkillsWithClaude(text: string, customPrompt?: string): Promise<string[]> {
   try {
     // Truncate text if it's too long (Claude has context length limits)
     const truncatedText = text.length > 50000 ? text.substring(0, 50000) + '...' : text;
     
-    const response = await anthropic.messages.create({
-      model: 'claude-3-7-sonnet-20250219', 
-      max_tokens: 1000,
-      system: `You are a skilled HR professional with expertise in parsing resumes.
+    // Default system prompt if no custom prompt is provided
+    const defaultSystemPrompt = `You are a skilled HR professional with expertise in parsing resumes.
       IMPORTANT: You must output ONLY valid JSON with no other text. Do not add any explanations or notes before or after the JSON.
       
       Your task is to extract a comprehensive list of technical skills, soft skills, and qualifications from the resume.
@@ -70,7 +69,12 @@ export async function extractSkillsWithClaude(text: string): Promise<string[]> {
       Example of correct output format:
       {"skills": ["JavaScript", "React", "Node.js", "Communication", "Project Management"]}
       
-      REMINDER: Output only valid JSON with no additional text.`,
+      REMINDER: Output only valid JSON with no additional text.`;
+    
+    const response = await anthropic.messages.create({
+      model: 'claude-3-7-sonnet-20250219', 
+      max_tokens: 1000,
+      system: customPrompt || defaultSystemPrompt,
       messages: [
         { role: 'user', content: `Extract the skills from the following resume in JSON format only:\n\n${truncatedText}` }
       ]
@@ -108,9 +112,10 @@ export async function extractSkillsWithClaude(text: string): Promise<string[]> {
  * Extract work history from resume text using Anthropic Claude
  * 
  * @param text The resume text to analyze
+ * @param customPrompt Optional custom prompt to override the default
  * @returns An array of work experiences
  */
-export async function extractWorkHistoryWithClaude(text: string): Promise<Array<{
+export async function extractWorkHistoryWithClaude(text: string, customPrompt?: string): Promise<Array<{
   title: string;
   company: string;
   location?: string;
@@ -124,10 +129,8 @@ export async function extractWorkHistoryWithClaude(text: string): Promise<Array<
     // Truncate text if it's too long (Claude has context length limits)
     const truncatedText = text.length > 50000 ? text.substring(0, 50000) + '...' : text;
     
-    const response = await anthropic.messages.create({
-      model: 'claude-3-7-sonnet-20250219',
-      max_tokens: 2000,
-      system: `You are a skilled HR professional with expertise in parsing resumes.
+    // Default system prompt if no custom prompt is provided
+    const defaultSystemPrompt = `You are a skilled HR professional with expertise in parsing resumes.
       IMPORTANT: You must output ONLY valid JSON with no other text. Do not add any explanations or notes before or after the JSON.
       
       Your task is to extract the work history from this resume.
@@ -155,7 +158,12 @@ export async function extractWorkHistoryWithClaude(text: string): Promise<Array<
         }
       ]}
       
-      REMINDER: Output only valid JSON with no additional text.`,
+      REMINDER: Output only valid JSON with no additional text.`;
+    
+    const response = await anthropic.messages.create({
+      model: 'claude-3-7-sonnet-20250219',
+      max_tokens: 2000,
+      system: customPrompt || defaultSystemPrompt,
       messages: [
         { role: 'user', content: `Extract the work history from the following resume in JSON format only:\n\n${truncatedText}` }
       ]

@@ -199,6 +199,7 @@ REMINDER: Output only valid JSON with no additional text.`,
       await saveSetting('analysis_prompt', values.analysisPrompt, 'analysis');
       await saveSetting('work_history_prompt', values.workHistoryPrompt, 'analysis');
       await saveSetting('skills_prompt', values.skillsPrompt, 'analysis');
+      await saveSetting('red_flags_prompt', values.redFlagsPrompt, 'analysis');
       
       toast({
         title: "Analysis settings updated",
@@ -226,6 +227,7 @@ REMINDER: Output only valid JSON with no additional text.`,
         const analysisPrompt = await getSetting('analysis_prompt');
         const workHistoryPrompt = await getSetting('work_history_prompt');
         const skillsPrompt = await getSetting('skills_prompt');
+        const redFlagsPrompt = await getSetting('red_flags_prompt');
         
         // Update the form with saved values if they exist
         if (defaultModel?.value) {
@@ -250,6 +252,10 @@ REMINDER: Output only valid JSON with no additional text.`,
         
         if (skillsPrompt?.value) {
           analysisForm.setValue('skillsPrompt', skillsPrompt.value);
+        }
+        
+        if (redFlagsPrompt?.value) {
+          analysisForm.setValue('redFlagsPrompt', redFlagsPrompt.value);
         }
       } catch (error) {
         console.error("Error loading settings:", error);
@@ -648,6 +654,27 @@ REMINDER: Output only valid JSON with no additional text.`,
                         </FormControl>
                         <FormDescription>
                           Customize the prompt used to extract skills from resumes.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={analysisForm.control}
+                    name="redFlagsPrompt"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Red Flags Analysis Prompt</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            placeholder="Enter instructions for red flags analysis..."
+                            className="min-h-[150px]"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Customize the prompt used to identify potential red flags and highlights in resumes.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

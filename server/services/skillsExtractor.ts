@@ -33,12 +33,12 @@ export interface RedFlagAnalysis {
  * @param text The resume text to analyze
  * @returns An array of extracted skills
  */
-export async function extractSkillsFromResume(text: string): Promise<string[]> {
+export async function extractSkillsFromResume(text: string, customPrompt?: string): Promise<string[]> {
   try {
     // Try Claude first if available
     if (isAnthropicApiKeyAvailable()) {
       try {
-        return await extractSkillsWithClaude(text);
+        return await extractSkillsWithClaude(text, customPrompt);
       } catch (error) {
         console.error("Claude skills extraction failed, falling back to OpenAI:", error);
         // Continue to OpenAI if Claude fails
@@ -50,7 +50,8 @@ export async function extractSkillsFromResume(text: string): Promise<string[]> {
       return fallbackSkillsExtraction(text);
     }
     
-    const prompt = `
+    // If a custom prompt is provided, use it. Otherwise, use the default
+    const prompt = customPrompt || `
       Extract ALL technical and soft skills from the following resume. 
       Return ONLY a JSON array of strings with the skills, nothing else.
       Include programming languages, frameworks, tools, and soft skills.
@@ -92,7 +93,7 @@ export async function extractSkillsFromResume(text: string): Promise<string[]> {
  * @param text The resume text to analyze
  * @returns An array of work experiences
  */
-export async function extractWorkHistory(text: string): Promise<Array<{
+export async function extractWorkHistory(text: string, customPrompt?: string): Promise<Array<{
   title: string;
   company: string;
   period: string;
@@ -107,7 +108,7 @@ export async function extractWorkHistory(text: string): Promise<Array<{
     // Try Claude first if available
     if (isAnthropicApiKeyAvailable()) {
       try {
-        const claudeWorkHistory = await extractWorkHistoryWithClaude(text);
+        const claudeWorkHistory = await extractWorkHistoryWithClaude(text, customPrompt);
         
         // Convert Claude's format to our expected format
         return claudeWorkHistory.map(job => ({
@@ -134,7 +135,8 @@ export async function extractWorkHistory(text: string): Promise<Array<{
       return fallbackWorkExtraction(text);
     }
     
-    const prompt = `
+    // If a custom prompt is provided, use it. Otherwise, use the default
+    const prompt = customPrompt || `
       Extract ALL work experiences from the following resume.
       Return a JSON object with an array of "workHistory" items with the following properties for each:
       - title: the job title
