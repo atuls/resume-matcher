@@ -209,11 +209,13 @@ export default function CandidatesPage() {
     
     try {
       const resumeIds = resumes.map(resume => resume.id);
+      const totalResumes = resumeIds.length;
+      const batchSize = 10; // Process in smaller batches to show more granular progress
       
       setLoadingAnalysis(true);
       setBatchAnalysisStatus({
         inProgress: true,
-        totalResumes: resumeIds.length,
+        totalResumes: totalResumes,
         processedResumes: 0,
         message: 'Starting batch analysis...'
       });
@@ -242,34 +244,75 @@ export default function CandidatesPage() {
         duration: 5000
       });
       
-      // Set a timer to refresh the scores after analysis completes
+      // Update progress periodically using simulated progress
+      const updateInterval = setInterval(() => {
+        setBatchAnalysisStatus(prev => {
+          // Increment progress until we reach 90% (leave final 10% for verification)
+          const processed = Math.min(
+            prev.processedResumes + batchSize, 
+            Math.floor(totalResumes * 0.9)
+          );
+          
+          return {
+            ...prev,
+            processedResumes: processed,
+            message: processed < totalResumes * 0.9 
+              ? `Analyzing resume ${processed + 1} of ${totalResumes}...` 
+              : 'Finalizing analysis results...'
+          };
+        });
+      }, 3000);
+      
+      // Set a timer to refresh the scores and complete the progress after analysis completes
+      const estimatedTime = Math.min(resumeIds.length * 2000, 60000); // More realistic timing
+      
       setTimeout(() => {
+        clearInterval(updateInterval);
+        
         // Refresh the scores
         if (selectedJobId) {
           getResumeScores(resumeIds, selectedJobId)
             .then(scores => {
               console.log("Updated scores after batch analysis:", scores);
               setResumeScores(scores);
+              
+              // Final progress update
+              setBatchAnalysisStatus({
+                inProgress: true,
+                totalResumes: totalResumes,
+                processedResumes: totalResumes,
+                message: 'Analysis complete!'
+              });
+              
+              // Allow the progress bar to show 100% for a moment before hiding
+              setTimeout(() => {
+                setLoadingAnalysis(false);
+                setBatchAnalysisStatus({
+                  inProgress: false,
+                  totalResumes: totalResumes,
+                  processedResumes: totalResumes,
+                  message: 'Analysis complete!'
+                });
+              }, 1500);
             })
             .catch(error => {
               console.error("Error refreshing scores after batch analysis:", error);
+              setLoadingAnalysis(false);
+              setBatchAnalysisStatus({
+                inProgress: false,
+                totalResumes: 0,
+                processedResumes: 0,
+                message: 'Analysis failed'
+              });
             });
         }
-        
-        setLoadingAnalysis(false);
-        setBatchAnalysisStatus({
-          inProgress: false,
-          totalResumes: resumeIds.length,
-          processedResumes: resumeIds.length,
-          message: 'Analysis complete!'
-        });
         
         toast({
           title: 'Batch Analysis Complete',
           description: `Completed analysis of ${resumeIds.length} resumes against the selected job.`,
           duration: 5000
         });
-      }, Math.min(resumeIds.length * 5000, 60000)); // Cap at 60 seconds max wait time
+      }, estimatedTime);
       
     } catch (error) {
       console.error('Error running batch analysis:', error);
@@ -443,19 +486,38 @@ export default function CandidatesPage() {
               </div>
             </div>
           ) : (
-            <div className="mb-6 flex space-x-4">
-              <Button onClick={() => setShowUploader(true)}>Upload Resume</Button>
+            <div className="mb-6 flex flex-col space-y-4">
+              <div className="flex space-x-4">
+                <Button onClick={() => setShowUploader(true)}>Upload Resume</Button>
+                
+                {selectedJobId && resumes && resumes.length > 0 && (
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center gap-2"
+                    onClick={() => handleBatchAnalysis()}
+                    disabled={loadingAnalysis}
+                  >
+                    <RotateCcw className={`h-4 w-4 ${loadingAnalysis ? 'animate-spin' : ''}`} />
+                    {loadingAnalysis ? 'Analyzing...' : 'Analyze All Candidates'}
+                  </Button>
+                )}
+              </div>
               
-              {selectedJobId && resumes && resumes.length > 0 && (
-                <Button 
-                  variant="outline" 
-                  className="flex items-center gap-2"
-                  onClick={() => handleBatchAnalysis()}
-                  disabled={loadingAnalysis}
-                >
-                  <RotateCcw className={`h-4 w-4 ${loadingAnalysis ? 'animate-spin' : ''}`} />
-                  {loadingAnalysis ? 'Analyzing...' : 'Analyze All Candidates'}
-                </Button>
+              {/* Batch analysis progress indicator */}
+              {batchAnalysisStatus.inProgress && (
+                <div className="bg-slate-50 border border-slate-200 rounded-md p-4">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm font-medium">Batch Analysis Progress</span>
+                    <span className="text-sm text-slate-500">
+                      {batchAnalysisStatus.processedResumes} of {batchAnalysisStatus.totalResumes} resumes
+                    </span>
+                  </div>
+                  <Progress 
+                    value={(batchAnalysisStatus.processedResumes / batchAnalysisStatus.totalResumes) * 100} 
+                    className="h-2 mb-2"
+                  />
+                  <p className="text-xs text-slate-500">{batchAnalysisStatus.message}</p>
+                </div>
               )}
             </div>
           )}

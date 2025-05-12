@@ -825,10 +825,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // Run job match analysis
             try {
+              // Ensure that tags is never null before passing to analyzeResume
+              const requirementsWithTags = requirements.map(req => ({
+                requirement: req.requirement,
+                importance: req.importance,
+                tags: req.tags || [] // Convert null to empty array
+              }));
+                
               const analysisResult = await analyzeResume(
                 resume.extractedText,
                 jobDescription.description,
-                requirements
+                requirementsWithTags
               );
               
               // Store or update the analysis result
@@ -862,7 +869,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const skills = await extractSkillsFromResume(resume.extractedText);
               
               // Analyze for red flags
-              await analyzeRedFlags(workHistory, skills, jobDescription.description);
+              const redFlagAnalysis = analyzeRedFlags(workHistory, skills, jobDescription.description);
+              
+              // Log success
+              console.log(`Completed red flag analysis for resume ${resumeId}`);
             } catch (error) {
               console.error(`Error analyzing resume ${resumeId} (red flag analysis):`, error);
             }
