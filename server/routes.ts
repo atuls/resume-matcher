@@ -472,11 +472,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         } else {
           // Otherwise create a new one with raw response for debugging
+          // Ensure we have valid values for database fields
+          const overallScore = 
+            analysisResult.overallScore !== undefined && 
+            analysisResult.overallScore !== null && 
+            !isNaN(analysisResult.overallScore) 
+              ? analysisResult.overallScore 
+              : 50; // Default to middle score if missing
+          
+          const skillMatches = 
+            Array.isArray(analysisResult.skillMatches) 
+              ? analysisResult.skillMatches
+              : [];
+              
           await storage.createAnalysisResult({
             resumeId,
             jobDescriptionId,
-            overallScore: analysisResult.overallScore,
-            skillMatches: analysisResult.skillMatches,
+            overallScore: overallScore,
+            skillMatches: skillMatches,
             rawResponse: analysisResult.rawResponse || null,
             aiModel: analysisResult.aiModel || 'unknown'
           });
@@ -986,19 +999,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const existingAnalysis = await storage.getAnalysisResultForResume(resumeId, jobDescriptionId);
               
               if (existingAnalysis) {
+                // Ensure valid values when updating
+                const overallScore = 
+                  analysisResult.overallScore !== undefined && 
+                  analysisResult.overallScore !== null && 
+                  !isNaN(analysisResult.overallScore) 
+                    ? analysisResult.overallScore 
+                    : 50; // Default to middle score if missing
+                
+                const skillMatches = 
+                  Array.isArray(analysisResult.skillMatches) 
+                    ? JSON.stringify(analysisResult.skillMatches) 
+                    : JSON.stringify([]);
+                
                 await storage.updateAnalysisResult(existingAnalysis.id, {
-                  overallScore: analysisResult.overallScore,
-                  skillMatches: JSON.stringify(analysisResult.skillMatches),
-                  rawResponse: JSON.stringify(analysisResult.rawResponse),
+                  overallScore: overallScore,
+                  skillMatches: skillMatches,
+                  rawResponse: JSON.stringify(analysisResult.rawResponse || {}),
                   aiModel: analysisResult.aiModel || 'unknown'
                 });
               } else {
+                // Ensure we have valid values for database fields
+                const overallScore = 
+                  analysisResult.overallScore !== undefined && 
+                  analysisResult.overallScore !== null && 
+                  !isNaN(analysisResult.overallScore) 
+                    ? analysisResult.overallScore 
+                    : 50; // Default to middle score if missing
+                
+                const skillMatches = 
+                  Array.isArray(analysisResult.skillMatches) 
+                    ? JSON.stringify(analysisResult.skillMatches) 
+                    : JSON.stringify([]);
+                    
                 await storage.createAnalysisResult({
                   resumeId,
                   jobDescriptionId,
-                  overallScore: analysisResult.overallScore,
-                  skillMatches: JSON.stringify(analysisResult.skillMatches),
-                  rawResponse: JSON.stringify(analysisResult.rawResponse),
+                  overallScore: overallScore,
+                  skillMatches: skillMatches,
+                  rawResponse: JSON.stringify(analysisResult.rawResponse || {}),
                   aiModel: analysisResult.aiModel || 'unknown'
                 });
               }

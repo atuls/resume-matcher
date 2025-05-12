@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { storage } from '../storage';
 
 // Define interfaces for Anthropic content types
 interface TextBlock {
