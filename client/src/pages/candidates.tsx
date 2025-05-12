@@ -410,46 +410,50 @@ export default function CandidatesPage() {
                     )}
                   </div>
                 </th>
-                <th 
-                  scope="col" 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort('score')}
-                >
-                  <div className="flex items-center">
-                    <BarChart3 className="h-4 w-4 mr-1 text-primary" />
-                    Match Score
-                    {sortField === 'score' && (
-                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </div>
-                </th>
-                <th 
-                  scope="col" 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  <div className="flex items-center">
-                    <Briefcase className="h-4 w-4 mr-1 text-gray-500" />
-                    Current Position
-                  </div>
-                </th>
-                <th 
-                  scope="col" 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  <div className="flex items-center">
-                    <Award className="h-4 w-4 mr-1 text-emerald-500" />
-                    Highlights
-                  </div>
-                </th>
-                <th 
-                  scope="col" 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  <div className="flex items-center">
-                    <AlertTriangle className="h-4 w-4 mr-1 text-amber-500" />
-                    Red Flags
-                  </div>
-                </th>
+                {selectedJobId && (
+                  <>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('score')}
+                    >
+                      <div className="flex items-center">
+                        <BarChart3 className="h-4 w-4 mr-1 text-primary" />
+                        Match Score
+                        {sortField === 'score' && (
+                          <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      <div className="flex items-center">
+                        <Briefcase className="h-4 w-4 mr-1 text-gray-500" />
+                        Current Position
+                      </div>
+                    </th>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      <div className="flex items-center">
+                        <Award className="h-4 w-4 mr-1 text-emerald-500" />
+                        Highlights
+                      </div>
+                    </th>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      <div className="flex items-center">
+                        <AlertTriangle className="h-4 w-4 mr-1 text-amber-500" />
+                        Red Flags
+                      </div>
+                    </th>
+                  </>
+                )}
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
