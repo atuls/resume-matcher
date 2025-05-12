@@ -401,10 +401,10 @@ export default function ResumeProfilePage() {
 
         <div className="md:col-span-2">
           <Card>
-            <Tabs defaultValue="overview">
+            <Tabs defaultValue="match-analysis">
               <CardHeader className="pb-2">
                 <TabsList>
-                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="match-analysis">Job Match Analysis</TabsTrigger>
                   <TabsTrigger value="raw">Raw Text</TabsTrigger>
                   <TabsTrigger value="skills">Skills</TabsTrigger>
                   <TabsTrigger value="history">Work History</TabsTrigger>
