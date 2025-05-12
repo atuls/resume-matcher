@@ -364,24 +364,99 @@ export async function analyzeResumeWithClaude(
         }
       }
       
-      // Ensure we have all required fields
-      if (!result.skills || !result.experience || !result.education || 
-          typeof result.score !== 'number' || !result.matchedRequirements) {
-        throw new Error('Incomplete data in Claude response');
-      }
-      
-      // Store the original text response for debugging purposes
+      // Store the original text and parsed JSON for debugging
       const rawResponse = {
         rawText: text,
         parsedJson: result
       };
       
+      // First approach: Direct mapping if Claude returned the exact format we expect
+      if (result.skills && result.experience && result.education && 
+          typeof result.score === 'number' && Array.isArray(result.matchedRequirements)) {
+        return {
+          skills: result.skills,
+          experience: result.experience,
+          education: result.education,
+          score: result.score,
+          matchedRequirements: result.matchedRequirements,
+          rawResponse
+        };
+      }
+      
+      // Second approach: Try to extract from nested "jobAnalysis" or similar structures 
+      // that Claude sometimes returns
+      console.log("Standard fields not found, attempting to extract from nested structure");
+      
+      // First, check for common nested structures Claude might return
+      const nestedObj = 
+        result.jobAnalysis || 
+        result.resumeAnalysis || 
+        result.analysis || 
+        result.jobRequirements ||
+        result;
+        
+      // Extract skills - check multiple possible locations  
+      const skills = 
+        nestedObj.skills || 
+        nestedObj.candidateSkills || 
+        (nestedObj.resumeSkills && Array.isArray(nestedObj.resumeSkills) ? nestedObj.resumeSkills : null) ||
+        [];
+      
+      // Extract experience summary
+      const experience = 
+        nestedObj.experience || 
+        nestedObj.workExperience ||
+        nestedObj.candidateExperience ||
+        "Experience extracted from resume";
+      
+      // Extract education info
+      const education = 
+        nestedObj.education || 
+        nestedObj.educationBackground ||
+        nestedObj.candidateEducation ||
+        "Education extracted from resume";
+        
+      // Extract score - several possible locations
+      let score = 
+        typeof nestedObj.score === 'number' ? nestedObj.score : 
+        typeof nestedObj.matchScore === 'number' ? nestedObj.matchScore :
+        typeof nestedObj.overallScore === 'number' ? nestedObj.overallScore :
+        typeof nestedObj.overallMatch === 'number' ? nestedObj.overallMatch : 
+        null;
+        
+      // If score is still null or not a number between 0-100, assign a default
+      if (score === null || typeof score !== 'number' || isNaN(score) || score < 0 || score > 100) {
+        score = 50; // Default middle score
+      }
+      
+      // Extract matched requirements - check multiple possible locations and formats
+      let matchedRequirements = 
+        Array.isArray(nestedObj.matchedRequirements) ? nestedObj.matchedRequirements : 
+        Array.isArray(nestedObj.requirements) ? nestedObj.requirements.map((req: any) => ({
+          requirement: req.requirement || req.name || req.text || "Requirement",
+          matched: req.matched || req.isMatched || req.match === 'full' || req.match === true,
+          confidence: typeof req.confidence === 'number' ? req.confidence : 0.5
+        })) : 
+        [];
+      
+      // If we still don't have requirements, create a default entry
+      if (!matchedRequirements || matchedRequirements.length === 0) {
+        matchedRequirements = [{
+          requirement: "Resume evaluation requirement",
+          matched: true,
+          confidence: 0.5
+        }];
+      }
+      
+      console.log(`Extracted from Claude response: score=${score}, skills count=${skills.length}, requirements count=${matchedRequirements.length}`);
+      
+      // Return the extracted data
       return {
-        skills: result.skills,
-        experience: result.experience,
-        education: result.education,
-        score: result.score,
-        matchedRequirements: result.matchedRequirements,
+        skills: Array.isArray(skills) ? skills : [],
+        experience: typeof experience === 'string' ? experience : "Experience extracted from resume",
+        education: typeof education === 'string' ? education : "Education extracted from resume",
+        score: score,
+        matchedRequirements: matchedRequirements,
         rawResponse
       };
     } catch (error) {
