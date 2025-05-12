@@ -1,0 +1,41 @@
+6:55:15 PM [express] POST /api/job-descriptions/f17e9b1c-9e63-4ed5-9cae-a307b37c95ff/resume-scores 2…
+Using Claude for resume analysis
+Resume text length: 15605
+Job description text length: 7332
+Requirements count: 14
+Raw Claude response (first 100 chars): ```json {   "skills": [     "Brand Strategy",     "Marketing Leadership",     "Digital Marketing",  
+JSON extracted using regex
+Claude analysis completed in 12.321 seconds
+Claude score: 85
+Matched requirements: 12
+Using Claude for resume analysis
+Resume text length: 13556
+Job description text length: 7332
+Requirements count: 14
+Raw Claude response (first 100 chars): {   "skills": ["Digital Marketing", "SEO", "SEM", "Social Media Marketing", "PPC", "Google Analytics
+JSON extracted using regex
+Claude analysis completed in 9.89 seconds
+Claude score: 65
+Matched requirements: 12
+Using Claude for resume analysis
+Resume text length: 5595
+Job description text length: 7332
+Requirements count: 14
+Raw Claude response (first 100 chars): GPT, analyze the resume against this job description. Output only valid JSON without any additional 
+Initial JSON parsing failed: Unexpected token 'G', "GPT, analy"... is not valid JSON
+Failed to parse resume analysis JSON from Claude: Error: Could not extract valid JSON from Claude response: Unexpected token 'G', "GPT, analy"... is not valid JSON
+    at analyzeResumeWithClaude (/home/runner/workspace/server/services/anthropicService.ts:354:17)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async analyzeResume (/home/runner/workspace/server/services/aiService.ts:94:30)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:635:34)
+Error analyzing resume with Claude: Error: Could not extract valid JSON from Claude response: Unexpected token 'G', "GPT, analy"... is not valid JSON
+    at analyzeResumeWithClaude (/home/runner/workspace/server/services/anthropicService.ts:354:17)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async analyzeResume (/home/runner/workspace/server/services/aiService.ts:94:30)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:635:34)
+Error using Claude for resume analysis, falling back to OpenAI: Error: Failed to analyze resume with Claude: Could not extract valid JSON from Claude response: Unexpected token 'G', "GPT, analy"... is not valid JSON
+    at analyzeResumeWithClaude (/home/runner/workspace/server/services/anthropicService.ts:384:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async analyzeResume (/home/runner/workspace/server/services/aiService.ts:94:30)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:635:34)
+Falling back to OpenAI for resume analysis

@@ -225,8 +225,9 @@ export async function analyzeResumeWithClaude(
     const response = await anthropic.messages.create({
       model: 'claude-3-7-sonnet-20250219',
       max_tokens: 2000,
-      system: `You are an expert resume analyst. 
-      IMPORTANT: You must output ONLY valid JSON with no other text. Do not add any explanations or notes before or after the JSON.
+      system: `You are Claude, an AI assistant by Anthropic and you are an expert resume analyst. 
+      IMPORTANT: You must output ONLY valid JSON with no other text. Do not add any explanations, commands, or notes before or after the JSON.
+      DO NOT start your output with "GPT" or any instruction to another AI.
       
       Your task is to analyze a resume against a job description and determine how well the candidate matches the role.
       Extract key requirements from the job description and check if the resume demonstrates those skills or experiences.
@@ -235,7 +236,7 @@ export async function analyzeResumeWithClaude(
       - skills: Array of strings listing relevant skills found in the resume
       - experience: String summarizing relevant experience
       - education: String summarizing education background
-      - score: Number from 0-100 indicating overall match percentage
+      - score: Number from 0-100 indicating overall match percentage (must be a numeric value)
       - matchedRequirements: Array of objects with:
         - requirement: String describing the job requirement
         - matched: Boolean indicating if the resume matches this requirement
@@ -261,7 +262,7 @@ export async function analyzeResumeWithClaude(
         ]
       }
       
-      REMINDER: Output only valid JSON with no additional text.`,
+      FINAL REMINDER: Reply with ONLY valid JSON. Do not include any instructions, explanations or additional text.`,
       messages: [
         { 
           role: 'user', 

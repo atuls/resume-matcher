@@ -201,9 +201,34 @@ export async function analyzeResume(
     const endTime = Date.now();
     console.log(`OpenAI analysis completed in ${(endTime - startTime) / 1000} seconds`);
 
-    const result = JSON.parse(response.choices[0].message.content || '{"overallScore": 0, "skillMatches": []}');
-    console.log("OpenAI score:", result.overallScore);
-    console.log("OpenAI skill matches:", result.skillMatches?.length || 0);
+    // Parse JSON response with robust error handling and default values
+    let result;
+    try {
+      result = JSON.parse(response.choices[0].message.content || '{"overallScore": 0, "skillMatches": []}');
+      
+      // Ensure there's always a valid overallScore (this is a required field in the database)
+      if (result.overallScore === undefined || result.overallScore === null || isNaN(result.overallScore)) {
+        console.warn("OpenAI returned no score or invalid score, defaulting to 50");
+        result.overallScore = 50; // Default to middle score if missing
+      }
+      
+      // Ensure skillMatches is an array
+      if (!Array.isArray(result.skillMatches)) {
+        result.skillMatches = [];
+      }
+      
+      console.log("OpenAI score:", result.overallScore);
+      console.log("OpenAI skill matches:", result.skillMatches.length);
+    } catch (error) {
+      console.error("Failed to parse OpenAI response:", error);
+      // Provide a valid fallback with required fields
+      result = {
+        overallScore: 50,
+        skillMatches: [],
+        candidateName: "Unknown",
+        candidateTitle: "Unknown"
+      };
+    }
     
     // Store the raw response with more details for debugging
     const rawResponse = {
