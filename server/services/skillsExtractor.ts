@@ -328,13 +328,41 @@ export function analyzeRedFlags(
   // Check for contract roles
   const hasContractRoles = recentJobs.some(job => job.isContractRole === true);
   
+  // Helper function to calculate job duration for current jobs
+  const calculateJobDuration = (job: typeof recentJobs[0]): number => {
+    let durationMonths = job.durationMonths || 0;
+    
+    if (job.isCurrentJob && job.startDate && durationMonths === 0) {
+      try {
+        // Parse the start date
+        const [startYear, startMonth] = job.startDate.split('-').map(n => parseInt(n));
+        if (!isNaN(startYear) && !isNaN(startMonth)) {
+          const startDate = new Date(startYear, startMonth - 1); // Month is 0-indexed in JS Date
+          const currentDate = new Date();
+          
+          // Calculate the difference in months
+          const monthsDiff = 
+            (currentDate.getFullYear() - startDate.getFullYear()) * 12 + 
+            (currentDate.getMonth() - startDate.getMonth());
+          
+          durationMonths = Math.max(0, monthsDiff);
+        }
+      } catch (error) {
+        console.error("Error calculating current job duration:", error);
+      }
+    }
+    
+    return durationMonths;
+  };
+  
   // Calculate average tenure
   let totalMonths = 0;
   let countableJobs = 0;
   
   recentJobs.forEach(job => {
-    if (job.durationMonths) {
-      totalMonths += job.durationMonths;
+    const jobDuration = calculateJobDuration(job);
+    if (jobDuration > 0) {
+      totalMonths += jobDuration;
       countableJobs++;
     }
   });
@@ -345,12 +373,14 @@ export function analyzeRedFlags(
   const hasJobHoppingHistory = averageTenureMonths > 0 && averageTenureMonths < 12;
   
   // Build recent roles list
-  const recentRoles = recentJobs.map(job => ({
-    title: job.title,
-    company: job.company,
-    durationMonths: job.durationMonths || 0,
-    isContract: job.isContractRole || false
-  }));
+  const recentRoles = recentJobs.map(job => {
+    return {
+      title: job.title,
+      company: job.company,
+      durationMonths: calculateJobDuration(job),
+      isContract: job.isContractRole || false
+    };
+  });
   
   // Compile red flags
   const redFlags: string[] = [];
