@@ -57,6 +57,12 @@ const analysisFormSchema = z.object({
   analysisPrompt: z.string().min(10, {
     message: "Custom analysis prompt must be at least 10 characters long.",
   }),
+  workHistoryPrompt: z.string().min(10, {
+    message: "Work history prompt must be at least 10 characters long.",
+  }),
+  skillsPrompt: z.string().min(10, {
+    message: "Skills prompt must be at least 10 characters long.",
+  }),
 });
 
 export default function SettingsPage() {
@@ -95,6 +101,45 @@ export default function SettingsPage() {
       includeEvidence: true,
       scoreThreshold: 70,
       analysisPrompt: 'Analyze this resume against the job requirements. Provide detailed feedback on skills match, experience relevance, and overall fit.',
+      workHistoryPrompt: `You are a skilled HR professional with expertise in parsing resumes.
+IMPORTANT: You must output ONLY valid JSON with no other text. Do not add any explanations or notes before or after the JSON.
+
+Your task is to extract the work history from this resume.
+Return a JSON object with a single "workHistory" array containing objects with these properties:
+- title: Job title (string)
+- company: Company name (string)
+- location: Location (string, optional)
+- startDate: Start date (string, optional)
+- endDate: End date (string, optional, use "Present" for current roles)
+- description: Summary of responsibilities and achievements (string)
+- durationMonths: Estimated duration in months (number, optional)
+- isCurrentRole: Boolean indicating if this is their current role (boolean, optional)
+
+Example of correct output format:
+{"workHistory": [
+  {
+    "title": "Software Engineer",
+    "company": "Tech Company",
+    "location": "San Francisco, CA",
+    "startDate": "2020-01",
+    "endDate": "Present",
+    "description": "Developed applications using React and Node.js",
+    "durationMonths": 24,
+    "isCurrentRole": true
+  }
+]}
+
+REMINDER: Output only valid JSON with no additional text.`,
+      skillsPrompt: `You are a skilled HR professional with expertise in parsing resumes.
+IMPORTANT: You must output ONLY valid JSON with no other text. Do not add any explanations or notes before or after the JSON.
+
+Your task is to extract a comprehensive list of technical skills, soft skills, and qualifications from the resume.
+Return a JSON object with a single "skills" array containing string items.
+
+Example of correct output format:
+{"skills": ["JavaScript", "React", "Node.js", "Communication", "Project Management"]}
+
+REMINDER: Output only valid JSON with no additional text.`,
     },
   });
 
@@ -124,6 +169,8 @@ export default function SettingsPage() {
       await saveSetting('analysis_include_evidence', values.includeEvidence.toString(), 'analysis');
       await saveSetting('analysis_score_threshold', values.scoreThreshold.toString(), 'analysis');
       await saveSetting('analysis_prompt', values.analysisPrompt, 'analysis');
+      await saveSetting('work_history_prompt', values.workHistoryPrompt, 'analysis');
+      await saveSetting('skills_prompt', values.skillsPrompt, 'analysis');
       
       toast({
         title: "Analysis settings updated",
@@ -149,6 +196,8 @@ export default function SettingsPage() {
         const includeEvidence = await getSetting('analysis_include_evidence');
         const scoreThreshold = await getSetting('analysis_score_threshold');
         const analysisPrompt = await getSetting('analysis_prompt');
+        const workHistoryPrompt = await getSetting('work_history_prompt');
+        const skillsPrompt = await getSetting('skills_prompt');
         
         // Update the form with saved values if they exist
         if (defaultModel?.value) {
@@ -165,6 +214,14 @@ export default function SettingsPage() {
         
         if (analysisPrompt?.value) {
           analysisForm.setValue('analysisPrompt', analysisPrompt.value);
+        }
+        
+        if (workHistoryPrompt?.value) {
+          analysisForm.setValue('workHistoryPrompt', workHistoryPrompt.value);
+        }
+        
+        if (skillsPrompt?.value) {
+          analysisForm.setValue('skillsPrompt', skillsPrompt.value);
         }
       } catch (error) {
         console.error("Error loading settings:", error);
