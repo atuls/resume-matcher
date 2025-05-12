@@ -117,17 +117,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Helper function to broadcast updates to all connected clients
   const broadcastUpdate = (data: any) => {
-    console.log('Broadcasting update:', JSON.stringify(data).substring(0, 200));
+    // Add a timestamp to all events for debugging
+    const dataWithTimestamp = {
+      ...data,
+      serverTimestamp: Date.now()
+    };
+    
+    console.log('Broadcasting update:', JSON.stringify(dataWithTimestamp).substring(0, 200));
     let activeClients = 0;
+    let failedClients = 0;
     
     clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(data));
-        activeClients++;
+      try {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify(dataWithTimestamp));
+          activeClients++;
+        } else {
+          failedClients++;
+        }
+      } catch (err) {
+        console.error('Error sending to client:', err);
+        failedClients++;
       }
     });
     
-    console.log(`Broadcast sent to ${activeClients} active clients`);
+    console.log(`Broadcast sent to ${activeClients} active clients (${failedClients} failed)`);
+    
+    // If this is a progress event, log additional details
+    if (data.type === 'batchAnalysisProgress') {
+      console.log(`Progress update: ${data.current}/${data.total} (${data.progress}%)`);
+    }
   };
   
   // API routes
@@ -904,8 +923,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         for (let i = 0; i < resumeIds.length; i++) {
           const resumeId = resumeIds[i];
           
-          // Send progress update
-          broadcastUpdate({
+          // Send progress update with more details
+          const progressEvent = {
             type: 'batchAnalysisProgress',
             jobId: jobDescriptionId,
             current: i + 1,
@@ -914,7 +933,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             status: 'processing',
             progress: Math.round(((i + 1) / resumeIds.length) * 100),
             message: `Processing resume ${i+1}/${resumeIds.length}...`
-          });
+          };
+          
+          console.log('Sending progress event:', progressEvent);
+          broadcastUpdate(progressEvent);
           
           try {
             // Get the resume
@@ -1033,15 +1055,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        // Send completion update via WebSocket
-        broadcastUpdate({
+        // Create and send completion event via WebSocket
+        const completeEvent = {
           type: 'batchAnalysisComplete',
           jobId: jobDescriptionId,
           total: resumeIds.length,
           successful,
           failed,
           message: `Batch analysis complete. Successfully analyzed: ${successful}, Failed: ${failed}`
-        });
+        };
+        
+        console.log("Sending batch completion event:", completeEvent);
+        broadcastUpdate(completeEvent);
+        
+        // Send a final progress update to ensure UI shows 100%
+        const finalProgressEvent = {
+          type: 'batchAnalysisProgress',
+          jobId: jobDescriptionId,
+          current: resumeIds.length,
+          total: resumeIds.length,
+          progress: 100,
+          message: `Completed analysis for all ${resumeIds.length} resumes`
+        };
+        
+        // Delay the final progress update slightly to ensure proper sequencing
+        setTimeout(() => {
+          console.log('Sending final progress update:', finalProgressEvent);
+          broadcastUpdate(finalProgressEvent);
+        }, 500);
         
         console.log("Batch analysis complete");
       })();

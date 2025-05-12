@@ -596,9 +596,15 @@ export default function CandidatesPage() {
                     </span>
                   </div>
                   <Progress 
-                    value={(batchAnalysisStatus.processedResumes / batchAnalysisStatus.totalResumes) * 100} 
+                    value={batchAnalysisStatus.totalResumes > 0 
+                      ? Math.min(100, Math.max(0, (batchAnalysisStatus.processedResumes / batchAnalysisStatus.totalResumes) * 100))
+                      : 0} 
                     className="h-2 mb-2"
                   />
+                  {/* Debug info */}
+                  <div className="text-xs text-slate-500 mb-1">
+                    Last update: {new Date(batchAnalysisStatus.lastUpdated || Date.now()).toLocaleTimeString()}
+                  </div>
                   <p className="text-xs text-slate-500">{batchAnalysisStatus.message}</p>
                 </div>
               )}
