@@ -38,6 +38,7 @@ import {
   deleteResume
 } from '@/lib/api';
 import { formatDate, formatFileSize } from '@/lib/utils';
+import websocketService, { BatchAnalysisEvent } from '@/lib/websocket';
 
 export default function CandidatesPage() {
   const { toast } = useToast();
@@ -131,6 +132,74 @@ export default function CandidatesPage() {
     }
   }, [jobId]);
   
+  // Initialize WebSocket connection
+  useEffect(() => {
+    // Connect to WebSocket server
+    websocketService.connect();
+    
+    // Handle batch analysis events
+    const handleBatchEvent = (event: BatchAnalysisEvent) => {
+      console.log('WebSocket batch analysis event:', event);
+      
+      if (event.type === 'batchAnalysisStart') {
+        setBatchAnalysisStatus({
+          inProgress: true,
+          totalResumes: event.total,
+          processedResumes: 0,
+          message: event.message
+        });
+      } 
+      else if (event.type === 'batchAnalysisProgress') {
+        setBatchAnalysisStatus({
+          inProgress: true,
+          totalResumes: event.total,
+          processedResumes: event.current,
+          message: event.message
+        });
+      } 
+      else if (event.type === 'batchAnalysisComplete') {
+        // Refresh scores when batch analysis is complete
+        if (selectedJobId && resumes) {
+          const resumeIds = resumes.map(resume => resume.id);
+          getResumeScores(resumeIds, selectedJobId)
+            .then(scores => {
+              setResumeScores(scores);
+              
+              // Show complete state briefly before hiding
+              setBatchAnalysisStatus({
+                inProgress: true,
+                totalResumes: event.total,
+                processedResumes: event.total,
+                message: event.message
+              });
+              
+              setTimeout(() => {
+                setLoadingAnalysis(false);
+                setBatchAnalysisStatus({
+                  inProgress: false,
+                  totalResumes: event.total,
+                  processedResumes: event.total,
+                  message: 'Analysis complete!'
+                });
+              }, 1500);
+            });
+        }
+      }
+    };
+    
+    // Register for batch analysis events
+    websocketService.addEventListener('batchAnalysisStart', handleBatchEvent);
+    websocketService.addEventListener('batchAnalysisProgress', handleBatchEvent);
+    websocketService.addEventListener('batchAnalysisComplete', handleBatchEvent);
+    
+    // Cleanup on unmount
+    return () => {
+      websocketService.removeEventListener('batchAnalysisStart', handleBatchEvent);
+      websocketService.removeEventListener('batchAnalysisProgress', handleBatchEvent);
+      websocketService.removeEventListener('batchAnalysisComplete', handleBatchEvent);
+    };
+  }, [selectedJobId, resumes]);
+  
   // Load resume scores and analysis data when job is selected
   useEffect(() => {
     if (selectedJobId && resumes && resumes.length > 0) {
@@ -210,8 +279,8 @@ export default function CandidatesPage() {
     try {
       const resumeIds = resumes.map(resume => resume.id);
       const totalResumes = resumeIds.length;
-      const batchSize = 10; // Process in smaller batches to show more granular progress
       
+      // Set initial UI state
       setLoadingAnalysis(true);
       setBatchAnalysisStatus({
         inProgress: true,
@@ -219,6 +288,9 @@ export default function CandidatesPage() {
         processedResumes: 0,
         message: 'Starting batch analysis...'
       });
+      
+      // Ensure WebSocket is connected
+      websocketService.connect();
       
       // Call batch analysis API endpoint
       const response = await fetch('/api/analyze', {
@@ -234,7 +306,7 @@ export default function CandidatesPage() {
         throw new Error('Failed to start batch analysis');
       }
       
-      // Initial response contains all resume IDs with queued status
+      // Initial response contains queued status
       const data = await response.json();
       console.log('Batch analysis initiated:', data);
       
@@ -244,75 +316,8 @@ export default function CandidatesPage() {
         duration: 5000
       });
       
-      // Update progress periodically using simulated progress
-      const updateInterval = setInterval(() => {
-        setBatchAnalysisStatus(prev => {
-          // Increment progress until we reach 90% (leave final 10% for verification)
-          const processed = Math.min(
-            prev.processedResumes + batchSize, 
-            Math.floor(totalResumes * 0.9)
-          );
-          
-          return {
-            ...prev,
-            processedResumes: processed,
-            message: processed < totalResumes * 0.9 
-              ? `Analyzing resume ${processed + 1} of ${totalResumes}...` 
-              : 'Finalizing analysis results...'
-          };
-        });
-      }, 3000);
-      
-      // Set a timer to refresh the scores and complete the progress after analysis completes
-      const estimatedTime = Math.min(resumeIds.length * 2000, 60000); // More realistic timing
-      
-      setTimeout(() => {
-        clearInterval(updateInterval);
-        
-        // Refresh the scores
-        if (selectedJobId) {
-          getResumeScores(resumeIds, selectedJobId)
-            .then(scores => {
-              console.log("Updated scores after batch analysis:", scores);
-              setResumeScores(scores);
-              
-              // Final progress update
-              setBatchAnalysisStatus({
-                inProgress: true,
-                totalResumes: totalResumes,
-                processedResumes: totalResumes,
-                message: 'Analysis complete!'
-              });
-              
-              // Allow the progress bar to show 100% for a moment before hiding
-              setTimeout(() => {
-                setLoadingAnalysis(false);
-                setBatchAnalysisStatus({
-                  inProgress: false,
-                  totalResumes: totalResumes,
-                  processedResumes: totalResumes,
-                  message: 'Analysis complete!'
-                });
-              }, 1500);
-            })
-            .catch(error => {
-              console.error("Error refreshing scores after batch analysis:", error);
-              setLoadingAnalysis(false);
-              setBatchAnalysisStatus({
-                inProgress: false,
-                totalResumes: 0,
-                processedResumes: 0,
-                message: 'Analysis failed'
-              });
-            });
-        }
-        
-        toast({
-          title: 'Batch Analysis Complete',
-          description: `Completed analysis of ${resumeIds.length} resumes against the selected job.`,
-          duration: 5000
-        });
-      }, estimatedTime);
+      // Progress will be updated via WebSocket connection in the useEffect hook
+      // No need for setTimeout or setInterval anymore
       
     } catch (error) {
       console.error('Error running batch analysis:', error);

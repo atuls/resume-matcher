@@ -946,8 +946,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   aiModel: analysisResult.aiModel || 'unknown'
                 });
               }
+              
+              // Send successful analysis update via WebSocket
+              broadcastUpdate({
+                type: 'batchAnalysisResumeStatus',
+                jobId: jobDescriptionId,
+                resumeId,
+                status: 'analyzed',
+                score: analysisResult.overallScore,
+                skillsMatched: analysisResult.skillMatches.length,
+                message: `Analysis complete with score: ${analysisResult.overallScore}`
+              });
+              
+              successful++;
             } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : String(error);
               console.error(`Error analyzing resume ${resumeId} (job match analysis):`, error);
+              
+              // Send error update via WebSocket
+              broadcastUpdate({
+                type: 'batchAnalysisResumeStatus',
+                jobId: jobDescriptionId,
+                resumeId,
+                status: 'error',
+                message: `Analysis error: ${errorMessage.substring(0, 100)}`
+              });
+              
+              failed++;
             }
             
             // Run red flag analysis (which includes work history extraction)
@@ -967,7 +992,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } catch (error) {
             console.error(`Error processing resume ${resumeId}:`, error);
           }
+          
+          // Update the completed count
+          completed++;
+          
+          // Send progress update
+          broadcastUpdate({
+            type: 'batchAnalysisProgress',
+            jobId: jobDescriptionId,
+            current: completed,
+            total: resumeIds.length,
+            progress: Math.round((completed / resumeIds.length) * 100),
+            message: `Processed ${completed}/${resumeIds.length} resumes`
+          });
         }
+        
+        // Send completion update via WebSocket
+        broadcastUpdate({
+          type: 'batchAnalysisComplete',
+          jobId: jobDescriptionId,
+          total: resumeIds.length,
+          successful,
+          failed,
+          message: `Batch analysis complete. Successfully analyzed: ${successful}, Failed: ${failed}`
+        });
         
         console.log("Batch analysis complete");
       })();
