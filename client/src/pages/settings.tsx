@@ -63,6 +63,9 @@ const analysisFormSchema = z.object({
   skillsPrompt: z.string().min(10, {
     message: "Skills prompt must be at least 10 characters long.",
   }),
+  redFlagsPrompt: z.string().min(10, {
+    message: "Red flags prompt must be at least 10 characters long.",
+  }),
 });
 
 export default function SettingsPage() {
@@ -138,6 +141,31 @@ Return a JSON object with a single "skills" array containing string items.
 
 Example of correct output format:
 {"skills": ["JavaScript", "React", "Node.js", "Communication", "Project Management"]}
+
+REMINDER: Output only valid JSON with no additional text.`,
+      redFlagsPrompt: `You are a skilled recruiter analyzing resumes for potential concerns.
+IMPORTANT: You must output ONLY valid JSON with no other text. Do not add any explanations or notes before or after the JSON.
+
+Analyze the provided resume and job description to identify:
+1. Potential red flags that might indicate issues with the candidate's fit
+2. Highlights that demonstrate particular strengths for this role
+3. The candidate's current position and employment status
+
+Return a JSON object with the following properties:
+- "redFlags": Array of strings describing potential concerns
+- "highlights": Array of strings describing key strengths
+- "currentPosition": String describing their current or most recent role
+- "employmentStatus": "employed", "unemployed", or "unknown"
+
+Example of correct output format:
+{
+  "redFlags": ["Frequent job changes with less than 1 year tenure", "Gap in employment from 2019-2020"],
+  "highlights": ["5+ years experience with required technologies", "Leadership experience managing teams of 5+"],
+  "currentPosition": "Senior Software Engineer at Tech Corp",
+  "employmentStatus": "employed"
+}
+
+Consider factors like job hopping, employment gaps, contract work history, relevant experience, and skill match.
 
 REMINDER: Output only valid JSON with no additional text.`,
     },
