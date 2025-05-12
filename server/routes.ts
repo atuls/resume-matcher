@@ -2,6 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import multer from "multer";
+import { WebSocketServer, WebSocket } from 'ws';
 import {
   analyzeJobDescription,
   analyzeResume,
@@ -52,6 +53,57 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Create HTTP server
+  const httpServer = createServer(app);
+  
+  // Initialize WebSocket server on the same HTTP server but at /ws path
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Store connected clients
+  const clients = new Map<string, WebSocket>();
+  
+  // WebSocket connection handler
+  wss.on('connection', (ws) => {
+    // Generate a unique ID for this connection
+    const clientId = Date.now().toString();
+    clients.set(clientId, ws);
+    
+    console.log(`WebSocket client connected: ${clientId}`);
+    
+    // Send welcome message
+    ws.send(JSON.stringify({ type: 'info', message: 'Connected to Resume Analyzer WebSocket' }));
+    
+    // Handle message from client
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        console.log('Received message:', data);
+        
+        // Handle client registration for specific events
+        if (data.type === 'register') {
+          ws.send(JSON.stringify({ type: 'info', message: `Registered for ${data.event}` }));
+        }
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    });
+    
+    // Handle disconnection
+    ws.on('close', () => {
+      clients.delete(clientId);
+      console.log(`WebSocket client disconnected: ${clientId}`);
+    });
+  });
+  
+  // Helper function to broadcast updates to all connected clients
+  const broadcastUpdate = (data: any) => {
+    clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(data));
+      }
+    });
+  };
+  
   // API routes
   const apiRouter = app.route("/api");
 
@@ -809,15 +861,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Process a limited number of resumes at a time (to avoid rate-limiting issues)
         console.log(`Starting batch analysis for ${resumeIds.length} resumes...`);
         
+        // Send a progress update via WebSocket
+        broadcastUpdate({
+          type: 'batchAnalysisStart',
+          jobId: jobDescriptionId,
+          total: resumeIds.length,
+          message: `Starting analysis for ${resumeIds.length} resumes...`
+        });
+        
+        // Track progress
+        let completed = 0;
+        let successful = 0;
+        let failed = 0;
+        
         // Process each resume sequentially
         for (let i = 0; i < resumeIds.length; i++) {
           const resumeId = resumeIds[i];
+          
+          // Send progress update
+          broadcastUpdate({
+            type: 'batchAnalysisProgress',
+            jobId: jobDescriptionId,
+            current: i + 1,
+            total: resumeIds.length,
+            resumeId,
+            status: 'processing',
+            progress: Math.round(((i + 1) / resumeIds.length) * 100),
+            message: `Processing resume ${i+1}/${resumeIds.length}...`
+          });
           
           try {
             // Get the resume
             const resume = await storage.getResume(resumeId);
             if (!resume) {
               console.error(`Resume ${resumeId} not found, skipping`);
+              
+              // Send resume skip update
+              broadcastUpdate({
+                type: 'batchAnalysisResumeStatus',
+                jobId: jobDescriptionId,
+                resumeId,
+                status: 'skipped',
+                message: 'Resume not found'
+              });
+              
+              failed++;
               continue;
             }
             
@@ -1142,7 +1230,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  const httpServer = createServer(app);
-
+  // Return the HTTP server that was created at the beginning of this function
   return httpServer;
 }
