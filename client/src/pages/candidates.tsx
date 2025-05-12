@@ -202,6 +202,93 @@ export default function CandidatesPage() {
       });
     }
   };
+  
+  // Batch analysis function to run all analyses on all resumes for selected job
+  const handleBatchAnalysis = async () => {
+    if (!selectedJobId || !resumes || resumes.length === 0) return;
+    
+    try {
+      const resumeIds = resumes.map(resume => resume.id);
+      
+      setLoadingAnalysis(true);
+      setBatchAnalysisStatus({
+        inProgress: true,
+        totalResumes: resumeIds.length,
+        processedResumes: 0,
+        message: 'Starting batch analysis...'
+      });
+      
+      // Call batch analysis API endpoint
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jobDescriptionId: selectedJobId,
+          resumeIds
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to start batch analysis');
+      }
+      
+      // Initial response contains all resume IDs with queued status
+      const data = await response.json();
+      console.log('Batch analysis initiated:', data);
+      
+      toast({
+        title: 'Batch Analysis Started',
+        description: `Analyzing ${resumeIds.length} resumes against the selected job.`,
+        duration: 5000
+      });
+      
+      // Set a timer to refresh the scores after analysis completes
+      setTimeout(() => {
+        // Refresh the scores
+        if (selectedJobId) {
+          getResumeScores(resumeIds, selectedJobId)
+            .then(scores => {
+              console.log("Updated scores after batch analysis:", scores);
+              setResumeScores(scores);
+            })
+            .catch(error => {
+              console.error("Error refreshing scores after batch analysis:", error);
+            });
+        }
+        
+        setLoadingAnalysis(false);
+        setBatchAnalysisStatus({
+          inProgress: false,
+          totalResumes: resumeIds.length,
+          processedResumes: resumeIds.length,
+          message: 'Analysis complete!'
+        });
+        
+        toast({
+          title: 'Batch Analysis Complete',
+          description: `Completed analysis of ${resumeIds.length} resumes against the selected job.`,
+          duration: 5000
+        });
+      }, Math.min(resumeIds.length * 5000, 60000)); // Cap at 60 seconds max wait time
+      
+    } catch (error) {
+      console.error('Error running batch analysis:', error);
+      setLoadingAnalysis(false);
+      setBatchAnalysisStatus({
+        inProgress: false,
+        totalResumes: 0,
+        processedResumes: 0,
+        message: 'Analysis failed'
+      });
+      
+      toast({
+        title: 'Analysis Failed',
+        description: 'There was an error running the batch analysis. Please try again.',
+        variant: 'destructive',
+        duration: 5000
+      });
+    }
+  };
 
   // Handle job selection
   const handleJobChange = (value: string) => {
@@ -359,12 +446,12 @@ export default function CandidatesPage() {
             <div className="mb-6 flex space-x-4">
               <Button onClick={() => setShowUploader(true)}>Upload Resume</Button>
               
-              {selectedJobId && (
+              {selectedJobId && resumes && resumes.length > 0 && (
                 <Button 
                   variant="outline" 
                   className="flex items-center gap-2"
                   onClick={() => handleBatchAnalysis()}
-                  disabled={loadingAnalysis || resumeIds.length === 0}
+                  disabled={loadingAnalysis}
                 >
                   <RotateCcw className={`h-4 w-4 ${loadingAnalysis ? 'animate-spin' : ''}`} />
                   {loadingAnalysis ? 'Analyzing...' : 'Analyze All Candidates'}

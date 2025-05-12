@@ -838,7 +838,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 await storage.updateAnalysisResult(existingAnalysis.id, {
                   overallScore: analysisResult.overallScore,
                   skillMatches: JSON.stringify(analysisResult.skillMatches),
-                  rawResult: JSON.stringify(analysisResult.rawResponse),
+                  rawResponse: JSON.stringify(analysisResult.rawResponse),
                   aiModel: analysisResult.aiModel || 'unknown'
                 });
               } else {
@@ -847,7 +847,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   jobDescriptionId,
                   overallScore: analysisResult.overallScore,
                   skillMatches: JSON.stringify(analysisResult.skillMatches),
-                  rawResult: JSON.stringify(analysisResult.rawResponse),
+                  rawResponse: JSON.stringify(analysisResult.rawResponse),
                   aiModel: analysisResult.aiModel || 'unknown'
                 });
               }
