@@ -775,6 +775,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // Batch analysis endpoint to run all analyses on all candidates for a job
+  app.post("/api/analyze", async (req: Request, res: Response) => {
+    try {
+      const { jobDescriptionId, resumeIds } = req.body;
+      
+      if (!jobDescriptionId || !resumeIds || !Array.isArray(resumeIds) || resumeIds.length === 0) {
+        return res.status(400).json({ message: "Missing required fields or invalid format" });
+      }
+      
+      // Get job description
+      const jobDescription = await storage.getJobDescription(jobDescriptionId);
+      if (!jobDescription) {
+        return res.status(404).json({ message: "Job description not found" });
+      }
+      
+      // Get job requirements
+      const requirements = await storage.getJobRequirements(jobDescriptionId);
+      
+      // Initialize results array for tracking
+      const results = resumeIds.map(id => ({
+        id,
+        status: 'queued',
+        message: 'Analysis queued'
+      }));
+      
+      // Send initial response immediately
+      res.json({ results });
+      
+      // Process in background after sending initial response
+      (async () => {
+        // Process a limited number of resumes at a time (to avoid rate-limiting issues)
+        console.log(`Starting batch analysis for ${resumeIds.length} resumes...`);
+        
+        // Process each resume sequentially
+        for (let i = 0; i < resumeIds.length; i++) {
+          const resumeId = resumeIds[i];
+          
+          try {
+            // Get the resume
+            const resume = await storage.getResume(resumeId);
+            if (!resume) {
+              console.error(`Resume ${resumeId} not found, skipping`);
+              continue;
+            }
+            
+            console.log(`Analyzing resume ${i+1}/${resumeIds.length}: ${resumeId}`);
+            
+            // Run job match analysis
+            try {
+              const analysisResult = await analyzeResume(
+                resume.extractedText,
+                jobDescription.description,
+                requirements
+              );
+              
+              // Store or update the analysis result
+              const existingAnalysis = await storage.getAnalysisResultForResume(resumeId, jobDescriptionId);
+              
+              if (existingAnalysis) {
+                await storage.updateAnalysisResult(existingAnalysis.id, {
+                  overallScore: analysisResult.overallScore,
+                  skillMatches: JSON.stringify(analysisResult.skillMatches),
+                  rawResult: JSON.stringify(analysisResult.rawResponse),
+                  aiModel: analysisResult.aiModel || 'unknown'
+                });
+              } else {
+                await storage.createAnalysisResult({
+                  resumeId,
+                  jobDescriptionId,
+                  overallScore: analysisResult.overallScore,
+                  skillMatches: JSON.stringify(analysisResult.skillMatches),
+                  rawResult: JSON.stringify(analysisResult.rawResponse),
+                  aiModel: analysisResult.aiModel || 'unknown'
+                });
+              }
+            } catch (error) {
+              console.error(`Error analyzing resume ${resumeId} (job match analysis):`, error);
+            }
+            
+            // Run red flag analysis (which includes work history extraction)
+            try {
+              // Extract work history and skills for red flag analysis
+              const workHistory = await extractWorkHistory(resume.extractedText);
+              const skills = await extractSkillsFromResume(resume.extractedText);
+              
+              // Analyze for red flags
+              await analyzeRedFlags(workHistory, skills, jobDescription.description);
+            } catch (error) {
+              console.error(`Error analyzing resume ${resumeId} (red flag analysis):`, error);
+            }
+          } catch (error) {
+            console.error(`Error processing resume ${resumeId}:`, error);
+          }
+        }
+        
+        console.log("Batch analysis complete");
+      })();
+    } catch (error) {
+      console.error("Error initiating batch analysis:", error);
+      if (!res.headersSent) {
+        res.status(500).json({ message: "Failed to initiate batch analysis" });
+      }
+    }
+  });
 
   // Candidate-Job Connection endpoints
   

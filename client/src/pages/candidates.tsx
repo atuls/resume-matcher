@@ -66,6 +66,17 @@ export default function CandidatesPage() {
   const [resumeToDelete, setResumeToDelete] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [analysingResumeId, setAnalysingResumeId] = useState<string | null>(null);
+  const [batchAnalysisStatus, setBatchAnalysisStatus] = useState<{
+    inProgress: boolean;
+    totalResumes: number;
+    processedResumes: number;
+    message: string;
+  }>({
+    inProgress: false,
+    totalResumes: 0,
+    processedResumes: 0,
+    message: ''
+  });
   
   // Function to analyze a specific resume on demand
   const handleAnalyzeResume = (resumeId: string) => {
@@ -345,8 +356,20 @@ export default function CandidatesPage() {
               </div>
             </div>
           ) : (
-            <div className="mb-6">
+            <div className="mb-6 flex space-x-4">
               <Button onClick={() => setShowUploader(true)}>Upload Resume</Button>
+              
+              {selectedJobId && (
+                <Button 
+                  variant="outline" 
+                  className="flex items-center gap-2"
+                  onClick={() => handleBatchAnalysis()}
+                  disabled={loadingAnalysis || resumeIds.length === 0}
+                >
+                  <RotateCcw className={`h-4 w-4 ${loadingAnalysis ? 'animate-spin' : ''}`} />
+                  {loadingAnalysis ? 'Analyzing...' : 'Analyze All Candidates'}
+                </Button>
+              )}
             </div>
           )}
 
