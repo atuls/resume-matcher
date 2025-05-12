@@ -540,49 +540,121 @@ export default function ResumeProfilePage() {
                         Failed to analyze skills. Please try again later.
                       </AlertDescription>
                     </Alert>
-                  ) : analysis?.skills?.length > 0 ? (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div className="bg-primary/5 p-4 rounded-lg">
-                          <h4 className="font-medium mb-2">Technical Skills</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {(analysis?.skills || [])
-                              .filter(skill => !['communication', 'teamwork', 'leadership', 'problem solving', 
-                                            'adaptability', 'time management', 'creativity', 'critical thinking',
-                                            'collaboration', 'presentation'].includes(skill.toLowerCase()))
-                              .map((skill) => (
-                                <span key={skill} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
-                                  {skill}
-                                </span>
-                              ))}
-                          </div>
-                        </div>
-                        
-                        <div className="bg-primary/5 p-4 rounded-lg">
-                          <h4 className="font-medium mb-2">Soft Skills</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {(analysis?.skills || [])
-                              .filter(skill => ['communication', 'teamwork', 'leadership', 'problem solving', 
-                                          'adaptability', 'time management', 'creativity', 'critical thinking',
-                                          'collaboration', 'presentation'].includes(skill.toLowerCase()))
-                              .map((skill) => (
-                                <span key={skill} className="bg-secondary/10 text-secondary px-3 py-1 rounded-full text-sm">
-                                  {skill}
-                                </span>
-                              ))}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-4">
-                        <p className="text-sm text-gray-500 italic">
-                          Note: Skills are extracted from resume content using AI and may require verification.
-                        </p>
-                      </div>
-                    </div>
                   ) : (
-                    <div className="text-center py-8">
-                      <p className="text-gray-500">No skills detected in this resume.</p>
+                    <div className="space-y-4">
+                      {(() => {
+                        // Get skills from either dedicated analysis or job match analysis
+                        let skillsList: string[] = [];
+                        
+                        // Check if skills are available in the analysis object directly
+                        if (analysis?.skills && analysis.skills.length > 0) {
+                          skillsList = analysis.skills;
+                        } 
+                        // If not, check if available in analysis.analysis.skills
+                        else if (analysis?.analysis?.skills && analysis.analysis.skills.length > 0) {
+                          skillsList = analysis.analysis.skills;
+                        }
+                        
+                        if (skillsList.length > 0) {
+                          // Define soft skills for filtering
+                          const softSkillKeywords = ['communication', 'teamwork', 'leadership', 'problem solving', 
+                                                'adaptability', 'time management', 'creativity', 'critical thinking',
+                                                'collaboration', 'presentation', 'interpersonal', 'organization', 
+                                                'flexibility', 'negotiation', 'conflict resolution'];
+                          
+                          // Filter for technical vs soft skills
+                          const technicalSkills = skillsList.filter(skill => 
+                            !softSkillKeywords.some(softSkill => 
+                              skill.toLowerCase().includes(softSkill.toLowerCase())
+                            )
+                          );
+                          
+                          const softSkills = skillsList.filter(skill => 
+                            softSkillKeywords.some(softSkill => 
+                              skill.toLowerCase().includes(softSkill.toLowerCase())
+                            )
+                          );
+                          
+                          return (
+                            <>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="bg-primary/5 p-4 rounded-lg">
+                                  <h4 className="font-medium mb-2">Technical Skills</h4>
+                                  <div className="flex flex-wrap gap-2">
+                                    {technicalSkills.length > 0 ? (
+                                      technicalSkills.map((skill, index) => (
+                                        <span key={index} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
+                                          {skill}
+                                        </span>
+                                      ))
+                                    ) : (
+                                      <p className="text-sm text-gray-500">No technical skills detected</p>
+                                    )}
+                                  </div>
+                                </div>
+                                
+                                <div className="bg-primary/5 p-4 rounded-lg">
+                                  <h4 className="font-medium mb-2">Soft Skills</h4>
+                                  <div className="flex flex-wrap gap-2">
+                                    {softSkills.length > 0 ? (
+                                      softSkills.map((skill, index) => (
+                                        <span key={index} className="bg-secondary/10 text-secondary px-3 py-1 rounded-full text-sm">
+                                          {skill}
+                                        </span>
+                                      ))
+                                    ) : (
+                                      <p className="text-sm text-gray-500">No soft skills detected</p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="mt-4">
+                                <p className="text-sm text-gray-500 italic">
+                                  Note: Skills are extracted from resume content using AI and may require verification.
+                                </p>
+                              </div>
+                            </>
+                          );
+                        } else {
+                          return (
+                            <div className="text-center py-8">
+                              <p className="text-gray-500">No skills detected in this resume.</p>
+                              {selectedJobId && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="mt-4"
+                                  onClick={() => {
+                                    setForceRerun(true);
+                                    setAnalysisLoading(true);
+                                    refetchAnalysis()
+                                      .then(() => {
+                                        setForceRerun(false);
+                                        toast({
+                                          title: "Analysis updated",
+                                          description: "Resume skills analysis has been refreshed.",
+                                        });
+                                      })
+                                      .catch((error) => {
+                                        toast({
+                                          title: "Analysis failed",
+                                          description: error instanceof Error ? error.message : "An unexpected error occurred",
+                                          variant: "destructive",
+                                        });
+                                      })
+                                      .finally(() => {
+                                        setAnalysisLoading(false);
+                                      });
+                                  }}
+                                >
+                                  Run Skills Analysis
+                                </Button>
+                              )}
+                            </div>
+                          );
+                        }
+                      })()}
                     </div>
                   )}
                 </TabsContent>
