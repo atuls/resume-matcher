@@ -4,6 +4,27 @@ All notable changes to the Resume Analyzer project will be documented in this fi
 
 ## [Unreleased]
 
+## [1.3.0] - 2024-05-11
+
+### Added
+- Multi-model AI support with OpenAI, Anthropic Claude, and Mistral
+- Customizable analysis prompts via settings
+- Debug Info tab showing raw AI responses
+- Settings page for configuring AI model preferences
+- Ability to save custom analysis prompts
+- Model selection with automatic fallback mechanism
+
+### Changed
+- Enhanced raw response capture in both Claude and OpenAI services
+- Improved JSON parsing with robust error handling
+- Better handling of different AI model responses
+
+### Fixed
+- Debug Info tab now properly shows raw AI responses
+- JSON parsing issues with non-standard Claude responses
+- OpenAI service compatibility with new API requirements
+- Type errors in AI service implementations
+
 ## [1.2.0] - 2024-05-10
 
 ### Added

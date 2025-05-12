@@ -12,13 +12,16 @@ An AI-powered resume analysis platform that efficiently matches candidate resume
 - **Batch Matching**: Match multiple resumes with a job position simultaneously
 - **Visual Progress**: Color-coded match scores with progress bars
 - **Sortable Results**: Sort candidates by match score to prioritize best matches
+- **Multi-model AI Support**: Choose between OpenAI GPT or Anthropic Claude for analysis
+- **Customizable Analysis Prompts**: Configure how AI models analyze resumes via settings
+- **Advanced Debugging**: Debug Info tab shows raw AI responses for troubleshooting
 
 ## Tech Stack
 
 - **Frontend**: React with TypeScript, Tailwind CSS, shadcn/ui components
 - **Backend**: Node.js/Express API
 - **Database**: PostgreSQL with Drizzle ORM
-- **AI Integration**: OpenAI/GPT and Mistral AI for document analysis
+- **AI Integration**: OpenAI/GPT, Anthropic Claude, and Mistral AI for document analysis
 - **Document Processing**: PDF text extraction with fallback methods
 
 ## Environment Variables
@@ -29,6 +32,7 @@ The application requires the following environment variables:
 |----------|-------------|
 | `DATABASE_URL` | PostgreSQL connection string |
 | `OPENAI_API_KEY` | OpenAI API key for document analysis |
+| `ANTHROPIC_API_KEY` | Anthropic Claude API key for document analysis |
 | `MISTRAL_API_KEY` | Mistral AI API key for PDF extraction (optional) |
 
 ## Getting Started
