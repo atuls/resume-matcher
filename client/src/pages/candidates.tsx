@@ -359,6 +359,24 @@ export default function CandidatesPage() {
           )}
         </div>
       </div>
+      
+      {!selectedJobId && (
+        <div className="bg-amber-50 border border-amber-200 rounded-md px-4 py-3 mb-6">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <AlertCircle className="h-5 w-5 text-amber-400" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-amber-800">
+                Job selection needed
+              </h3>
+              <div className="mt-1 text-sm text-amber-700">
+                <p>Please select a job from the dropdown menu to view full candidate analysis including match scores, current positions, highlights, and red flags.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Enhanced candidate evaluation section removed as requested */}
       
