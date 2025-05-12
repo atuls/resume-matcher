@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useRoute } from 'wouter';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   BarChart3, Calendar, FileText, AlertTriangle, Briefcase,
   Filter, Search, AlertCircle, Award, RotateCcw, CircleDashed,
@@ -30,7 +30,13 @@ import { Input } from '@/components/ui/input';
 import { queryClient } from '@/lib/queryClient';
 
 import ResumeUploader from '@/components/resume/uploader';
-import { getJobDescriptions, getResumes, getResumeScores, deleteResume } from '@/lib/api';
+import {
+  getJobDescriptions,
+  getResumes,
+  getResumeScores,
+  getResumeRedFlagAnalysis,
+  deleteResume
+} from '@/lib/api';
 import { formatDate, formatFileSize } from '@/lib/utils';
 
 export default function CandidatesPage() {
@@ -60,13 +66,6 @@ export default function CandidatesPage() {
   const [resumeToDelete, setResumeToDelete] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
-  // Set selected job when route changes
-  useEffect(() => {
-    if (jobId) {
-      setSelectedJobId(jobId);
-    }
-  }, [jobId]);
-
   // Fetch resumes
   const {
     data: resumes,
@@ -76,12 +75,77 @@ export default function CandidatesPage() {
     queryKey: ['/api/resumes'],
     queryFn: getResumes
   });
-
+  
   // Fetch job descriptions for filter
   const { data: jobDescriptions } = useQuery({
     queryKey: ['/api/job-descriptions'],
     queryFn: getJobDescriptions
   });
+  
+  // Set selected job when route changes
+  useEffect(() => {
+    if (jobId) {
+      setSelectedJobId(jobId);
+    }
+  }, [jobId]);
+  
+  // Load resume scores and analysis data when job is selected
+  useEffect(() => {
+    if (selectedJobId && resumes && resumes.length > 0) {
+      // Fetch scores for all resumes
+      const resumeIds = resumes.map(resume => resume.id);
+      
+      // Set loading state
+      setLoadingAnalysis(true);
+      
+      // Get resume scores for the selected job
+      getResumeScores(resumeIds, selectedJobId)
+        .then(scores => {
+          console.log("Fetched scores:", scores);
+          setResumeScores(scores);
+          
+          // For each resume, get red flag analysis
+          const analysisPromises = resumeIds.map(resumeId => 
+            getResumeRedFlagAnalysis(resumeId, selectedJobId)
+              .then(data => ({
+                resumeId,
+                analysis: data.analysis
+              }))
+              .catch(() => null)
+          );
+          
+          return Promise.all(analysisPromises);
+        })
+        .then(results => {
+          // Filter out null results and create a map of resume ID to analysis
+          const analysisMap = results
+            .filter(result => result !== null)
+            .reduce((map: {[resumeId: string]: any}, result: any) => {
+              if (result) {
+                map[result.resumeId] = result.analysis;
+              }
+              return map;
+            }, {});
+            
+          setResumeAnalysis(analysisMap);
+        })
+        .catch(err => {
+          console.error("Error fetching resume data:", err);
+          toast({
+            title: "Error",
+            description: "Failed to load resume analysis data",
+            variant: "destructive"
+          });
+        })
+        .finally(() => {
+          setLoadingAnalysis(false);
+        });
+    } else {
+      // Clear scores and analysis when no job is selected
+      setResumeScores({});
+      setResumeAnalysis({});
+    }
+  }, [selectedJobId, resumes, toast]);
   
   // Delete resume mutation
   const deleteMutation = useMutation({
@@ -534,39 +598,40 @@ export default function CandidatesPage() {
               </table>
             </div>
           ) : (
-            <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+            <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
               <div className="mx-auto w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
                 <FileText className="h-6 w-6 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-1">No resumes found</h3>
-              <p className="text-gray-500 mb-4">
-                {searchTerm 
-                  ? `No results found for "${searchTerm}". Try a different search term.`
-                  : "Upload some resumes to get started."}
-              </p>
-              {!searchTerm && (
-                <Button onClick={() => setShowUploader(true)}>
-                  Upload Resume
-                </Button>
-              )}
-              {searchTerm && (
-                <Button variant="outline" onClick={() => setSearchTerm('')}>
-                  Clear Search
-                </Button>
-              )}
-            </div>
-          )}
-          
-          {!showUploader && resumes && resumes.length > 0 && (
-            <div className="mt-6">
+              <p className="text-gray-500 mb-6">Upload some resumes to get started with candidate analysis</p>
               <Button onClick={() => setShowUploader(true)}>
-                Upload More Resumes
+                Upload Resumes
               </Button>
             </div>
           )}
+          
+          <div className="mt-6 flex justify-between items-center">
+            <div>
+              {resumes && resumes.length > 0 && (
+                <p className="text-sm text-gray-500">
+                  Showing {sortedResumes.length} of {resumes.length} resumes
+                </p>
+              )}
+            </div>
+            
+            <div className="flex-shrink-0">
+              <Button 
+                onClick={() => setShowUploader(true)}
+                className="ml-3"
+              >
+                Upload Resumes
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
       
+      {/* Delete confirmation dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
@@ -584,7 +649,7 @@ export default function CandidatesPage() {
               onClick={() => resumeToDelete && deleteMutation.mutate(resumeToDelete)}
               disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+              {deleteMutation.isPending ? "Deleting..." : "Delete Resume"}
             </Button>
           </DialogFooter>
         </DialogContent>
