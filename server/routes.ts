@@ -71,16 +71,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log(`WebSocket client connected: ${clientId}`);
     
     // Send welcome message
-    ws.send(JSON.stringify({ type: 'info', message: 'Connected to Resume Analyzer WebSocket' }));
+    const welcomeMessage = { type: 'info', message: 'Connected to Resume Analyzer WebSocket' };
+    ws.send(JSON.stringify(welcomeMessage));
+    
+    // Send a test batch event immediately to verify connectivity 
+    setTimeout(() => {
+      try {
+        const testEvent = { 
+          type: 'batchAnalysisProgress', 
+          jobId: 'test-job', 
+          current: 1,
+          total: 10, 
+          progress: 10,
+          message: 'Test websocket message' 
+        };
+        console.log(`Sending test event to client ${clientId}:`, testEvent);
+        ws.send(JSON.stringify(testEvent));
+      } catch (err) {
+        console.error('Error sending test event:', err);
+      }
+    }, 2000);
     
     // Handle message from client
     ws.on('message', (message) => {
       try {
         const data = JSON.parse(message.toString());
-        console.log('Received message:', data);
+        console.log('Received message from client:', data);
         
         // Handle client registration for specific events
         if (data.type === 'register') {
+          console.log(`Client ${clientId} registered for event: ${data.event}`);
           ws.send(JSON.stringify({ type: 'info', message: `Registered for ${data.event}` }));
         }
       } catch (error) {

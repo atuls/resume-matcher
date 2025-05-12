@@ -61,11 +61,16 @@ class WebSocketService {
   // Handle incoming WebSocket messages
   private handleMessage(event: MessageEvent) {
     try {
-      const data = JSON.parse(event.data) as WebSocketEvent;
+      const data = JSON.parse(event.data);
       console.log('WebSocket message received:', data);
       
+      // Add better debug logging for batch analysis events
+      if (data.type && ['batchAnalysisStart', 'batchAnalysisProgress', 'batchAnalysisComplete'].includes(data.type)) {
+        console.log(`BATCH ANALYSIS EVENT: ${data.type}`, data);
+      }
+      
       // Dispatch the event to all listeners
-      this.dispatchEvent(data);
+      this.dispatchEvent(data as WebSocketEvent);
     } catch (error) {
       console.error('Error parsing WebSocket message:', error, event.data);
     }

@@ -139,33 +139,46 @@ export default function CandidatesPage() {
     
     // Handle batch analysis events
     const handleBatchEvent = (event: any) => {
-      // Check if it's a batch analysis event
-      if (
-        !event.type || 
-        !['batchAnalysisStart', 'batchAnalysisProgress', 'batchAnalysisComplete', 'batchAnalysisResumeStatus'].includes(event.type)
-      ) {
+      // Check if event is defined and has a type
+      if (!event || !event.type) {
+        console.warn('Received invalid WebSocket event:', event);
         return;
       }
       
-      console.log('WebSocket batch analysis event:', event);
+      // Log all events for debugging
+      console.log(`Candidates page received event: ${event.type}`, event);
       
+      // Handle batch analysis events
       if (event.type === 'batchAnalysisStart') {
+        console.log('BATCH ANALYSIS STARTED:', event);
         setBatchAnalysisStatus({
           inProgress: true,
-          totalResumes: event.total,
+          totalResumes: event.total || 0,
           processedResumes: 0,
-          message: event.message
+          message: event.message || 'Starting analysis...'
         });
+        
+        // Force React to update right away
+        setTimeout(() => {
+          console.log('Current batch status after start:', batchAnalysisStatus);
+        }, 0);
       } 
       else if (event.type === 'batchAnalysisProgress') {
-        setBatchAnalysisStatus({
+        console.log('BATCH ANALYSIS PROGRESS:', event);
+        setBatchAnalysisStatus(prev => ({
           inProgress: true,
-          totalResumes: event.total,
-          processedResumes: event.current,
-          message: event.message
-        });
+          totalResumes: event.total || prev.totalResumes,
+          processedResumes: event.current || 0,
+          message: event.message || `Processed ${event.current}/${event.total} resumes`
+        }));
+        
+        // Force React to update right away
+        setTimeout(() => {
+          console.log('Current batch status after progress:', batchAnalysisStatus);
+        }, 0);
       } 
       else if (event.type === 'batchAnalysisComplete') {
+        console.log('BATCH ANALYSIS COMPLETE:', event);
         // Refresh scores when batch analysis is complete
         if (selectedJobId && resumes) {
           const resumeIds = resumes.map(resume => resume.id);
