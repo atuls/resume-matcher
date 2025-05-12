@@ -97,11 +97,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Helper function to broadcast updates to all connected clients
   const broadcastUpdate = (data: any) => {
+    console.log('Broadcasting update:', JSON.stringify(data).substring(0, 200));
+    let activeClients = 0;
+    
     clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(JSON.stringify(data));
+        activeClients++;
       }
     });
+    
+    console.log(`Broadcast sent to ${activeClients} active clients`);
   };
   
   // API routes

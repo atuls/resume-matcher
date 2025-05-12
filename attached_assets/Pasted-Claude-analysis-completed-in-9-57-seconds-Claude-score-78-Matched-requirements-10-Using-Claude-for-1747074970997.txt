@@ -1,0 +1,63 @@
+Claude analysis completed in 9.57 seconds
+Claude score: 78
+Matched requirements: 10
+Using Claude for resume analysis
+Resume text length: 4059
+Job description text length: 7332
+Requirements count: 14
+Raw Claude response (first 100 chars): {   "skills": ["Partnership Development", "Strategic Growth", "CRM Management", "Sales Pipeline Mana
+JSON extracted using regex
+Claude analysis completed in 6.938 seconds
+Claude score: 82
+Matched requirements: 9
+Using Claude for resume analysis
+Resume text length: 4469
+Job description text length: 7332
+Requirements count: 14
+Raw Claude response (first 100 chars): {   "skills": [     "Client Partnerships Management",     "Sales Process Management",     "Campaign 
+JSON extracted using regex
+Claude analysis completed in 9.563 seconds
+Claude score: 85
+Matched requirements: 9
+Using Claude for resume analysis
+Resume text length: 4201
+Job description text length: 7332
+Requirements count: 14
+Raw Claude response (first 100 chars): {   "skills": ["Business Development", "Strategic Partnerships", "Market Growth", "Brand Development
+JSON extracted using regex
+Claude analysis completed in 7.719 seconds
+Claude score: 78
+Matched requirements: 9
+Using Claude for resume analysis
+Resume text length: 5676
+Job description text length: 7332
+Requirements count: 14
+Raw Claude response (first 100 chars): {"skills":["Account management", "Advertising Analysis", "Business Development", "Campaign Analysis"
+JSON extracted using regex
+Claude analysis completed in 9.169 seconds
+Claude score: 58
+Matched requirements: 8
+Using Claude for resume analysis
+Resume text length: 3122
+Job description text length: 7332
+Requirements count: 14
+Raw Claude response (first 100 chars): {"skills":["Sales & Business Development", "Client Relationship Management", "Event & Hospitality Ma
+JSON extracted using regex
+Claude analysis completed in 7.008 seconds
+Claude score: 68
+Matched requirements: 8
+Using Claude for resume analysis
+Resume text length: 4964
+Job description text length: 7332
+Requirements count: 14
+Raw Claude response (first 100 chars): ```json {   "skills": [     "Stakeholder Management",     "Financial Modeling",     "Valuation",    
+JSON extracted using regex
+Claude analysis completed in 8.665 seconds
+Claude score: 68
+Matched requirements: 10
+Using Claude for resume analysis
+Resume text length: 7459
+Job description text length: 7332
+Requirements count: 14
+Raw Claude response (first 100 chars): ```json {   "skills": ["Relationship Management", "Sales", "Project Management", "Brand Partnerships
+JSON extracted using regex
