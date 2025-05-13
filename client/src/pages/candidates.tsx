@@ -308,10 +308,24 @@ export default function CandidatesPage() {
       // Set loading state
       setLoadingAnalysis(true);
       
+      console.log("Selected job ID:", selectedJobId);
+      console.log("Resume IDs to fetch scores for:", resumeIds);
+      
       // Get resume scores for the selected job
       getResumeScores(resumeIds, selectedJobId)
         .then(scores => {
           console.log("Fetched scores:", scores);
+          
+          // Check if we received valid scores
+          if (Object.keys(scores).length === 0) {
+            console.warn("No scores returned from API, this might indicate an issue");
+          }
+          
+          // Debug: check specific resume scores
+          resumeIds.forEach(id => {
+            console.log(`Score for resume ${id}:`, scores[id] ? scores[id].score : 'not found');
+          });
+          
           setResumeScores(scores);
           
           // Get analysis data for the first few displayed resumes (max 5)
@@ -336,6 +350,10 @@ export default function CandidatesPage() {
             analysisResults.forEach(result => {
               if (result.analysis) {
                 newAnalysisData[result.resumeId] = result.analysis;
+                console.log(`Analysis for resume ${result.resumeId}:`, 
+                  `Current Position: ${result.analysis.currentJobPosition || 'N/A'}`,
+                  `Company: ${result.analysis.currentCompany || 'N/A'}`
+                );
               }
             });
             
