@@ -8,6 +8,7 @@ import {
   Briefcase, Code, AlertCircle, BarChart3, CheckCircle, XCircle,
   RefreshCw, UserCheck, Sparkles, AlertTriangle
 } from "lucide-react";
+import { DebugPanel } from "@/components/DebugPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
 import { formatDistance } from "date-fns";
@@ -1033,26 +1034,11 @@ export default function ResumeProfilePage() {
                 
                 {/* Debug tab to show all raw LLM responses */}
                 <TabsContent value="debug">
-                  <div className="space-y-6">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-medium text-lg">Resume Analysis LLM Responses</h3>
-                      <Badge variant="secondary" className="ml-2">
-                        Resume ID: {resumeId}
-                      </Badge>
-                    </div>
-                    
-                    {/* Complete Analysis Object Structure */}
-                    <div className="rounded-md border overflow-hidden">
-                      <div className="p-4 bg-gray-50 border-b">
-                        <h4 className="font-medium">Complete Analysis Object Structure</h4>
-                        <p className="text-xs text-gray-500">Full data returned from the API</p>
-                      </div>
-                      <div className="p-4">
-                        <pre className="overflow-auto text-xs max-h-80 p-3 rounded bg-black text-green-400">
-                          {JSON.stringify(analysis, null, 2) || "No analysis data available"}
-                        </pre>
-                      </div>
-                    </div>
+                  <DebugPanel 
+                    resumeId={resumeId ?? ""} 
+                    analysis={analysis} 
+                    redFlagData={redFlagData} 
+                  />
                     
                     {/* Skills Analysis Response */}
                     <div className="rounded-md border overflow-hidden">

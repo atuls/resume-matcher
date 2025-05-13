@@ -45,22 +45,22 @@ export function extractSkillsFromAnalysis(analysis: any): string[] {
   if (!analysis) return [];
   
   // Try different potential paths in order of likelihood
-  if (analysis?.analysis?.skills && analysis.analysis.skills.length > 0) {
+  if (analysis?.analysis?.skills && Array.isArray(analysis.analysis.skills)) {
     console.log("Found skills in analysis.analysis.skills");
     return analysis.analysis.skills;
   } 
   
-  if (analysis?.rawResponse?.parsedJson?.Skills && analysis.rawResponse.parsedJson.Skills.length > 0) {
+  if (analysis?.rawResponse?.parsedJson?.Skills && Array.isArray(analysis.rawResponse.parsedJson.Skills)) {
     console.log("Found skills in analysis.rawResponse.parsedJson.Skills");
     return analysis.rawResponse.parsedJson.Skills;
   }
   
-  if (analysis?.rawResponse?.parsedJson?.skills && analysis.rawResponse.parsedJson.skills.length > 0) {
+  if (analysis?.rawResponse?.parsedJson?.skills && Array.isArray(analysis.rawResponse.parsedJson.skills)) {
     console.log("Found skills in analysis.rawResponse.parsedJson.skills");
     return analysis.rawResponse.parsedJson.skills;
   }
   
-  if (analysis?.rawResponse?.extractedSections?.skills && analysis.rawResponse.extractedSections.skills.length > 0) {
+  if (analysis?.rawResponse?.extractedSections?.skills && Array.isArray(analysis.rawResponse.extractedSections.skills)) {
     console.log("Found skills in analysis.rawResponse.extractedSections.skills");
     return analysis.rawResponse.extractedSections.skills;
   }
@@ -103,4 +103,59 @@ export function categorizeSkills(skillsList: string[]) {
   );
   
   return { technicalSkills, softSkills };
+}
+
+/**
+ * Safely extracts formatted work history from analysis data
+ * @param redFlagData Analysis data that might contain work history
+ * @returns Formatted work history array or empty array
+ */
+export function extractWorkHistory(redFlagData: any): any[] {
+  if (!redFlagData) return [];
+  
+  // Try different potential paths in order of likelihood
+  if (redFlagData?.analysis?.recentRoles && Array.isArray(redFlagData.analysis.recentRoles)) {
+    console.log("Found work history in redFlagData.analysis.recentRoles");
+    return redFlagData.analysis.recentRoles;
+  }
+  
+  if (redFlagData?.rawResponse?.parsedJson?.WorkHistory && Array.isArray(redFlagData.rawResponse.parsedJson.WorkHistory)) {
+    console.log("Found work history in redFlagData.rawResponse.parsedJson.WorkHistory");
+    return redFlagData.rawResponse.parsedJson.WorkHistory;
+  }
+  
+  if (redFlagData?.rawResponse?.parsedJson?.workHistory && Array.isArray(redFlagData.rawResponse.parsedJson.workHistory)) {
+    console.log("Found work history in redFlagData.rawResponse.parsedJson.workHistory");
+    return redFlagData.rawResponse.parsedJson.workHistory;
+  }
+  
+  if (redFlagData?.workHistory && Array.isArray(redFlagData.workHistory)) {
+    console.log("Found work history in redFlagData.workHistory");
+    return redFlagData.workHistory;
+  }
+  
+  return [];
+}
+
+/**
+ * Check if a field exists at any level in a nested object
+ * @param obj The object to search
+ * @param field The field name to look for
+ * @returns The path to the field if found, null otherwise
+ */
+export function findFieldPath(obj: any, field: string): string | null {
+  if (!obj || typeof obj !== 'object') return null;
+  
+  // Check if the field exists directly on this object
+  if (field in obj) return field;
+  
+  // Recursively check all nested objects
+  for (const key in obj) {
+    if (typeof obj[key] === 'object' && obj[key] !== null) {
+      const path = findFieldPath(obj[key], field);
+      if (path) return `${key}.${path}`;
+    }
+  }
+  
+  return null;
 }
