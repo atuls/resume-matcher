@@ -11,6 +11,7 @@ import AnalyticsPage from "@/pages/analytics";
 import SettingsPage from "@/pages/settings";
 import ResumeProfilePage from "@/pages/resume-profile";
 import AnalysisTestPage from "@/pages/analysis-test";
+import DataExtractionTestPage from "@/pages/data-extraction-test";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/analytics" component={AnalyticsPage} />
       <Route path="/settings" component={SettingsPage} />
       <Route path="/analysis-test" component={AnalysisTestPage} />
+      <Route path="/data-extraction-test" component={DataExtractionTestPage} />
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />
