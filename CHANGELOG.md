@@ -4,6 +4,30 @@ All notable changes to the Resume Analyzer project will be documented in this fi
 
 ## [Unreleased]
 
+## [1.6.0] - 2024-05-13
+
+### Added
+- Enhanced work history extraction with multiple data source fallbacks
+- Job selection dropdown in resume profile interface
+- Score display with visual progress indicator in candidate profiles
+- Re-run Analysis button for updating job-specific scores on demand
+- Auto-selection of the first available job when viewing profiles
+- Console logging for data extraction troubleshooting
+
+### Changed
+- Improved data extractors to handle various response formats
+- Enhanced ResumeWorkHistoryTab to accept both analysis and redFlagData
+- Optimized job score display with empty state handling
+- Updated job selection UX for better user experience
+- Restructured profile page for better information hierarchy
+
+### Fixed
+- Fixed work history not displaying in some resume profiles
+- Resolved SelectItem empty value error in job selection dropdown
+- Fixed apiRequest parameter type issues in analysis functionality
+- Improved handling of null values in job selection state
+- Enhanced edge case handling in data extraction utilities
+
 ## [1.5.0] - 2024-05-12
 
 ### Added

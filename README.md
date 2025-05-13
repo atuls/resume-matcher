@@ -20,6 +20,9 @@ An AI-powered resume analysis platform that efficiently matches candidate resume
 - **Flexible AI Response Parsing**: Robust extraction of data from various LLM response formats
 - **Single-Prompt Analysis**: Unified prompt system for comprehensive resume evaluation
 - **Score Normalization**: Automatic conversion of different scoring scales (0-1, 0-10, 0-100)
+- **Versatile Data Extraction**: Extract work history from multiple response structures with fallbacks
+- **Job Matching Interface**: Interactive job selection with score display in candidate profiles
+- **Re-run Analysis**: Ability to re-analyze candidates against specific jobs on demand
 
 ## Tech Stack
 
@@ -57,6 +60,8 @@ The application requires the following environment variables:
 6. **On-demand Analysis**: Click the "Analyze" button for any candidate to view their position details, highlights, and red flags
 7. **Efficient Processing**: Analyze only the candidates you're interested in to reduce API usage and speed up processing
 8. **View Details**: Click on a resume to see detailed candidate information and job-specific scores
+9. **Job-specific Matching**: Use the job selection dropdown in candidate profiles to compare match scores against different job positions
+10. **Re-run Analysis**: Update match scores for specific job-candidate combinations using the Re-run Analysis button
 
 ## Data Flow
 
