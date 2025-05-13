@@ -547,8 +547,8 @@ export default function ResumeProfilePage() {
                         let skillsList: string[] = [];
                         
                         // Check if skills are available in the analysis object directly
-                        if (analysis?.skills && analysis.skills.length > 0) {
-                          skillsList = analysis.skills;
+                        if (analysis?.analysis?.skills && analysis.analysis.skills.length > 0) {
+                          skillsList = analysis.analysis.skills;
                         } 
                         // Check if skills are in rawResponse.parsedJson.Skills path
                         else if (analysis?.rawResponse?.parsedJson?.Skills && analysis.rawResponse.parsedJson.Skills.length > 0) {
