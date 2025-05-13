@@ -1,244 +1,216 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
-import { runAllTests } from '@/lib/analysis-test';
+import { testAnalysisDataPaths, testRedFlagDataPaths, runAllTests } from '@/lib/analysis-test';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { JsonView, defaultStyles } from 'react-json-view-lite';
+import 'react-json-view-lite/dist/index.css';
 
-export default function AnalysisTestPage() {
-  const [resumeId, setResumeId] = useState<string>('395a8706-7c15-4238-82ea-9823cedb824f');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [results, setResults] = useState<any>(null);
+const AnalysisTestPage: React.FC = () => {
+  const [resumeId, setResumeId] = useState('395a8706-7c15-4238-82ea-9823cedb824f');
+  const [analysisResults, setAnalysisResults] = useState<any>(null);
+  const [redFlagResults, setRedFlagResults] = useState<any>(null);
+  const [allTestResults, setAllTestResults] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('analysis');
 
-  const runTest = async () => {
-    if (!resumeId) {
-      setError('Please enter a resume ID');
-      return;
-    }
+  const handleTest = async () => {
+    if (!resumeId) return;
     
-    setIsLoading(true);
-    setError(null);
-    
+    setLoading(true);
     try {
-      const testResults = await runAllTests(resumeId);
-      setResults(testResults);
-      console.log('Test results:', testResults);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred while running tests');
-      console.error('Test error:', err);
+      const results = await testAnalysisDataPaths(resumeId);
+      setAnalysisResults(results);
+    } catch (error) {
+      console.error("Error testing analysis data paths:", error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  // Run the test on initial load
-  useEffect(() => {
-    runTest();
-  }, []);
+  const handleRedFlagTest = async () => {
+    if (!resumeId) return;
+    
+    setLoading(true);
+    try {
+      const results = await testRedFlagDataPaths(resumeId);
+      setRedFlagResults(results);
+    } catch (error) {
+      console.error("Error testing red flag data paths:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAllTests = async () => {
+    if (!resumeId) return;
+    
+    setLoading(true);
+    try {
+      const results = await runAllTests(resumeId);
+      setAllTestResults(results);
+    } catch (error) {
+      console.error("Test error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const jsonViewStyles = {
+    ...defaultStyles,
+    container: 'pt-4'
+  };
 
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-4">Analysis Data Path Test</h1>
-      
-      <div className="mb-6">
-        <div className="flex gap-2 mb-4">
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Analysis Data Path Tester</h1>
+      <div className="mb-4">
+        <Label htmlFor="resumeId">Resume ID</Label>
+        <div className="flex gap-2">
           <Input 
-            value={resumeId}
-            onChange={(e) => setResumeId(e.target.value)}
+            id="resumeId" 
+            value={resumeId} 
+            onChange={(e) => setResumeId(e.target.value)} 
             placeholder="Enter resume ID"
-            className="flex-1"
+            className="max-w-md"
           />
-          <Button 
-            onClick={runTest}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Running...' : 'Run Test'}
+          <Button onClick={handleAllTests} disabled={loading}>
+            {loading ? 'Testing...' : 'Run All Tests'}
           </Button>
         </div>
-        
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+        <p className="text-sm text-muted-foreground mt-1">
+          Default ID is for testing purposes - this is pre-configured with a known working resume ID
+        </p>
       </div>
-      
-      {results && (
-        <Tabs defaultValue="skills">
-          <TabsList>
-            <TabsTrigger value="skills">Skills</TabsTrigger>
-            <TabsTrigger value="workHistory">Work History</TabsTrigger>
-            <TabsTrigger value="redFlags">Red Flags</TabsTrigger>
-            <TabsTrigger value="score">Score & Summary</TabsTrigger>
-            <TabsTrigger value="rawPaths">All Data Paths</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="skills">
-            <Card>
-              <CardHeader>
-                <CardTitle>Skills Data</CardTitle>
-                <CardDescription>
-                  Found at path: <code>{results.analysis.skills.foundPath}</code>
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[600px]">
-                  <pre>{JSON.stringify(results.analysis.skills.data, null, 2)}</pre>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="workHistory">
-            <Card>
-              <CardHeader>
-                <CardTitle>Work History Data</CardTitle>
-                <CardDescription>
-                  <div>Analysis Path: <code>{results.analysis.workHistory.foundPath}</code></div>
-                  <div>Red Flag Path: <code>{results.redFlagAnalysis.workHistory.foundPath}</code></div>
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="analysis">
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="analysis">From Analysis</TabsTrigger>
-                    <TabsTrigger value="redFlag">From Red Flag Analysis</TabsTrigger>
-                  </TabsList>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="analysis">Analysis Paths</TabsTrigger>
+          <TabsTrigger value="redFlags">Red Flag Paths</TabsTrigger>
+          <TabsTrigger value="all">All Test Results</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="analysis">
+          <Card>
+            <CardHeader>
+              <CardTitle>Analysis Data Paths</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={handleTest} disabled={loading}>
+                {loading ? 'Testing...' : 'Test Analysis Paths'}
+              </Button>
+              
+              {analysisResults && (
+                <div className="mt-4">
+                  <h3 className="text-lg font-semibold mb-2">Skills Path Result:</h3>
+                  <div className="bg-muted p-2 rounded">
+                    <p><strong>Found Path:</strong> {analysisResults.skills.foundPath}</p>
+                  </div>
                   
-                  <TabsContent value="analysis">
-                    <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[600px]">
-                      <pre>{JSON.stringify(results.analysis.workHistory.data, null, 2)}</pre>
+                  <h4 className="text-md font-semibold mt-4 mb-2">Skills Data:</h4>
+                  <ScrollArea className="h-[200px] w-full rounded-md border">
+                    <div className="p-4">
+                      <pre>{JSON.stringify(analysisResults.skills.data, null, 2)}</pre>
                     </div>
-                  </TabsContent>
+                  </ScrollArea>
                   
-                  <TabsContent value="redFlag">
-                    <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[600px]">
-                      <pre>{JSON.stringify(results.redFlagAnalysis.workHistory.data, null, 2)}</pre>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="redFlags">
-            <Card>
-              <CardHeader>
-                <CardTitle>Red Flags Data</CardTitle>
-                <CardDescription>
-                  <div>Analysis Path: <code>{results.analysis.redFlags.foundPath}</code></div>
-                  <div>Red Flag Path: <code>{results.redFlagAnalysis.redFlags.foundPath}</code></div>
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="analysis">
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="analysis">From Analysis</TabsTrigger>
-                    <TabsTrigger value="redFlag">From Red Flag Analysis</TabsTrigger>
-                  </TabsList>
+                  <h3 className="text-lg font-semibold mt-6 mb-2">Work History Path Result:</h3>
+                  <div className="bg-muted p-2 rounded">
+                    <p><strong>Found Path:</strong> {analysisResults.workHistory.foundPath}</p>
+                  </div>
                   
-                  <TabsContent value="analysis">
-                    <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[600px]">
-                      <pre>{JSON.stringify(results.analysis.redFlags.data, null, 2)}</pre>
+                  <h4 className="text-md font-semibold mt-4 mb-2">Work History Data:</h4>
+                  <ScrollArea className="h-[200px] w-full rounded-md border">
+                    <div className="p-4">
+                      <pre>{JSON.stringify(analysisResults.workHistory.data, null, 2)}</pre>
                     </div>
-                  </TabsContent>
+                  </ScrollArea>
                   
-                  <TabsContent value="redFlag">
-                    <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[600px]">
-                      <pre>{JSON.stringify(results.redFlagAnalysis.redFlags.data, null, 2)}</pre>
+                  <h3 className="text-lg font-semibold mt-6 mb-2">Summary Path Result:</h3>
+                  <div className="bg-muted p-2 rounded">
+                    <p><strong>Found Path:</strong> {analysisResults.summary.foundPath}</p>
+                  </div>
+                  
+                  <h4 className="text-md font-semibold mt-4 mb-2">Summary Data:</h4>
+                  <ScrollArea className="h-[100px] w-full rounded-md border">
+                    <div className="p-4">
+                      <pre>{analysisResults.summary.text}</pre>
                     </div>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="score">
-            <Card>
-              <CardHeader>
-                <CardTitle>Score & Summary</CardTitle>
-                <CardDescription>
-                  <div>Score Path: <code>{results.analysis.matchingScore.foundPath}</code></div>
-                  <div>Summary Path: <code>{results.analysis.summary.foundPath}</code></div>
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Matching Score</h3>
-                  <div className="bg-gray-100 p-4 rounded-md">
-                    <span className="text-2xl font-bold">
-                      {results.analysis.matchingScore.score}
-                    </span>
+                  </ScrollArea>
+                  
+                  <h3 className="text-lg font-semibold mt-6 mb-2">Matching Score Path Result:</h3>
+                  <div className="bg-muted p-2 rounded">
+                    <p><strong>Found Path:</strong> {analysisResults.matchingScore.foundPath}</p>
+                    <p><strong>Score:</strong> {analysisResults.matchingScore.score}</p>
                   </div>
                 </div>
-                
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Summary</h3>
-                  <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[400px]">
-                    <p className="whitespace-pre-wrap">{results.analysis.summary.text}</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="redFlags">
+          <Card>
+            <CardHeader>
+              <CardTitle>Red Flag Data Paths</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={handleRedFlagTest} disabled={loading}>
+                {loading ? 'Testing...' : 'Test Red Flag Paths'}
+              </Button>
+              
+              {redFlagResults && (
+                <div className="mt-4">
+                  <h3 className="text-lg font-semibold mb-2">Red Flags Path Result:</h3>
+                  <div className="bg-muted p-2 rounded">
+                    <p><strong>Found Path:</strong> {redFlagResults.redFlags.foundPath}</p>
+                  </div>
+                  
+                  <h4 className="text-md font-semibold mt-4 mb-2">Red Flags Data:</h4>
+                  <ScrollArea className="h-[200px] w-full rounded-md border">
+                    <div className="p-4">
+                      <pre>{JSON.stringify(redFlagResults.redFlags.data, null, 2)}</pre>
+                    </div>
+                  </ScrollArea>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="all">
+          <Card>
+            <CardHeader>
+              <CardTitle>All Test Results</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={handleAllTests} disabled={loading}>
+                {loading ? 'Testing...' : 'Run All Tests'}
+              </Button>
+              
+              {allTestResults && (
+                <div className="mt-4">
+                  <h3 className="text-lg font-semibold mb-2">Raw Data Structure:</h3>
+                  <div className="mt-4 bg-white rounded-md border">
+                    <ScrollArea className="h-[400px] w-full">
+                      {allTestResults.analysis && (
+                        <div className="p-4">
+                          <JsonView data={allTestResults} style={jsonViewStyles} />
+                        </div>
+                      )}
+                    </ScrollArea>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="rawPaths">
-            <Card>
-              <CardHeader>
-                <CardTitle>All Data Paths</CardTitle>
-                <CardDescription>
-                  All attempted data paths and their values
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="skills">
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="skills">Skills</TabsTrigger>
-                    <TabsTrigger value="workHistory">Work History</TabsTrigger>
-                    <TabsTrigger value="redFlags">Red Flags</TabsTrigger>
-                    <TabsTrigger value="score">Score</TabsTrigger>
-                    <TabsTrigger value="summary">Summary</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="skills">
-                    <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[600px]">
-                      <pre>{JSON.stringify(results.analysis.allPaths.skills, null, 2)}</pre>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="workHistory">
-                    <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[600px]">
-                      <pre>{JSON.stringify(results.analysis.allPaths.workHistory, null, 2)}</pre>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="redFlags">
-                    <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[600px]">
-                      <pre>{JSON.stringify(results.analysis.allPaths.redFlags, null, 2)}</pre>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="score">
-                    <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[600px]">
-                      <pre>{JSON.stringify(results.analysis.allPaths.score, null, 2)}</pre>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="summary">
-                    <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[600px]">
-                      <pre>{JSON.stringify(results.analysis.allPaths.summary, null, 2)}</pre>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      )}
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
-}
+};
+
+export default AnalysisTestPage;

@@ -43,7 +43,16 @@ interface DebugResult {
 export async function testAnalysisDataPaths(resumeId: string): Promise<DebugResult> {
   try {
     // Fetch the analysis result
-    const analysisResult = await apiRequest(`/api/resumes/${resumeId}/analysis`);
+    const response = await fetch(`/api/resumes/${resumeId}/analysis`, { 
+      method: 'GET',
+      credentials: 'include'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch analysis: ${response.status} ${response.statusText}`);
+    }
+    
+    const analysisResult = await response.json();
     console.log("Full analysis result:", analysisResult);
     
     // Try different access paths for skills
@@ -138,6 +147,28 @@ export async function testAnalysisDataPaths(resumeId: string): Promise<DebugResu
 }
 
 /**
+ * Run both analysis and red flag analysis tests
+ * @param resumeId The resume ID to test
+ */
+export async function runAllTests(resumeId: string): Promise<{
+  analysis: DebugResult;
+  redFlags: any;
+}> {
+  try {
+    const analysis = await testAnalysisDataPaths(resumeId);
+    const redFlags = await testRedFlagDataPaths(resumeId);
+    
+    return {
+      analysis,
+      redFlags
+    };
+  } catch (error) {
+    console.error("Error running all tests:", error);
+    throw error;
+  }
+}
+
+/**
  * Same test function but for red flag analysis
  * @param resumeId The resume ID to analyze
  * @returns A debug result with red flag data paths and values
@@ -145,7 +176,16 @@ export async function testAnalysisDataPaths(resumeId: string): Promise<DebugResu
 export async function testRedFlagDataPaths(resumeId: string): Promise<any> {
   try {
     // Fetch the red flag analysis result
-    const redFlagResult = await apiRequest(`/api/resumes/${resumeId}/red-flag-analysis`);
+    const response = await fetch(`/api/resumes/${resumeId}/red-flag-analysis`, {
+      method: 'GET',
+      credentials: 'include'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch red flag analysis: ${response.status} ${response.statusText}`);
+    }
+    
+    const redFlagResult = await response.json();
     console.log("Full red flag analysis result:", redFlagResult);
     
     // Try different access paths for red flags
