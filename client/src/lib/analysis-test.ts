@@ -61,9 +61,38 @@ export async function testAnalysisDataPaths(resumeId: string): Promise<DebugResu
     // Try to extract JSON from the rawText if it exists
     let parsedJson = null;
     try {
-      const rawText = getNestedValue(analysisData, ["rawResponse", "rawResponse", "rawText"]);
+      // First attempt - regular path to rawText
+      let rawText = getNestedValue(analysisData, ["rawResponse", "rawResponse", "rawText"]);
+      
+      // If that doesn't work, try to extract it from the logs
+      if (!rawText) {
+        // Log the raw structure to help debug
+        console.log("Raw analysis structure:", JSON.stringify(analysisData, null, 2).substring(0, 500) + "...");
+        
+        // Try alternate paths
+        const rawResponseData = getNestedValue(analysisData, ["rawResponse", "rawResponse"]);
+        if (rawResponseData && typeof rawResponseData === 'object') {
+          for (const key in rawResponseData) {
+            if (typeof rawResponseData[key] === 'string' && 
+                rawResponseData[key].includes("matching_score") && 
+                rawResponseData[key].includes("Summary")) {
+              rawText = rawResponseData[key];
+              console.log("Found potential JSON text in:", key);
+              break;
+            }
+          }
+        }
+      }
+      
       if (rawText && typeof rawText === 'string') {
-        parsedJson = JSON.parse(rawText);
+        // Extract JSON from the text - it might be wrapped in markdown code blocks or other text
+        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          parsedJson = JSON.parse(jsonMatch[0]);
+          console.log("Successfully parsed JSON from rawText");
+        } else {
+          console.log("No valid JSON object found in rawText");
+        }
       }
     } catch (e) {
       console.error("Error parsing JSON from rawText:", e);
@@ -202,18 +231,18 @@ export async function testRedFlagDataPaths(resumeId: string): Promise<any> {
     const redFlagResult = await response.json();
     console.log("Full red flag analysis result:", redFlagResult);
     
-    // Try different access paths for red flags
+    // Direct path for red flags - this matches the structure in logs
     const redFlagsPaths = {
       "redFlags.redFlags": getNestedValue(redFlagResult, ["redFlags", "redFlags"]),
-      "redFlags.isCurrentlyEmployed": getNestedValue(redFlagResult, ["redFlags", "isCurrentlyEmployed"]),
-      "redFlags.hasJobHoppingHistory": getNestedValue(redFlagResult, ["redFlags", "hasJobHoppingHistory"]),
-      "redFlags.hasContractRoles": getNestedValue(redFlagResult, ["redFlags", "hasContractRoles"])
+      // Additional potential paths
+      "redFlags": getNestedValue(redFlagResult, ["redFlags"]),
+      "requirements": getNestedValue(redFlagResult, ["requirements"])
     };
     
     // Try different access paths for work history
     const workHistoryPaths = {
       "redFlags.recentRoles": getNestedValue(redFlagResult, ["redFlags", "recentRoles"]),
-      "redFlags.highlights": getNestedValue(redFlagResult, ["redFlags", "highlights"])
+      "recentRoles": getNestedValue(redFlagResult, ["recentRoles"])
     };
     
     // Find the first working path for each data type
