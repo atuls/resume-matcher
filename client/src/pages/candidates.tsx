@@ -829,13 +829,20 @@ export default function CandidatesPage() {
                               <span className="text-sm text-gray-500">Analyzing...</span>
                             </div>
                           ) : resumeAnalysis[resume.id] ? (
-                            <div className="flex items-center text-sm">
-                              <Briefcase className="h-4 w-4 mr-1 text-gray-500" />
-                              <span className="font-medium">
-                                {resumeAnalysis[resume.id].currentJobPosition || 
-                                 (resumeAnalysis[resume.id].isCurrentlyEmployed ? 
-                                 "Employed" : "Unemployed")}
-                              </span>
+                            <div className="flex flex-col">
+                              <div className="flex items-center text-sm">
+                                <Briefcase className="h-4 w-4 mr-1 text-gray-500" />
+                                <span className="font-medium">
+                                  {resumeAnalysis[resume.id].currentJobPosition || 
+                                   (resumeAnalysis[resume.id].isCurrentlyEmployed ? 
+                                   "Employed" : "Unemployed")}
+                                </span>
+                              </div>
+                              {resumeAnalysis[resume.id].currentCompany && (
+                                <div className="flex items-center ml-5 text-xs text-gray-500 mt-1">
+                                  <span>{resumeAnalysis[resume.id].currentCompany}</span>
+                                </div>
+                              )}
                             </div>
                           ) : (
                             <Button 
