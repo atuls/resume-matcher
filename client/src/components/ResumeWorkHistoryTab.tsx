@@ -71,8 +71,12 @@ export function ResumeWorkHistoryTab({
           <div className="space-y-4">
             {potentialRedFlags.map((flag: any, index: number) => (
               <div key={index} className="p-3 bg-amber-50 text-amber-800 rounded-md">
-                <div className="font-medium mb-1">{flag.title || "Potential Issue"}</div>
-                <p className="text-sm">{flag.description || flag.issue || flag}</p>
+                <div className="font-medium mb-1">
+                  {flag.title || (typeof flag === 'string' ? "Potential Issue" : "Potential Issue")}
+                </div>
+                <p className="text-sm">
+                  {flag.description || flag.issue || (typeof flag === 'string' ? flag : JSON.stringify(flag))}
+                </p>
               </div>
             ))}
           </div>
@@ -97,15 +101,32 @@ export function ResumeWorkHistoryTab({
               <div key={index} className="p-4 border rounded-md">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h4 className="font-medium">{role.title || role.position || "Role"}</h4>
-                    <div className="text-sm text-gray-600">{role.company || role.organization || "Company"}</div>
+                    <h4 className="font-medium">
+                      {role.title || role.Title || role.position || role.Position || "Role"}
+                    </h4>
+                    <div className="text-sm text-gray-600">
+                      {role.company || role.Company || role.organization || role.Organization || "Company"}
+                      {(role.location || role.Location) && 
+                        <span className="ml-1">• {role.location || role.Location}</span>
+                      }
+                    </div>
                   </div>
                   <div className="text-sm text-gray-500">
-                    {role.startDate || role.dates?.start || ""} - {role.endDate || role.dates?.end || role.isCurrentlyEmployed ? "Present" : ""}
+                    {role.startDate || role.StartDate || role.dates?.start || ""} - {role.endDate || role.EndDate || role.dates?.end || (role.isCurrentRole || role.isCurrentlyEmployed) ? "Present" : ""}
                   </div>
                 </div>
-                {role.description && (
-                  <p className="text-sm mt-2">{role.description}</p>
+                {(role.description || role.Description) && (
+                  <p className="text-sm mt-2">{role.description || role.Description}</p>
+                )}
+                {(role.achievements || role.Achievements) && Array.isArray(role.achievements || role.Achievements) && (
+                  <div className="mt-2">
+                    <h5 className="text-sm font-medium">Key Achievements:</h5>
+                    <ul className="list-disc pl-5 text-sm mt-1">
+                      {(role.achievements || role.Achievements).map((achievement: string, i: number) => (
+                        <li key={i}>{achievement}</li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
             ))}
