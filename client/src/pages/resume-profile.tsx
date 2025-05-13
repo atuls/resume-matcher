@@ -842,7 +842,7 @@ export default function ResumeProfilePage() {
                           <div className="bg-gray-50 p-3 rounded-lg">
                             <div className="text-sm text-gray-500">Job Stability</div>
                             <div className="font-medium flex items-center">
-                              {redFlagData.analysis.hasJobHoppingHistory ? (
+                              {redFlagData.analysis && redFlagData.analysis.hasJobHoppingHistory ? (
                                 <>
                                   <AlertCircle className="h-4 w-4 mr-1.5 text-amber-500" />
                                   Job Hopping Detected
@@ -855,7 +855,7 @@ export default function ResumeProfilePage() {
                               )}
                             </div>
                             <div className="text-xs text-gray-500 mt-1">
-                              {redFlagData.analysis.hasContractRoles ? 
+                              {redFlagData.analysis && redFlagData.analysis.hasContractRoles ? 
                                 "Has held contract roles" : 
                                 "No contract roles detected"}
                             </div>
@@ -864,7 +864,7 @@ export default function ResumeProfilePage() {
                       </div>
                       
                       {/* Recent roles section */}
-                      {redFlagData.analysis.recentRoles && redFlagData.analysis.recentRoles.length > 0 && (
+                      {redFlagData.analysis && redFlagData.analysis.recentRoles && redFlagData.analysis.recentRoles.length > 0 && (
                         <div className="space-y-3">
                           <h3 className="text-lg font-medium flex items-center">
                             <Briefcase className="h-5 w-5 mr-2 text-gray-500" />
