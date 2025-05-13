@@ -55,52 +55,57 @@ export async function testAnalysisDataPaths(resumeId: string): Promise<DebugResu
     const analysisResult = await response.json();
     console.log("Full analysis result:", analysisResult);
     
+    // First unwrap the array if it exists
+    const analysisData = Array.isArray(analysisResult) ? analysisResult[0] : analysisResult;
+    
+    // Try to extract JSON from the rawText if it exists
+    let parsedJson = null;
+    try {
+      const rawText = getNestedValue(analysisData, ["rawResponse", "rawResponse", "rawText"]);
+      if (rawText && typeof rawText === 'string') {
+        parsedJson = JSON.parse(rawText);
+      }
+    } catch (e) {
+      console.error("Error parsing JSON from rawText:", e);
+    }
+    
     // Try different access paths for skills
     const skillsPaths = {
-      "rawResponse.rawResponse.parsedJson.Skills": getNestedValue(analysisResult, ["rawResponse", "rawResponse", "parsedJson", "Skills"]),
-      "rawResponse.rawResponse.extractedSections.skills": getNestedValue(analysisResult, ["rawResponse", "rawResponse", "extractedSections", "skills"]),
-      "rawResponse.skills": getNestedValue(analysisResult, ["rawResponse", "skills"]),
-      "analysis.skills": getNestedValue(analysisResult, ["analysis", "skills"])
+      "rawResponse.skills": getNestedValue(analysisData, ["rawResponse", "skills"]),
+      "skillMatches": getNestedValue(analysisData, ["skillMatches"]),
+      "parsedJson.Skills": parsedJson?.Skills || [],
+      "parsedJson.skills": parsedJson?.skills || []
     };
     
     // Try different access paths for work history
     const workHistoryPaths = {
-      "rawResponse.rawResponse.parsedJson.Work History": getNestedValue(analysisResult, ["rawResponse", "rawResponse", "parsedJson", "Work History"]),
-      "rawResponse.rawResponse.parsedJson.work_history": getNestedValue(analysisResult, ["rawResponse", "rawResponse", "parsedJson", "work_history"]),
-      "rawResponse.rawResponse.parsedJson.WorkHistory": getNestedValue(analysisResult, ["rawResponse", "rawResponse", "parsedJson", "WorkHistory"]),
-      "rawResponse.rawResponse.extractedSections.workHistory": getNestedValue(analysisResult, ["rawResponse", "rawResponse", "extractedSections", "workHistory"]),
-      "rawResponse.workHistory": getNestedValue(analysisResult, ["rawResponse", "workHistory"]),
-      "analysis.workHistory": getNestedValue(analysisResult, ["analysis", "workHistory"]),
-      "analysis.recentRoles": getNestedValue(analysisResult, ["analysis", "recentRoles"])
+      "rawResponse.experience": getNestedValue(analysisData, ["rawResponse", "experience"]),
+      "parsedJson.Work History": parsedJson?.["Work History"] || [],
+      "parsedJson.work_history": parsedJson?.work_history || [],
+      "parsedJson.WorkHistory": parsedJson?.WorkHistory || []
     };
     
     // Try different access paths for red flags
     const redFlagsPaths = {
-      "rawResponse.rawResponse.parsedJson.Red Flags": getNestedValue(analysisResult, ["rawResponse", "rawResponse", "parsedJson", "Red Flags"]),
-      "rawResponse.rawResponse.parsedJson.RedFlags": getNestedValue(analysisResult, ["rawResponse", "rawResponse", "parsedJson", "RedFlags"]),
-      "rawResponse.rawResponse.parsedJson.red_flags": getNestedValue(analysisResult, ["rawResponse", "rawResponse", "parsedJson", "red_flags"]),
-      "rawResponse.rawResponse.extractedSections.redFlags": getNestedValue(analysisResult, ["rawResponse", "rawResponse", "extractedSections", "redFlags"]),
-      "rawResponse.redFlags": getNestedValue(analysisResult, ["rawResponse", "redFlags"]),
-      "analysis.redFlags": getNestedValue(analysisResult, ["analysis", "redFlags"]),
-      "analysis.potentialRedFlags": getNestedValue(analysisResult, ["analysis", "potentialRedFlags"])
+      "parsedJson.Red Flags": parsedJson?.["Red Flags"] || [],
+      "parsedJson.RedFlags": parsedJson?.RedFlags || [],
+      "parsedJson.red_flags": parsedJson?.red_flags || []
     };
     
     // Try different access paths for matching score
     const scorePaths = {
-      "overallScore": getNestedValue(analysisResult, ["overallScore"]),
-      "rawResponse.score": getNestedValue(analysisResult, ["rawResponse", "score"]),
-      "rawResponse.rawResponse.parsedJson.matching_score": getNestedValue(analysisResult, ["rawResponse", "rawResponse", "parsedJson", "matching_score"]),
-      "rawResponse.rawResponse.parsedJson.matchingScore": getNestedValue(analysisResult, ["rawResponse", "rawResponse", "parsedJson", "matchingScore"]),
-      "rawResponse.rawResponse.parsedJson.score": getNestedValue(analysisResult, ["rawResponse", "rawResponse", "parsedJson", "score"])
+      "overallScore": getNestedValue(analysisData, ["overallScore"]),
+      "rawResponse.score": getNestedValue(analysisData, ["rawResponse", "score"]),
+      "parsedJson.matching_score": parsedJson?.matching_score || 0,
+      "parsedJson.matchingScore": parsedJson?.matchingScore || 0,
+      "parsedJson.score": parsedJson?.score || 0
     };
     
     // Try different access paths for summary
     const summaryPaths = {
-      "rawResponse.rawResponse.parsedJson.Summary": getNestedValue(analysisResult, ["rawResponse", "rawResponse", "parsedJson", "Summary"]),
-      "rawResponse.rawResponse.parsedJson.summary": getNestedValue(analysisResult, ["rawResponse", "rawResponse", "parsedJson", "summary"]),
-      "rawResponse.rawResponse.extractedSections.summary": getNestedValue(analysisResult, ["rawResponse", "rawResponse", "extractedSections", "summary"]),
-      "rawResponse.summary": getNestedValue(analysisResult, ["rawResponse", "summary"]),
-      "analysis.summary": getNestedValue(analysisResult, ["analysis", "summary"])
+      "rawResponse.experience": getNestedValue(analysisData, ["rawResponse", "experience"]),
+      "parsedJson.Summary": parsedJson?.Summary || "",
+      "parsedJson.summary": parsedJson?.summary || ""
     };
     
     // Find the first working path for each data type
@@ -199,22 +204,16 @@ export async function testRedFlagDataPaths(resumeId: string): Promise<any> {
     
     // Try different access paths for red flags
     const redFlagsPaths = {
-      "analysis.potentialRedFlags": getNestedValue(redFlagResult, ["analysis", "potentialRedFlags"]),
-      "analysis.redFlags": getNestedValue(redFlagResult, ["analysis", "redFlags"]),
-      "rawResponse.parsedJson.Red Flags": getNestedValue(redFlagResult, ["rawResponse", "parsedJson", "Red Flags"]),
-      "rawResponse.parsedJson.RedFlags": getNestedValue(redFlagResult, ["rawResponse", "parsedJson", "RedFlags"]),
-      "rawResponse.parsedJson.red_flags": getNestedValue(redFlagResult, ["rawResponse", "parsedJson", "red_flags"]),
-      "rawResponse.extractedSections.redFlags": getNestedValue(redFlagResult, ["rawResponse", "extractedSections", "redFlags"])
+      "redFlags.redFlags": getNestedValue(redFlagResult, ["redFlags", "redFlags"]),
+      "redFlags.isCurrentlyEmployed": getNestedValue(redFlagResult, ["redFlags", "isCurrentlyEmployed"]),
+      "redFlags.hasJobHoppingHistory": getNestedValue(redFlagResult, ["redFlags", "hasJobHoppingHistory"]),
+      "redFlags.hasContractRoles": getNestedValue(redFlagResult, ["redFlags", "hasContractRoles"])
     };
     
     // Try different access paths for work history
     const workHistoryPaths = {
-      "analysis.recentRoles": getNestedValue(redFlagResult, ["analysis", "recentRoles"]),
-      "analysis.workHistory": getNestedValue(redFlagResult, ["analysis", "workHistory"]),
-      "rawResponse.parsedJson.Work History": getNestedValue(redFlagResult, ["rawResponse", "parsedJson", "Work History"]),
-      "rawResponse.parsedJson.work_history": getNestedValue(redFlagResult, ["rawResponse", "parsedJson", "work_history"]),
-      "rawResponse.parsedJson.WorkHistory": getNestedValue(redFlagResult, ["rawResponse", "parsedJson", "WorkHistory"]),
-      "rawResponse.extractedSections.workHistory": getNestedValue(redFlagResult, ["rawResponse", "extractedSections", "workHistory"])
+      "redFlags.recentRoles": getNestedValue(redFlagResult, ["redFlags", "recentRoles"]),
+      "redFlags.highlights": getNestedValue(redFlagResult, ["redFlags", "highlights"])
     };
     
     // Find the first working path for each data type
