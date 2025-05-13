@@ -221,7 +221,7 @@ export async function updateResumeContactedStatus(id: string, contacted: boolean
 
 export async function getResumeAnalysis(
   id: string, 
-  jobDescriptionId: string,
+  jobDescriptionId?: string,
   forceRerun: boolean = false
 ): Promise<{
   analysis: {
@@ -238,7 +238,11 @@ export async function getResumeAnalysis(
   rawResponse?: any;
   aiModel?: string;
 }> {
-  const url = `/api/resumes/${id}/analysis?jobDescriptionId=${jobDescriptionId}${forceRerun ? '&forceRerun=true' : ''}`;
+  // Build URL based on whether jobDescriptionId is provided
+  const baseUrl = `/api/resumes/${id}/analysis`;
+  const url = jobDescriptionId 
+    ? `${baseUrl}?jobDescriptionId=${jobDescriptionId}${forceRerun ? '&forceRerun=true' : ''}` 
+    : `${baseUrl}${forceRerun ? '?forceRerun=true' : ''}`;
   const response = await fetch(url, {
     credentials: "include",
   });
@@ -325,18 +329,27 @@ function processScoreData(data: any): { [resumeId: string]: { score: number, mat
   return processed;
 }
 
-export async function getResumeScores(resumeIds: string[], jobDescriptionId: string): Promise<{
+export async function getResumeScores(resumeIds: string | string[], jobDescriptionId?: string): Promise<{
   [resumeId: string]: { score: number, matchedAt: Date }
 }> {
   try {
-    console.log(`Fetching scores for ${resumeIds.length} resumes and job ${jobDescriptionId}`);
+    // Ensure resumeIds is always an array
+    const resumeIdsArray = Array.isArray(resumeIds) ? resumeIds : [resumeIds];
+    
+    console.log(`Fetching scores for ${resumeIdsArray.length} resumes and job ${jobDescriptionId}`);
+    
+    // If no jobDescriptionId is provided, return empty result
+    if (!jobDescriptionId) {
+      console.log('No jobDescriptionId provided, skipping score fetch');
+      return {};
+    }
     
     // Using POST endpoint to handle large numbers of resumeIds
     const url = `/api/job-descriptions/${jobDescriptionId}/resume-scores`;
     
     // For small batches (under 20 resumes), use GET for simplicity
-    if (resumeIds.length <= 20) {
-      const queryString = resumeIds.map(id => `resumeId=${encodeURIComponent(id)}`).join('&');
+    if (resumeIdsArray.length <= 20) {
+      const queryString = resumeIdsArray.map((id: string) => `resumeId=${encodeURIComponent(id)}`).join('&');
       const getUrl = `${url}?${queryString}`;
       
       console.log("Using GET for small batch, URL:", getUrl);
@@ -363,7 +376,7 @@ export async function getResumeScores(resumeIds: string[], jobDescriptionId: str
         "Content-Type": "application/json",
       },
       credentials: "include",
-      body: JSON.stringify({ resumeIds }),
+      body: JSON.stringify({ resumeIds: resumeIdsArray }),
     });
     
     if (!response.ok) {
