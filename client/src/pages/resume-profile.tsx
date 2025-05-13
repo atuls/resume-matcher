@@ -717,7 +717,7 @@ export default function ResumeProfilePage() {
                           <div className="bg-white p-3 rounded border">
                             <div className="text-sm text-gray-500">Employment Status</div>
                             <div className="font-medium flex items-center">
-                              {redFlagData.analysis.isCurrentlyEmployed ? (
+                              {redFlagData.analysis && redFlagData.analysis.isCurrentlyEmployed ? (
                                 <>
                                   <CheckCircle className="h-4 w-4 mr-1.5 text-green-500" />
                                   Currently Employed
@@ -733,7 +733,7 @@ export default function ResumeProfilePage() {
                           <div className="bg-white p-3 rounded border">
                             <div className="text-sm text-gray-500">Contract Experience</div>
                             <div className="font-medium">
-                              {redFlagData.analysis.hasContractRoles ? "Yes" : "No"}
+                              {redFlagData.analysis && redFlagData.analysis.hasContractRoles ? "Yes" : "No"}
                             </div>
                           </div>
                         </div>
@@ -1016,9 +1016,32 @@ export default function ResumeProfilePage() {
                         </Badge>
                       </div>
                       {analysis?.rawResponse ? (
-                        <pre className="p-4 overflow-auto text-xs max-h-80 bg-black text-green-400">
-                          {JSON.stringify(analysis.rawResponse, null, 2)}
-                        </pre>
+                        <div className="space-y-4 p-4">
+                          {analysis.rawResponse?.parsedJson && (
+                            <div>
+                              <h4 className="font-medium text-sm mb-2">Parsed JSON Analysis:</h4>
+                              <pre className="overflow-auto text-xs max-h-60 p-3 rounded bg-black text-green-400">
+                                {JSON.stringify(analysis.rawResponse.parsedJson, null, 2)}
+                              </pre>
+                            </div>
+                          )}
+                          
+                          {analysis.rawResponse?.extractedSections && (
+                            <div>
+                              <h4 className="font-medium text-sm mb-2">Extracted Sections:</h4>
+                              <pre className="overflow-auto text-xs max-h-60 p-3 rounded bg-black text-green-400">
+                                {JSON.stringify(analysis.rawResponse.extractedSections, null, 2)}
+                              </pre>
+                            </div>
+                          )}
+                          
+                          <div>
+                            <h4 className="font-medium text-sm mb-2">Complete Raw Response:</h4>
+                            <pre className="overflow-auto text-xs max-h-80 p-3 rounded bg-black text-green-400">
+                              {JSON.stringify(analysis.rawResponse, null, 2)}
+                            </pre>
+                          </div>
+                        </div>
                       ) : isAnalysisLoading || analysisLoading ? (
                         <div className="flex justify-center py-8">
                           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
