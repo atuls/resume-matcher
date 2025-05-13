@@ -59,6 +59,7 @@ export default function CandidatesPage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [resumeAnalysis, setResumeAnalysis] = useState<{[resumeId: string]: {
     currentJobPosition?: string;
+    currentCompany?: string;
     isCurrentlyEmployed?: boolean;
     highlights?: string[];
     redFlags?: string[];
