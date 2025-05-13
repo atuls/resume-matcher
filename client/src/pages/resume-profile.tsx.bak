@@ -3,7 +3,6 @@ import { useRoute } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getResume, getResumeAnalysis, getJobDescriptions, getResumeScores, updateResumeContactedStatus, getResumeRedFlagAnalysis } from "@/lib/api";
-import { examineSkillsAccessPaths, examineWorkHistoryAccessPaths, extractSkillsFromAnalysis, categorizeSkills } from "@/lib/debug-utils";
 import { 
   User, FileText, Calendar, ArrowLeft, Mail, MapPin, Phone, Award, 
   Briefcase, Code, AlertCircle, BarChart3, CheckCircle, XCircle,
@@ -1036,84 +1035,22 @@ export default function ResumeProfilePage() {
                 <TabsContent value="debug">
                   <div className="space-y-6">
                     <div className="flex justify-between items-center">
-                      <h3 className="font-medium text-lg">Resume Analysis Debug Info</h3>
+                      <h3 className="font-medium text-lg">Resume Analysis LLM Responses</h3>
                       <Badge variant="secondary" className="ml-2">
                         Resume ID: {resumeId}
                       </Badge>
                     </div>
                     
-                    {/* Data Structure Diagnosis Alert */}
-                    <Alert>
-                      <AlertCircle className="h-4 w-4" />
-                      <div className="ml-2">
-                        <p className="font-medium text-sm">Data Structure Diagnosis</p>
-                        <p className="text-xs text-gray-500">
-                          This section uses debug utilities to identify the correct data access paths for Skills, Work History, and Red Flags.
-                          Use this information to fix data access paths in the UI components.
-                        </p>
-                      </div>
-                    </Alert>
-                    
-                    {/* Skills Analysis Object Structure */}
+                    {/* Complete Analysis Object Structure */}
                     <div className="rounded-md border overflow-hidden">
                       <div className="p-4 bg-gray-50 border-b">
-                        <h4 className="font-medium">Skills Analysis Object Structure</h4>
-                        <p className="text-xs text-gray-500">Full data returned from the Skills Analysis API</p>
+                        <h4 className="font-medium">Complete Analysis Object Structure</h4>
+                        <p className="text-xs text-gray-500">Full data returned from the API</p>
                       </div>
                       <div className="p-4">
                         <pre className="overflow-auto text-xs max-h-80 p-3 rounded bg-black text-green-400">
                           {JSON.stringify(analysis, null, 2) || "No analysis data available"}
                         </pre>
-                      </div>
-                    </div>
-                    
-                    {/* Work History Analysis Object Structure */}
-                    <div className="rounded-md border overflow-hidden">
-                      <div className="p-4 bg-gray-50 border-b">
-                        <h4 className="font-medium">Work History Analysis Object Structure</h4>
-                        <p className="text-xs text-gray-500">Full data returned from the Red Flag Analysis API</p>
-                      </div>
-                      <div className="p-4">
-                        <pre className="overflow-auto text-xs max-h-80 p-3 rounded bg-black text-green-400">
-                          {JSON.stringify(redFlagData, null, 2) || "No work history data available"}
-                        </pre>
-                      </div>
-                    </div>
-                    
-                    {/* Data Structure Path Analysis */}
-                    <div className="rounded-md border overflow-hidden">
-                      <div className="p-4 bg-gray-50 border-b">
-                        <h4 className="font-medium">Data Structure Path Analysis</h4>
-                        <p className="text-xs text-gray-500">Using debug utility functions to examine common access paths</p>
-                      </div>
-                      <div className="p-4 space-y-4">
-                        <div>
-                          <h5 className="text-sm font-medium">Skills Access Paths:</h5>
-                          <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
-                            {JSON.stringify(examineSkillsAccessPaths(analysis), null, 2)}
-                          </pre>
-                        </div>
-                        
-                        <div className="mt-4">
-                          <h5 className="text-sm font-medium">Work History Access Paths:</h5>
-                          <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
-                            {JSON.stringify(examineWorkHistoryAccessPaths(redFlagData), null, 2)}
-                          </pre>
-                        </div>
-                        
-                        <div className="mt-4">
-                          <h5 className="text-sm font-medium">Extracted Skills:</h5>
-                          <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
-                            {JSON.stringify(extractSkillsFromAnalysis(analysis), null, 2)}
-                          </pre>
-                        </div>
-                        
-                        <div className="mt-4">
-                          <h5 className="text-sm font-medium">Categorized Skills:</h5>
-                          <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
-                            {JSON.stringify(categorizeSkills(extractSkillsFromAnalysis(analysis)), null, 2)}
-                          </pre>
-                        </div>
                       </div>
                     </div>
                     
