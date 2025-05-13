@@ -806,15 +806,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Found ${existingAnalyses.length} existing analyses; will process ${resumesToProcess.length} new resumes`);
       
-      // Initialize results array for tracking
+      // Format the existing scores for response
+      const scoreMap: Record<string, { score: number, matchedAt: Date }> = {};
+      
+      // Add existing analysis results to the score map
+      for (const resumeId of limitedResumeIds) {
+        const existingAnalysis = existingAnalysisMap.get(resumeId);
+        if (existingAnalysis) {
+          scoreMap[resumeId] = {
+            score: existingAnalysis.overallScore,
+            matchedAt: existingAnalysis.createdAt
+          };
+        }
+      }
+      
+      console.log(`Returning ${Object.keys(scoreMap).length} existing scores for ${limitedResumeIds.length} requested resumes`);
+      
+      // Initialize results array for tracking (for backward compatibility)
       const results = limitedResumeIds.map(id => ({
         id,
         status: existingAnalysisMap.has(id) ? 'complete' : 'queued',
         message: existingAnalysisMap.has(id) ? 'Analysis already exists' : 'Analysis queued'
       }));
       
-      // Send initial response immediately
-      res.json({ results });
+      // Send initial response immediately with both scores and results
+      res.json(scoreMap);
       
       // Only process if there are new resumes to analyze
       if (resumesToProcess.length > 0) {
