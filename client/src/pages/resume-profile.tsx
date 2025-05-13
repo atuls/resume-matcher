@@ -6,7 +6,7 @@ import { getResume, getResumeAnalysis, getJobDescriptions, getResumeScores, upda
 import { 
   User, FileText, Calendar, ArrowLeft, Mail, MapPin, Phone, Award, 
   Briefcase, Code, AlertCircle, BarChart3, CheckCircle, XCircle,
-  RefreshCw, UserCheck, Sparkles, AlertTriangle
+  RefreshCw, UserCheck, Sparkles, AlertTriangle, Loader2
 } from "lucide-react";
 import { DebugPanel } from "@/components/DebugPanel";
 import { ResumeSkillsTab } from "@/components/ResumeSkillsTab";
@@ -17,7 +17,9 @@ import { formatDistance } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useState } from "react";
+import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -72,11 +74,14 @@ export default function ResumeProfilePage() {
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   
   // Job scores query - specifically for the selected job
+  // Type definition for score data
+  type ScoreData = Record<string, { score: number, matchedAt: Date }>;
+  
   const { 
     data: jobScore,
     refetch: refetchJobScore,
     isLoading: jobScoreIsLoading
-  } = useQuery({
+  } = useQuery<ScoreData>({
     queryKey: [`/api/resume/${resumeId}/job-score/${selectedJobId}`],
     queryFn: () => selectedJobId ? getResumeScores(resumeId!, selectedJobId) : Promise.resolve({}),
     enabled: !!resumeId && !!selectedJobId,
@@ -88,6 +93,27 @@ export default function ResumeProfilePage() {
     queryFn: () => getResumeScores(resumeId!),
     enabled: !!resumeId,
   });
+  
+  // Set the first available job as selected when data loads
+  useEffect(() => {
+    if (jobDescriptions && jobDescriptions.length > 0 && !selectedJobId) {
+      // Get the first job description with a score for this resume if available
+      if (resumeScore && Object.keys(resumeScore).length > 0) {
+        // Find a matching job ID that exists in both resumeScore and jobDescriptions
+        const matchingJobId = Object.keys(resumeScore).find(jobId => 
+          jobDescriptions.some(job => job.id === jobId)
+        );
+        
+        if (matchingJobId) {
+          setSelectedJobId(matchingJobId);
+          return;
+        }
+      }
+      
+      // Otherwise, just set the first job as selected
+      setSelectedJobId(jobDescriptions[0].id);
+    }
+  }, [jobDescriptions, resumeScore, selectedJobId]);
   
   // Function to run analysis for a specific job
   const runJobAnalysis = async () => {
@@ -237,7 +263,7 @@ export default function ResumeProfilePage() {
     setAnalysisLoading(true);
     
     try {
-      await apiRequest(`/api/resumes/${resumeId}/analysis`, { method: "POST" });
+      await apiRequest(`/api/resumes/${resumeId}/analysis`, "POST");
       
       toast({
         title: "Analysis complete",
@@ -339,9 +365,74 @@ export default function ResumeProfilePage() {
               
               <Separator />
               
+              {/* Job selection dropdown and analysis */}
+              <div className="mb-4">
+                <h3 className="font-medium mb-2">Job Matching</h3>
+                
+                <div className="space-y-3">
+                  <Select 
+                    value={selectedJobId || ""} 
+                    onValueChange={(value) => setSelectedJobId(value ? value : null)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select job position to match" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Select a job...</SelectItem>
+                      {jobDescriptions?.map(job => (
+                        <SelectItem key={job.id} value={job.id}>
+                          {job.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  {selectedJobId && jobScore && resumeId && jobScore[resumeId] && (
+                    <div className="mt-2 p-3 bg-muted rounded-md">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">Match Score:</span>
+                        <span className="text-base font-semibold">
+                          {`${Math.round(jobScore[resumeId]?.score || 0)}%`}
+                        </span>
+                      </div>
+                      <div className="mt-1">
+                        <Progress 
+                          value={jobScore[resumeId]?.score || 0} 
+                          className="h-2" 
+                        />
+                      </div>
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        Analyzed: {jobScore[resumeId]?.matchedAt ? new Date(jobScore[resumeId]?.matchedAt).toLocaleString() : 'N/A'}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <Button 
+                    onClick={runJobAnalysis} 
+                    size="sm" 
+                    variant="secondary" 
+                    disabled={!selectedJobId || jobScoreLoading}
+                    className="w-full"
+                  >
+                    {jobScoreLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Re-run Analysis
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Historical matched jobs */}
               {resumeScore && Object.keys(resumeScore).length > 0 && (
                 <div>
-                  <h3 className="font-medium mb-2">Matched Jobs</h3>
+                  <h3 className="font-medium mb-2">Previous Matches</h3>
                   <div className="space-y-2">
                     {Object.entries(resumeScore).map(([jobId, scoreData]) => (
                       <div key={jobId} className="p-3 bg-gray-50 rounded-md">
