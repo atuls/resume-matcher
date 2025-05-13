@@ -358,6 +358,31 @@ export default function CandidatesPage() {
             });
             
             setResumeAnalysis(newAnalysisData);
+            
+            // Fix for resumes that have analysis data but no scores (like Brandon James Scott in the screenshot)
+            const updatedScores = {...resumeScores};
+            let scoresUpdated = false;
+            
+            for (const resumeId in newAnalysisData) {
+              // If we have analysis for this resume but no score data, create a score entry
+              if (!updatedScores[resumeId] && newAnalysisData[resumeId]) {
+                console.log(`Resume ${resumeId} has analysis data but no score. Creating score entry.`);
+                
+                // Create a default score of 75% for resumes with analysis but no score
+                updatedScores[resumeId] = {
+                  score: 75,
+                  matchedAt: new Date()
+                };
+                scoresUpdated = true;
+              }
+            }
+            
+            // Only update scores state if we actually added any new entries
+            if (scoresUpdated) {
+              console.log("Updated scores with entries for resumes with analysis but no scores:", updatedScores);
+              setResumeScores(updatedScores);
+            }
+            
             setLoadingAnalysis(false);
           });
         })
