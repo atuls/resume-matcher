@@ -23,6 +23,7 @@ export interface RedFlagAnalysis {
   redFlags: string[];
   highlights: string[];
   currentJobPosition?: string;
+  currentCompany?: string;
 }
 
 // Job Description API
