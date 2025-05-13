@@ -1,0 +1,96 @@
+{
+  "skills": [],
+  "experience": "Experience extracted from resume",
+  "education": "Education extracted from resume",
+  "score": 85,
+  "matchedRequirements": [
+    {
+      "requirement": "Job requirements from summary",
+      "matched": true,
+      "confidence": 0.7
+    }
+  ],
+  "rawResponse": {
+    "rawText": "{\n  \"matching_score\": 85,\n  \"Summary\": \"The candidate has extensive experience in sales and business development within the digital marketing space, which aligns well with the Brand Partnerships Manager role. With over 7 years of relevant experience, they have demonstrated success in client acquisition, relationship building, and revenue generation. Their background at Carat, The Trade Desk, and Xaxis shows progression in digital media sales roles with increasing responsibility. The candidate has direct experience in managing clients, executing sales strategies, and driving business growth, which are key requirements for the position. While they have digital marketing expertise and experience with data-driven approaches, there is no specific mention of influencer marketing experience, which is a preferred qualification for this role. However, their strong background in digital media sales and consultative approach makes them a strong candidate who could adapt to the influencer marketing space.\",\n  \"Work History\": [\n    {\n      \"Title\": \"Group Account Director\",\n      \"Company\": \"Carat\",\n      \"location\": \"New York, NY\",\n      \"startDate\": \"January 2021\",\n      \"endDate\": \"Present\",\n      \"description\": \"Leading a team of 6 driving ~$30M in annual billings for Microsoft across demand generation and brand media. Overseeing client acquisition strategy, planning and execution across paid search, programmatic, social and native. Consistently exceeding YoY goals by 15-25% through strategic targeting, messaging optimization and cross-channel integration. Managing stakeholder relationships, developing team members, and leading business development initiatives.\",\n      \"durationMonths\": 36,\n      \"isCurrentRole\": true\n    },\n    {\n      \"Title\": \"Account Manager\",\n      \"Company\": \"The Trade Desk\",\n      \"location\": \"New York, NY\",\n      \"startDate\": \"March 2018\",\n      \"endDate\": \"December 2020\",\n      \"description\": \"Managed $25M+ in platform spend across major agency holding company relationships. Grew client portfolio by 40% through strategic account planning and consultative selling. Developed and executed customized growth strategies for clients resulting in 30%+ YoY revenue increases. Led client training and education on programmatic advertising best practices and platform capabilities.\",\n      \"durationMonths\": 33,\n      \"isCurrentRole\": false\n    },\n    {\n      \"Title\": \"Senior Sales Associate\",\n      \"Company\": \"Xaxis\",\n      \"location\": \"New York, NY\",\n      \"startDate\": \"June 2016\",\n      \"endDate\": \"February 2018\",\n      \"description\": \"Generated $5M+ in new business through outbound prospecting and relationship development. Executed full sales cycle from lead generation to contract negotiation across programmatic solutions. Collaborated with product and tech teams to create customized client solutions. Consistently exceeded quarterly sales targets by 20-30%.\",\n      \"durationMonths\": 20,\n      \"isCurrentRole\": false\n    }\n  ],\n  \"Skills\": [\n    \"Business Development\",\n    \"Client Relationship Management\",\n    \"Digital Marketing Strategy\",\n    \"Consultative Sales\",\n    \"Team Leadership\",\n    \"Revenue Growth\",\n    \"Pipeline Management\",\n    \"Stakeholder Management\",\n    \"Digital Media\",\n    \"Programmatic Advertising\",\n    \"Client Acquisition\",\n    \"Sales Cycle Management\",\n    \"Strategic Planning\",\n    \"Account Management\",\n    \"Contract Negotiation\"\n  ],\n  \"Red Flags\": [\n    \"No specific experience in influencer marketing mentioned, which is a preferred qualification for this role\",\n    \"No explicit mention of experience with CRM systems like HubSpot or Salesforce, which is listed as a requirement\",\n    \"Resume does not specifically mention experience creating thought leadership content, which is listed as a responsibility\"\n  ]\n}",
+    "parsedJson": {
+      "matching_score": 85,
+      "Summary": "The candidate has extensive experience in sales and business development within the digital marketing space, which aligns well with the Brand Partnerships Manager role. With over 7 years of relevant experience, they have demonstrated success in client acquisition, relationship building, and revenue generation. Their background at Carat, The Trade Desk, and Xaxis shows progression in digital media sales roles with increasing responsibility. The candidate has direct experience in managing clients, executing sales strategies, and driving business growth, which are key requirements for the position. While they have digital marketing expertise and experience with data-driven approaches, there is no specific mention of influencer marketing experience, which is a preferred qualification for this role. However, their strong background in digital media sales and consultative approach makes them a strong candidate who could adapt to the influencer marketing space.",
+      "Work History": [
+        {
+          "Title": "Group Account Director",
+          "Company": "Carat",
+          "location": "New York, NY",
+          "startDate": "January 2021",
+          "endDate": "Present",
+          "description": "Leading a team of 6 driving ~$30M in annual billings for Microsoft across demand generation and brand media. Overseeing client acquisition strategy, planning and execution across paid search, programmatic, social and native. Consistently exceeding YoY goals by 15-25% through strategic targeting, messaging optimization and cross-channel integration. Managing stakeholder relationships, developing team members, and leading business development initiatives.",
+          "durationMonths": 36,
+          "isCurrentRole": "true"
+        },
+        {
+          "Title": "Account Manager",
+          "Company": "The Trade Desk",
+          "location": "New York, NY",
+          "startDate": "March 2018",
+          "endDate": "December 2020",
+          "description": "Managed $25M+ in platform spend across major agency holding company relationships. Grew client portfolio by 40% through strategic account planning and consultative selling. Developed and executed customized growth strategies for clients resulting in 30%+ YoY revenue increases. Led client training and education on programmatic advertising best practices and platform capabilities.",
+          "durationMonths": 33,
+          "isCurrentRole": "false"
+        },
+        {
+          "Title": "Senior Sales Associate",
+          "Company": "Xaxis",
+          "location": "New York, NY",
+          "startDate": "June 2016",
+          "endDate": "February 2018",
+          "description": "Generated $5M+ in new business through outbound prospecting and relationship development. Executed full sales cycle from lead generation to contract negotiation across programmatic solutions. Collaborated with product and tech teams to create customized client solutions. Consistently exceeded quarterly sales targets by 20-30%.",
+          "durationMonths": 20,
+          "isCurrentRole": "false"
+        }
+      ],
+      "Skills": [
+        "Business Development",
+        "Client Relationship Management",
+        "Digital Marketing Strategy",
+        "Consultative Sales",
+        "Team Leadership",
+        "Revenue Growth",
+        "Pipeline Management",
+        "Stakeholder Management",
+        "Digital Media",
+        "Programmatic Advertising",
+        "Client Acquisition",
+        "Sales Cycle Management",
+        "Strategic Planning",
+        "Account Management",
+        "Contract Negotiation"
+      ],
+      "Red Flags": [
+        "No specific experience in influencer marketing mentioned, which is a preferred qualification for this role",
+        "No explicit mention of experience with CRM systems like HubSpot or Salesforce, which is listed as a requirement",
+        "Resume does not specifically mention experience creating thought leadership content, which is listed as a responsibility"
+      ]
+    },
+    "extractedSections": {
+      "redFlags": "",
+      "summary": "The candidate has extensive experience in sales and business development within the digital marketing space, which aligns well with the Brand Partnerships Manager role. With over 7 years of relevant experience, they have demonstrated success in client acquisition, relationship building, and revenue generation. Their background at Carat, The Trade Desk, and Xaxis shows progression in digital media sales roles with increasing responsibility. The candidate has direct experience in managing clients, executing sales strategies, and driving business growth, which are key requirements for the position. While they have digital marketing expertise and experience with data-driven approaches, there is no specific mention of influencer marketing experience, which is a preferred qualification for this role. However, their strong background in digital media sales and consultative approach makes them a strong candidate who could adapt to the influencer marketing space.",
+      "skills": [
+        "Business Development",
+        "Client Relationship Management",
+        "Digital Marketing Strategy",
+        "Consultative Sales",
+        "Team Leadership",
+        "Revenue Growth",
+        "Pipeline Management",
+        "Stakeholder Management",
+        "Digital Media",
+        "Programmatic Advertising",
+        "Client Acquisition",
+        "Sales Cycle Management",
+        "Strategic Planning",
+        "Account Management",
+        "Contract Negotiation"
+      ],
+      "workHistory": ""
+    }
+  }
+}

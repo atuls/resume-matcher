@@ -550,6 +550,14 @@ export default function ResumeProfilePage() {
                         if (analysis?.skills && analysis.skills.length > 0) {
                           skillsList = analysis.skills;
                         } 
+                        // Check if skills are in rawResponse.parsedJson.Skills path
+                        else if (analysis?.rawResponse?.parsedJson?.Skills && analysis.rawResponse.parsedJson.Skills.length > 0) {
+                          skillsList = analysis.rawResponse.parsedJson.Skills;
+                        }
+                        // Check if skills are in rawResponse.extractedSections.skills path 
+                        else if (analysis?.rawResponse?.extractedSections?.skills && analysis.rawResponse.extractedSections.skills.length > 0) {
+                          skillsList = analysis.rawResponse.extractedSections.skills;
+                        }
                         // If not, check if available in analysis.analysis.skills
                         else if (analysis?.analysis?.skills && analysis.analysis.skills.length > 0) {
                           skillsList = analysis.analysis.skills;
@@ -892,21 +900,33 @@ export default function ResumeProfilePage() {
                       )}
                       
                       {/* Red flags section */}
-                      {redFlagData.analysis && redFlagData.analysis.redFlags && redFlagData.analysis.redFlags.length > 0 && (
+                      {(redFlagData.analysis && redFlagData.analysis.redFlags && redFlagData.analysis.redFlags.length > 0) || 
+                       (analysis && analysis.rawResponse && analysis.rawResponse.parsedJson && analysis.rawResponse.parsedJson['Red Flags'] && analysis.rawResponse.parsedJson['Red Flags'].length > 0) && (
                         <div className="space-y-3">
                           <h3 className="text-lg font-medium flex items-center">
                             <AlertTriangle className="h-5 w-5 mr-2 text-amber-500" />
                             Potential Concerns
                           </h3>
                           <div className="space-y-2">
-                            {redFlagData.analysis.redFlags.map((flag, index) => (
-                              <Alert key={index} className="border border-amber-200 bg-amber-50">
-                                <AlertCircle className="h-4 w-4 text-amber-500" />
-                                <AlertDescription className="text-amber-800">
-                                  {flag}
-                                </AlertDescription>
-                              </Alert>
-                            ))}
+                            {(() => {
+                              // Get red flags from the appropriate source
+                              let redFlags = [];
+                              
+                              if (redFlagData.analysis && redFlagData.analysis.redFlags) {
+                                redFlags = redFlagData.analysis.redFlags;
+                              } else if (analysis?.rawResponse?.parsedJson && analysis.rawResponse.parsedJson['Red Flags']) {
+                                redFlags = analysis.rawResponse.parsedJson['Red Flags'];
+                              }
+                              
+                              return redFlags.map((flag, index) => (
+                                <Alert key={index} className="border border-amber-200 bg-amber-50">
+                                  <AlertCircle className="h-4 w-4 text-amber-500" />
+                                  <AlertDescription className="text-amber-800">
+                                    {flag}
+                                  </AlertDescription>
+                                </Alert>
+                              ));
+                            })()}
                           </div>
                         </div>
                       )}
