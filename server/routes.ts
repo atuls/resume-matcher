@@ -130,7 +130,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     let activeClients = 0;
     let failedClients = 0;
     
-    clients.forEach((client) => {
+    // More detailed logging for progress updates
+    if (data.type === 'batchAnalysisProgress') {
+      console.log(`Progress WebSocket: Processing ${data.current}/${data.total} (${data.progress}%) - ${data.candidateName}`);
+    }
+    
+    // Convert Map to array to iterate over values
+    Array.from(clients.values()).forEach((client) => {
       try {
         if (client.readyState === WebSocket.OPEN) {
           client.send(JSON.stringify(dataWithTimestamp));

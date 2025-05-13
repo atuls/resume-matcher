@@ -1,0 +1,52 @@
+Using Claude for resume analysis
+Resume text length: 4051
+Job description text length: 7332
+Requirements count: 14
+Using general analysis prompt from settings for Claude
+Raw Claude response (first 100 chars): {   "matching_score": 78,   "summary": "The candidate has strong experience in strategic business de
+JSON extracted using regex
+Standard fields not found, attempting to extract from nested structure
+Extracted from Claude response: score=78, skills count=17, requirements count=1
+Claude analysis completed in 20.506 seconds
+Claude score: 78
+Matched requirements: 1
+Using Claude for resume analysis
+Resume text length: 2160
+Job description text length: 7332
+Requirements count: 14
+Using general analysis prompt from settings for Claude
+Raw Claude response (first 100 chars): {   "matching_score": 89,   "Summary": "The candidate possesses strong qualifications for the Brand 
+JSON extracted using regex
+Standard fields not found, attempting to extract from nested structure
+Extracted from Claude response: score=89, skills count=0, requirements count=1
+Claude analysis completed in 22.453 seconds
+Claude score: 89
+Matched requirements: 1
+Using Claude for resume analysis
+Resume text length: 3189
+Job description text length: 7332
+Requirements count: 14
+Using general analysis prompt from settings for Claude
+Raw Claude response (first 100 chars): {   "matching_score": 92,   "Summary": "The candidate is an excellent match for the Brand Partnershi
+JSON extracted using regex
+Standard fields not found, attempting to extract from nested structure
+Extracted from Claude response: score=92, skills count=0, requirements count=1
+Claude analysis completed in 19.557 seconds
+Claude score: 92
+Matched requirements: 1
+Using Claude for resume analysis
+Resume text length: 5650
+Job description text length: 7332
+Requirements count: 14
+Using general analysis prompt from settings for Claude
+Raw Claude response (first 100 chars): {   "matching_score": 85,   "summary": "The candidate has strong experience in influencer marketing 
+JSON extracted using regex
+Standard fields not found, attempting to extract from nested structure
+Extracted from Claude response: score=85, skills count=16, requirements count=1
+Claude analysis completed in 18.48 seconds
+Claude score: 85
+Matched requirements: 1
+Using Claude for resume analysis
+Resume text length: 5752
+Job description text length: 7332
+Requirements count: 14

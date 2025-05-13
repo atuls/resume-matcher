@@ -177,7 +177,16 @@ export default function CandidatesPage() {
           // Format the message with candidate name if available
           let progressMessage = event.message;
           if (event.candidateName) {
-            progressMessage = `Processed ${event.current}/${event.total} resumes (Latest: ${event.candidateName})`;
+            progressMessage = `Analyzing ${event.current}/${event.total} resumes (Current: ${event.candidateName})`;
+          }
+          
+          // Show a toast notification for each candidate being analyzed
+          if (event.candidateName && event.current % 2 === 0) { // Only show every other one to avoid too many notifications
+            toast({
+              title: `Analyzing Candidate ${event.current}/${event.total}`,
+              description: event.candidateName,
+              duration: 3000,
+            });
           }
           
           const newStatus = {
