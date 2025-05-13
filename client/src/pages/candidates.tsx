@@ -313,9 +313,34 @@ export default function CandidatesPage() {
           console.log("Fetched scores:", scores);
           setResumeScores(scores);
           
-          // Don't automatically fetch red flag analysis for all resumes
-          // This was causing hundreds of API calls and rate limiting
-          setLoadingAnalysis(false);
+          // Get analysis data for the first few displayed resumes (max 5)
+          // This provides a balance between showing data and preventing API rate limiting
+          const displayedResumes = resumes.slice(0, 5);
+          
+          Promise.all(
+            displayedResumes.map(resume => 
+              getResumeRedFlagAnalysis(resume.id, selectedJobId)
+                .then(data => ({
+                  resumeId: resume.id,
+                  analysis: data.analysis
+                }))
+                .catch(err => {
+                  console.error(`Error analyzing resume ${resume.id}:`, err);
+                  return { resumeId: resume.id, analysis: null };
+                })
+            )
+          ).then(analysisResults => {
+            const newAnalysisData = {...resumeAnalysis};
+            
+            analysisResults.forEach(result => {
+              if (result.analysis) {
+                newAnalysisData[result.resumeId] = result.analysis;
+              }
+            });
+            
+            setResumeAnalysis(newAnalysisData);
+            setLoadingAnalysis(false);
+          });
         })
         .catch(err => {
           console.error("Error fetching resume data:", err);
