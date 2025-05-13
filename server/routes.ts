@@ -975,7 +975,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             const candidateName = resume?.candidateName || 'Unknown candidate';
             
-            // Create progress event with candidate name
+            // Create detailed progress event with candidate name
             const progressEvent = {
               type: 'batchAnalysisProgress',
               jobId: jobDescriptionId,
@@ -990,17 +990,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             console.log(`Batch analysis progress: ${i+1}/${resumeIds.length} - Processing resume for ${candidateName} (${resumeId})`);
             
-            // Send the progress update
+            // Send the progress update immediately
             broadcastUpdate(progressEvent);
             
-            // Make sure the event is sent to all clients
+            // Send a second update immediately after to ensure clients get the message
+            broadcastUpdate({
+              ...progressEvent,
+              message: `Analyzing resume for ${candidateName} (${i+1}/${resumeIds.length})...`
+            });
+            
+            // Add another broadcast for analysis in progress
             setTimeout(() => {
-              // Re-send after a small delay in case the first broadcast didn't reach all clients
               broadcastUpdate({
                 ...progressEvent,
-                message: `Analyzing resume for ${candidateName} (${i+1}/${resumeIds.length})...`
+                message: `AI analyzing resume for ${candidateName}...`,
+                status: 'analyzing'
               });
-            }, 100);
+            }, 1000);
             
             console.log(`Analyzing resume ${i+1}/${resumeIds.length}: ${resumeId} (${candidateName})`);
             
@@ -1066,15 +1072,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 });
               }
               
-              // Send successful analysis update via WebSocket
+              // Send detailed successful analysis update via WebSocket
               broadcastUpdate({
                 type: 'batchAnalysisResumeStatus',
                 jobId: jobDescriptionId,
                 resumeId,
                 status: 'analyzed',
                 score: analysisResult.overallScore,
+                candidateName: candidateName,
                 skillsMatched: analysisResult.skillMatches.length,
-                message: `Analysis complete with score: ${analysisResult.overallScore}`
+                message: `✅ ${candidateName} analyzed - Score: ${analysisResult.overallScore}/100 (${analysisResult.skillMatches.length} skill matches)`
               });
               
               successful++;
@@ -1082,13 +1089,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const errorMessage = error instanceof Error ? error.message : String(error);
               console.error(`Error analyzing resume ${resumeId} (job match analysis):`, error);
               
-              // Send error update via WebSocket
+              // Send detailed error update via WebSocket
               broadcastUpdate({
                 type: 'batchAnalysisResumeStatus',
                 jobId: jobDescriptionId,
                 resumeId,
                 status: 'error',
-                message: `Analysis error: ${errorMessage.substring(0, 100)}`
+                candidateName: candidateName,
+                message: `❌ Error analyzing ${candidateName}: ${errorMessage.substring(0, 100)}`
               });
               
               failed++;

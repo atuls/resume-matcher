@@ -175,18 +175,18 @@ export default function CandidatesPage() {
         // Use a callback to ensure we're working with the latest state
         setBatchAnalysisStatus(prev => {
           // Format the message with candidate name if available
-          let progressMessage = event.message;
+          let progressMessage = event.message || '';
           if (event.candidateName) {
             progressMessage = `Analyzing ${event.current}/${event.total} resumes (Current: ${event.candidateName})`;
-          }
-          
-          // Show a toast notification for each candidate being analyzed
-          if (event.candidateName && event.current % 2 === 0) { // Only show every other one to avoid too many notifications
-            toast({
-              title: `Analyzing Candidate ${event.current}/${event.total}`,
-              description: event.candidateName,
-              duration: 3000,
-            });
+            
+            // Show a toast notification when a new candidate is being analyzed
+            if (prev.currentCandidateName !== event.candidateName) {
+              toast({
+                title: `Analyzing Candidate ${event.current}/${event.total}`,
+                description: event.candidateName,
+                duration: 3000,
+              });
+            }
           }
           
           const newStatus = {
@@ -205,6 +205,43 @@ export default function CandidatesPage() {
           return newStatus;
         });
       } 
+      else if (event.type === 'batchAnalysisResumeStatus') {
+        console.log('BATCH ANALYSIS RESUME STATUS:', event);
+        
+        // Handle individual resume analysis status update
+        if (event.status === 'analyzed' && event.score) {
+          // Update scores in local state when a single resume is analyzed
+          if (selectedJobId && event.resumeId) {
+            // Create a temporary updated score map
+            setResumeScores(prev => ({
+              ...prev,
+              [event.resumeId]: {
+                score: event.score,
+                matchedAt: new Date().toISOString()
+              }
+            }));
+            
+            // Show a toast notification for the analyzed resume
+            if (event.candidateName) {
+              toast({
+                title: `Analysis Complete - ${event.candidateName}`,
+                description: `Score: ${event.score}/100`,
+                duration: 2000,
+              });
+            }
+          }
+        }
+        
+        if (event.status === 'error' && event.candidateName) {
+          // Show error toast for the failed resume
+          toast({
+            title: `Analysis Error`,
+            description: event.message || `Error analyzing resume for ${event.candidateName}`,
+            variant: "destructive",
+            duration: 3000,
+          });
+        }
+      }
       else if (event.type === 'batchAnalysisComplete') {
         console.log('BATCH ANALYSIS COMPLETE:', event);
         
