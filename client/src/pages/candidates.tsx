@@ -744,23 +744,14 @@ export default function CandidatesPage() {
                     <tr key={resume.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap cursor-pointer" onClick={() => window.location.href = `/resume/${resume.id}`}>
                         <div className="flex items-center gap-3">
-                          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
+                          <div className="flex-shrink-0 h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">
                             {(resume.candidateName || 'UC').charAt(0).toUpperCase()}
                           </div>
-                          <div>
-                            <div className="text-md font-semibold text-gray-900">
-                              {resume.candidateName || 'Unnamed Candidate'}
-                            </div>
-                            <div className="text-sm text-gray-500 mt-0.5 truncate max-w-[280px]">
-                              {resume.candidateTitle || 'No title available'}
-                            </div>
-                            <div className="text-xs text-gray-400 flex items-center mt-0.5">
-                              <div className="flex items-center">
-                                <span className="text-xs">{formatFileSize(resume.fileSize || 0)}</span>
-                                <span className="mx-1.5">•</span>
-                                <span className="text-xs">{resume.fileType?.toUpperCase() || 'DOC'}</span>
-                              </div>
-                            </div>
+                          <div className="font-medium text-gray-900">
+                            {resume.candidateName || 'Unnamed Candidate'}
+                          </div>
+                          <div className="text-xs text-gray-400 ml-1">
+                            {formatFileSize(resume.fileSize || 0)}
                           </div>
                         </div>
                       </td>
