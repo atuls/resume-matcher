@@ -832,15 +832,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const resumeId = finalResumeIds[i];
         const resumeStartTime = Date.now();
         
-        console.log(`\n🔍 [BATCH-DEBUG] === Processing resume ${i+1}/${resumeIds.length} (${resumeId}) ===`);
+        console.log(`\n🔍 [BATCH-DEBUG] === Processing resume ${i+1}/${totalToProcess} (${resumeId}) ===`);
         
         try {
-          // Get the resume
-          console.log(`🔍 [BATCH-DEBUG] Fetching resume ${resumeId}...`);
-          const resume = await storage.getResume(resumeId);
+          // Get the resume (using our map for efficiency)
+          const resume = resumeMap.get(resumeId);
           
           if (!resume) {
-            console.error(`🔍 [BATCH-DEBUG] Resume ${resumeId} not found, skipping`);
+            console.error(`🔍 [BATCH-DEBUG] Resume ${resumeId} not found in map, skipping`);
             
             // Send resume skip update
             broadcastUpdate({
@@ -850,7 +849,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               status: 'skipped',
               message: 'Resume not found',
               debugInfo: { 
-                error: 'Resume not found in database',
+                error: 'Resume not found or invalid',
                 timeStamp: new Date().toISOString()
               }
             });
@@ -859,21 +858,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
             continue;
           }
           
-          const candidateName = resume?.candidateName || 'Unknown candidate';
+          const candidateName = resume.candidateName || 'Unknown candidate';
           console.log(`🔍 [BATCH-DEBUG] Processing candidate: ${candidateName}`);
           console.log(`🔍 [BATCH-DEBUG] Resume text length: ${resume.extractedText?.length || 0} characters`);
           
-          // Create detailed progress event with candidate name
+          // Create detailed progress event with candidate name and proper counts
           const progressEvent = {
             type: 'batchAnalysisProgress',
             jobId: jobDescriptionId,
             current: i + 1,
-            total: resumeIds.length,
+            total: totalToProcess,
             resumeId,
             candidateName: candidateName,
             status: 'processing',
-            progress: Math.round(((i + 1) / resumeIds.length) * 100),
-            message: `Processing resume ${i+1}/${resumeIds.length} - ${candidateName}...`,
+            progress: Math.round(((i + 1) / totalToProcess) * 100),
+            message: `Processing resume ${i+1}/${totalToProcess} - ${candidateName}...`,
             debugInfo: {
               startTime: resumeStartTime,
               serverTime: new Date().toISOString()
@@ -889,7 +888,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`🔍 [BATCH-DEBUG] Broadcasting second progress event to ensure delivery`);
           broadcastUpdate({
             ...progressEvent,
-            message: `Analyzing resume for ${candidateName} (${i+1}/${resumeIds.length})...`
+            message: `Analyzing resume for ${candidateName} (${i+1}/${totalToProcess})...`
           });
           
           // Add another broadcast for analysis in progress
@@ -1029,7 +1028,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         completed++;
         
         // Add 500ms delay between resumes to avoid rate limits and give UI time to update
-        if (i < resumeIds.length - 1) {
+        if (i < finalResumeIds.length - 1) {
           console.log(`🔍 [BATCH-DEBUG] Adding a small delay between resumes...`);
           await new Promise(resolve => setTimeout(resolve, 500));
         }
@@ -1042,12 +1041,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           type: 'batchAnalysisProgress',
           jobId: jobDescriptionId,
           current: completed,
-          total: resumeIds.length,
+          total: totalToProcess,
           resumeId,
           candidateName: completedCandidateName,
           status: 'completed',
-          progress: Math.round((completed / resumeIds.length) * 100),
-          message: `Processed ${completed}/${resumeIds.length} resumes (latest: ${completedCandidateName})`
+          progress: Math.round((completed / totalToProcess) * 100),
+          message: `Processed ${completed}/${totalToProcess} resumes (latest: ${completedCandidateName})`
         };
         
         // Send the update
@@ -1076,10 +1075,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const finalProgressEvent = {
         type: 'batchAnalysisProgress',
         jobId: jobDescriptionId,
-        current: resumeIds.length,
-        total: resumeIds.length,
+        current: totalToProcess,
+        total: totalToProcess,
         progress: 100,
-        message: `Completed analysis for all ${resumeIds.length} resumes`,
+        message: `Completed analysis for all ${totalToProcess} resumes`,
         debugInfo: {
           totalTimeMs: Date.now() - batchStartTime,
           endTime: new Date().toISOString()
@@ -1088,7 +1087,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Delay the final progress update slightly to ensure proper sequencing
       setTimeout(() => {
-        console.log(`🔍 [BATCH-DEBUG] Sending final progress update: ${resumeIds.length}/${resumeIds.length} complete`);
+        console.log(`🔍 [BATCH-DEBUG] Sending final progress update: ${totalToProcess}/${totalToProcess} complete`);
         broadcastUpdate(finalProgressEvent);
       }, 500);
       
