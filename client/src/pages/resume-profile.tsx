@@ -546,21 +546,32 @@ export default function ResumeProfilePage() {
                         // Get skills from either dedicated analysis or job match analysis
                         let skillsList: string[] = [];
                         
-                        // Check if skills are available in the analysis object directly
+                        console.log("Analysis data structure:", analysis);
+                        
+                        // Check if skills are available in the analysis object 
                         if (analysis?.analysis?.skills && analysis.analysis.skills.length > 0) {
+                          console.log("Found skills in analysis.analysis.skills");
                           skillsList = analysis.analysis.skills;
                         } 
-                        // Check if skills are in rawResponse.parsedJson.Skills path
+                        // Check if skills are in rawResponse.parsedJson
                         else if (analysis?.rawResponse?.parsedJson?.Skills && analysis.rawResponse.parsedJson.Skills.length > 0) {
+                          console.log("Found skills in analysis.rawResponse.parsedJson.Skills");
                           skillsList = analysis.rawResponse.parsedJson.Skills;
+                        }
+                        // Check if skills are in rawResponse.parsedJson.skills (lowercase)
+                        else if (analysis?.rawResponse?.parsedJson?.skills && analysis.rawResponse.parsedJson.skills.length > 0) {
+                          console.log("Found skills in analysis.rawResponse.parsedJson.skills");
+                          skillsList = analysis.rawResponse.parsedJson.skills;
                         }
                         // Check if skills are in rawResponse.extractedSections.skills path 
                         else if (analysis?.rawResponse?.extractedSections?.skills && analysis.rawResponse.extractedSections.skills.length > 0) {
+                          console.log("Found skills in analysis.rawResponse.extractedSections.skills");
                           skillsList = analysis.rawResponse.extractedSections.skills;
                         }
-                        // If not, check if available in analysis.analysis.skills
-                        else if (analysis?.analysis?.skills && analysis.analysis.skills.length > 0) {
-                          skillsList = analysis.analysis.skills;
+                        // Check if skills array is in rawResponse directory
+                        else if (analysis?.rawResponse?.skills && Array.isArray(analysis.rawResponse.skills)) {
+                          console.log("Found skills in analysis.rawResponse.skills");
+                          skillsList = analysis.rawResponse.skills;
                         }
                         
                         if (skillsList.length > 0) {
