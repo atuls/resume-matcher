@@ -37,6 +37,12 @@ export function extractResumeData(analysisResult: any): ExtractedResumeData {
     // Extract score - usually at the top level
     result.score = data.overallScore || 0;
     
+    // Try to extract work history from red flag analysis (which has different structure)
+    if (data.analysis && data.analysis.recentRoles && Array.isArray(data.analysis.recentRoles)) {
+      console.log("Found work history in data.analysis.recentRoles");
+      result.workHistory = data.analysis.recentRoles;
+    }
+    
     // Extract from rawResponse
     if (data.rawResponse) {
       // Try to get skills
@@ -47,6 +53,17 @@ export function extractResumeData(analysisResult: any): ExtractedResumeData {
       // Get experience/work history
       if (typeof data.rawResponse.experience === 'string') {
         result.summary = data.rawResponse.experience;
+      }
+      
+      // Try to get work history from parsedJson
+      if (data.rawResponse.parsedJson) {
+        if (Array.isArray(data.rawResponse.parsedJson['Work History'])) {
+          console.log("Found work history in data.rawResponse.parsedJson['Work History']");
+          result.workHistory = data.rawResponse.parsedJson['Work History'];
+        } else if (Array.isArray(data.rawResponse.parsedJson.WorkHistory)) {
+          console.log("Found work history in data.rawResponse.parsedJson.WorkHistory");
+          result.workHistory = data.rawResponse.parsedJson.WorkHistory;
+        }
       }
       
       // Get education

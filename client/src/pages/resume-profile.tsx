@@ -269,20 +269,20 @@ export default function ResumeProfilePage() {
               
               <Separator />
               
-              {resumeScore && resumeScore.length > 0 && (
+              {resumeScore && Object.keys(resumeScore).length > 0 && (
                 <div>
                   <h3 className="font-medium mb-2">Matched Jobs</h3>
                   <div className="space-y-2">
-                    {resumeScore.map((score: any) => (
-                      <div key={score.jobDescriptionId} className="p-3 bg-gray-50 rounded-md">
+                    {Object.entries(resumeScore).map(([jobId, scoreData]) => (
+                      <div key={jobId} className="p-3 bg-gray-50 rounded-md">
                         <div className="flex justify-between items-center">
-                          <div className="font-medium">{score.jobDescription?.title || "Untitled Job"}</div>
-                          <Badge className={score.score >= 70 ? "bg-green-500" : "bg-amber-500"}>
-                            {score.score}%
+                          <div className="font-medium">{"Job Match"}</div>
+                          <Badge className={typeof scoreData.score === 'number' && scoreData.score >= 70 ? "bg-green-500" : "bg-amber-500"}>
+                            {typeof scoreData.score === 'number' ? scoreData.score : 0}%
                           </Badge>
                         </div>
                         <div className="text-sm text-gray-500">
-                          Matched {formatDistance(new Date(score.matchedAt), new Date(), { addSuffix: true })}
+                          Matched {formatDistance(new Date(scoreData.matchedAt), new Date(), { addSuffix: true })}
                         </div>
                       </div>
                     ))}
