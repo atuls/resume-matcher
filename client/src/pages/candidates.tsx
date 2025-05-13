@@ -177,12 +177,18 @@ export default function CandidatesPage() {
           // Format the message with candidate name if available
           let progressMessage = event.message || '';
           if (event.candidateName) {
-            progressMessage = `Analyzing ${event.current}/${event.total} resumes (Current: ${event.candidateName})`;
+            progressMessage = `Analyzing ${event.current}/${event.total} resumes`;
             
-            // Show a toast notification when a new candidate is being analyzed
+            // Only show toast for new candidates to avoid notification spam
             if (prev.currentCandidateName !== event.candidateName) {
+              // Update processed count to keep progress accurate
+              const processedResumes = Math.max(prev.processedResumes || 0, event.current || 0);
+              
+              console.log(`Processing new candidate: ${event.candidateName} (${event.current}/${event.total})`);
+              
+              // Show toast notification for each new candidate
               toast({
-                title: `Analyzing Candidate ${event.current}/${event.total}`,
+                title: `Analyzing Resume ${event.current}/${event.total}`,
                 description: event.candidateName,
                 duration: 3000,
               });
@@ -330,17 +336,21 @@ export default function CandidatesPage() {
       }
     };
     
-    // Register for batch analysis events with type assertion
+    // Register for all batch analysis events with type assertion
     websocketService.addEventListener('batchAnalysisStart', handleBatchEvent as any);
     websocketService.addEventListener('batchAnalysisProgress', handleBatchEvent as any);
     websocketService.addEventListener('batchAnalysisComplete', handleBatchEvent as any);
+    websocketService.addEventListener('batchAnalysisResumeStatus', handleBatchEvent as any);
     websocketService.addEventListener('all', handleBatchEvent as any); // Listen to all events
+    
+    console.log('WebSocket event listeners registered for batch analysis events');
     
     // Cleanup on unmount
     return () => {
       websocketService.removeEventListener('batchAnalysisStart', handleBatchEvent as any);
       websocketService.removeEventListener('batchAnalysisProgress', handleBatchEvent as any);
       websocketService.removeEventListener('batchAnalysisComplete', handleBatchEvent as any);
+      websocketService.removeEventListener('batchAnalysisResumeStatus', handleBatchEvent as any);
       websocketService.removeEventListener('all', handleBatchEvent as any);
     };
   }, [selectedJobId, resumes]);
@@ -790,6 +800,9 @@ export default function CandidatesPage() {
                       <div className="flex-1">
                         <p className="text-sm font-medium text-blue-700">
                           Currently analyzing: <span className="font-semibold">{batchAnalysisStatus.currentCandidateName}</span>
+                        </p>
+                        <p className="text-xs text-blue-600">
+                          Resume {batchAnalysisStatus.processedResumes} of {batchAnalysisStatus.totalResumes}
                         </p>
                       </div>
                     </div>

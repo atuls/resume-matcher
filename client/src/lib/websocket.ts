@@ -64,8 +64,13 @@ class WebSocketService {
       const data = JSON.parse(event.data);
       console.log('WebSocket message received:', data);
       
-      // Add better debug logging for batch analysis events
-      if (data.type && ['batchAnalysisStart', 'batchAnalysisProgress', 'batchAnalysisComplete'].includes(data.type)) {
+      // Add better debug logging for all batch analysis events
+      if (data.type && [
+        'batchAnalysisStart', 
+        'batchAnalysisProgress', 
+        'batchAnalysisComplete',
+        'batchAnalysisResumeStatus'
+      ].includes(data.type)) {
         console.log(`BATCH ANALYSIS EVENT: ${data.type}`, data);
       }
       
