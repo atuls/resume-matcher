@@ -126,13 +126,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       serverTimestamp: Date.now()
     };
     
-    console.log('Broadcasting update:', JSON.stringify(dataWithTimestamp).substring(0, 200));
+    // Add more detailed logging for all batch analysis events
+    if (['batchAnalysisStart', 'batchAnalysisProgress', 'batchAnalysisResumeStatus', 'batchAnalysisComplete'].includes(data.type)) {
+      console.log(`\n📢 WEBSOCKET BROADCAST [${data.type}]:`, JSON.stringify(dataWithTimestamp));
+    } else {
+      console.log('Broadcasting update:', JSON.stringify(dataWithTimestamp).substring(0, 200));
+    }
+    
     let activeClients = 0;
     let failedClients = 0;
     
     // More detailed logging for progress updates
     if (data.type === 'batchAnalysisProgress') {
-      console.log(`Progress WebSocket: Processing ${data.current}/${data.total} (${data.progress}%) - ${data.candidateName}`);
+      console.log(`\n📊 Progress WebSocket: Processing ${data.current}/${data.total} (${data.progress}%) - ${data.candidateName}`);
     }
     
     // Convert Map to array to iterate over values
@@ -936,12 +942,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Process a limited number of resumes at a time (to avoid rate-limiting issues)
         console.log(`Starting batch analysis for ${resumeIds.length} resumes...`);
         
-        // Send a progress update via WebSocket
+        // Get all resumes first to have access to their names
+        const allResumes = await Promise.all(resumeIds.map(id => storage.getResume(id)));
+        const validResumes = allResumes.filter(Boolean);
+        
+        // Send a progress update via WebSocket with detailed information
         broadcastUpdate({
           type: 'batchAnalysisStart',
           jobId: jobDescriptionId,
           total: resumeIds.length,
-          message: `Starting analysis for ${resumeIds.length} resumes...`
+          message: `Starting analysis for ${resumeIds.length} resumes...`,
+          resumeNames: validResumes.map(resume => 
+            resume?.candidateName || `Resume ${(resume?.id || '').substring(0, 8)}`
+          ).slice(0, 5) // Only include first 5 names to avoid huge payloads
         });
         
         // Track progress

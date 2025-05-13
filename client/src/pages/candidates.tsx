@@ -158,11 +158,17 @@ export default function CandidatesPage() {
       if (event.type === 'batchAnalysisStart') {
         console.log('BATCH ANALYSIS STARTED:', event);
         
+        // Create a more informative status message with resume names if available
+        const resumeNames = event.resumeNames || [];
+        const resumeNameStr = resumeNames.length > 0 
+          ? `Resumes: ${resumeNames.join(', ')}${resumeNames.length < event.total ? '...' : ''}`
+          : '';
+          
         const newStatus = {
           inProgress: true,
           totalResumes: event.total || 0,
           processedResumes: 0,
-          message: event.message || 'Starting analysis...',
+          message: `${event.message || 'Starting analysis...'} ${resumeNameStr}`,
           lastUpdated: Date.now()
         };
         
@@ -171,6 +177,15 @@ export default function CandidatesPage() {
       } 
       else if (event.type === 'batchAnalysisProgress') {
         console.log('BATCH ANALYSIS PROGRESS EVENT RECEIVED:', event);
+        
+        // Show a subtle toast notification for current progress
+        if (event.candidateName) {
+          toast({
+            title: `Processing Resume ${event.current}/${event.total}`,
+            description: event.candidateName,
+            duration: 3000,
+          });
+        }
         
         // Use a callback to ensure we're working with the latest state
         setBatchAnalysisStatus(prev => {
