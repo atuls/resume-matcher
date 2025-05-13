@@ -750,9 +750,6 @@ export default function CandidatesPage() {
                           <div className="font-medium text-gray-900">
                             {resume.candidateName || 'Unnamed Candidate'}
                           </div>
-                          <div className="text-xs text-gray-400 ml-1">
-                            {formatFileSize(resume.fileSize || 0)}
-                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
