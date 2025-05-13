@@ -522,22 +522,21 @@ export default function CandidatesPage() {
     try {
       let resumeIds: string[];
       let totalResumes: number;
+      let limit: number | undefined;
       
       if (mode === 'next10') {
         // Filter to find resumes that don't have scores for this job yet (unanalyzed)
         const unanalyzedResumes = resumes.filter(resume => !resumeScores[resume.id]);
         console.log(`Found ${unanalyzedResumes.length} unanalyzed resumes out of ${resumes.length} total`);
         
-        // Take only the first 10 unanalyzed resumes
-        const next10Resumes = unanalyzedResumes.slice(0, 10);
+        // Take all unanalyzed resumes but set a limit of 10 for the API
+        resumeIds = unanalyzedResumes.map(resume => resume.id);
+        totalResumes = Math.min(resumeIds.length, 10);
+        limit = 10; // Set explicit limit for the API
         
-        resumeIds = next10Resumes.map(resume => resume.id);
-        totalResumes = resumeIds.length;
+        console.log(`Selected ${totalResumes} resumes for "Next 10" analysis`);
         
-        console.log(`Selected ${totalResumes} resumes for "Next 10" analysis:`, 
-          next10Resumes.map(r => r.candidateName || 'Unknown candidate'));
-        
-        if (totalResumes === 0) {
+        if (resumeIds.length === 0) {
           toast({
             title: "No unanalyzed resumes",
             description: "All resumes have already been analyzed for this job.",
@@ -562,13 +561,13 @@ export default function CandidatesPage() {
       // Ensure WebSocket is connected
       websocketService.connect();
       
-      // Call batch analysis API endpoint
-      const response = await fetch('/api/analyze', {
+      // Call batch analysis API endpoint with the correct URL
+      const response = await fetch(`/api/job-descriptions/${selectedJobId}/resume-scores`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          jobDescriptionId: selectedJobId,
-          resumeIds
+          resumeIds,
+          limit
         })
       });
       
@@ -582,7 +581,7 @@ export default function CandidatesPage() {
       
       toast({
         title: mode === 'next10' ? 'Analyzing Next 10 Unanalyzed Resumes' : 'Batch Analysis Started',
-        description: `Analyzing ${resumeIds.length} resumes against the selected job. Results will update in the table as they complete.`,
+        description: `Analyzing ${totalResumes} resumes against the selected job. Results will update in the table as they complete.`,
         duration: 5000
       });
       

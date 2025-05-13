@@ -715,7 +715,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No resume IDs provided" });
       }
       
-      console.log(`Processing scores request for job ${jobDescriptionId} with ${resumeIds.length} resumes`);
+      // Apply limit if specified
+      const actualLimit = limit ? parseInt(limit.toString()) : resumeIds.length;
+      const limitedResumeIds = resumeIds.slice(0, actualLimit);
+      
+      console.log(`Processing scores request for job ${jobDescriptionId} with ${limitedResumeIds.length} resumes${limit ? ` (limited to ${actualLimit})` : ''}`);
       
       // Get job description
       const jobDescription = await storage.getJobDescription(jobDescriptionId);
@@ -726,21 +730,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get job requirements
       const requirements = await storage.getJobRequirements(jobDescriptionId);
       
+      // Filter out resumes that already have analysis results to avoid reprocessing
+      const existingAnalysisMap = new Map();
+      const existingAnalyses = await storage.getAnalysisResultsByJob(jobDescriptionId);
+      
+      // Create a map for faster lookups
+      existingAnalyses.forEach(analysis => {
+        existingAnalysisMap.set(analysis.resumeId, analysis);
+      });
+      
+      // Filter to only include resumes without existing analysis
+      const resumesToProcess = limitedResumeIds.filter(id => !existingAnalysisMap.has(id));
+      
+      console.log(`Found ${existingAnalyses.length} existing analyses; will process ${resumesToProcess.length} new resumes`);
+      
       // Initialize results array for tracking
-      const results = resumeIds.map(id => ({
+      const results = limitedResumeIds.map(id => ({
         id,
-        status: 'queued',
-        message: 'Analysis queued'
+        status: existingAnalysisMap.has(id) ? 'complete' : 'queued',
+        message: existingAnalysisMap.has(id) ? 'Analysis already exists' : 'Analysis queued'
       }));
       
       // Send initial response immediately
       res.json({ results });
       
-      // Process in background after sending initial response
-      processBatchAnalysis(resumeIds, jobDescriptionId, jobDescription, requirements)
-        .catch(error => {
-          console.error("Fatal error in batch analysis:", error);
-        });
+      // Only process if there are new resumes to analyze
+      if (resumesToProcess.length > 0) {
+        // Process in background after sending initial response
+        processBatchAnalysis(resumesToProcess, jobDescriptionId, jobDescription, requirements)
+          .catch(error => {
+            console.error("Fatal error in batch analysis:", error);
+          });
+      } else {
+        console.log("No new resumes to process, skipping batch analysis");
+      }
     } catch (error) {
       console.error("Error initiating batch analysis:", error);
       if (!res.headersSent) {
@@ -775,13 +798,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`🔍 [BATCH-DEBUG] Candidates to process: ${candidateNames.join(', ').substring(0, 200)}...`);
       
+      // Create resume ID -> resume map for faster lookups
+      const resumeMap = validResumes.reduce((map, resume) => {
+        map.set(resume.id, resume);
+        return map;
+      }, new Map<string, Resume>());
+      
+      // Make a definitive list of resumes that will be processed (valid resumes only)
+      const finalResumeIds = validResumes.map(resume => resume.id);
+      const totalToProcess = finalResumeIds.length;
+      
       // Send a progress update via WebSocket with detailed information
       console.log(`🔍 [BATCH-DEBUG] Broadcasting batch start event via WebSocket...`);
       broadcastUpdate({
         type: 'batchAnalysisStart',
         jobId: jobDescriptionId,
-        total: resumeIds.length,
-        message: `Starting analysis for ${resumeIds.length} resumes...`,
+        total: totalToProcess,
+        message: `Starting analysis for ${totalToProcess} resumes...`,
         resumeNames: candidateNames.slice(0, 5), // Only include first 5 names to avoid huge payloads
         debugInfo: {
           startTime: batchStartTime,
@@ -794,9 +827,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let successful = 0;
       let failed = 0;
     
-      // Process each resume sequentially
-      for (let i = 0; i < resumeIds.length; i++) {
-        const resumeId = resumeIds[i];
+      // Process each resume sequentially (only valid ones)
+      for (let i = 0; i < finalResumeIds.length; i++) {
+        const resumeId = finalResumeIds[i];
         const resumeStartTime = Date.now();
         
         console.log(`\n🔍 [BATCH-DEBUG] === Processing resume ${i+1}/${resumeIds.length} (${resumeId}) ===`);
