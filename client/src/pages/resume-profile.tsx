@@ -892,7 +892,7 @@ export default function ResumeProfilePage() {
                       )}
                       
                       {/* Red flags section */}
-                      {redFlagData.analysis.redFlags && redFlagData.analysis.redFlags.length > 0 && (
+                      {redFlagData.analysis && redFlagData.analysis.redFlags && redFlagData.analysis.redFlags.length > 0 && (
                         <div className="space-y-3">
                           <h3 className="text-lg font-medium flex items-center">
                             <AlertTriangle className="h-5 w-5 mr-2 text-amber-500" />
@@ -900,7 +900,7 @@ export default function ResumeProfilePage() {
                           </h3>
                           <div className="space-y-2">
                             {redFlagData.analysis.redFlags.map((flag, index) => (
-                              <Alert key={index} variant="outline" className="border-amber-200 bg-amber-50">
+                              <Alert key={index} className="border border-amber-200 bg-amber-50">
                                 <AlertCircle className="h-4 w-4 text-amber-500" />
                                 <AlertDescription className="text-amber-800">
                                   {flag}
@@ -912,7 +912,7 @@ export default function ResumeProfilePage() {
                       )}
                       
                       {/* Highlights section */}
-                      {redFlagData.analysis.highlights && redFlagData.analysis.highlights.length > 0 && (
+                      {redFlagData.analysis && redFlagData.analysis.highlights && redFlagData.analysis.highlights.length > 0 && (
                         <div className="space-y-3">
                           <h3 className="text-lg font-medium flex items-center">
                             <Sparkles className="h-5 w-5 mr-2 text-blue-500" />
@@ -920,7 +920,7 @@ export default function ResumeProfilePage() {
                           </h3>
                           <div className="space-y-2">
                             {redFlagData.analysis.highlights.map((highlight, index) => (
-                              <Alert key={index} variant="outline" className="border-blue-200 bg-blue-50">
+                              <Alert key={index} className="border border-blue-200 bg-blue-50">
                                 <CheckCircle className="h-4 w-4 text-blue-500" />
                                 <AlertDescription className="text-blue-800">
                                   {highlight}
@@ -1024,22 +1024,24 @@ export default function ResumeProfilePage() {
                           <div>
                             <h4 className="text-sm font-medium mb-2">Work History Extracted:</h4>
                             <pre className="text-xs overflow-auto max-h-80 p-3 bg-gray-50 rounded-md">
-                              {JSON.stringify(redFlagData.analysis.recentRoles, null, 2)}
+                              {redFlagData.analysis && redFlagData.analysis.recentRoles ? 
+                                JSON.stringify(redFlagData.analysis.recentRoles, null, 2) : 
+                                "No work history data available"}
                             </pre>
                           </div>
                           
                           <div>
                             <h4 className="text-sm font-medium mb-2">Analysis Results:</h4>
                             <pre className="text-xs overflow-auto max-h-80 p-3 bg-gray-50 rounded-md">
-                              {JSON.stringify({
-                                hasJobHoppingHistory: redFlagData.analysis.hasJobHoppingHistory,
-                                hasContractRoles: redFlagData.analysis.hasContractRoles,
-                                isCurrentlyEmployed: redFlagData.analysis.isCurrentlyEmployed,
-                                averageTenureMonths: redFlagData.analysis.averageTenureMonths,
-                                redFlags: redFlagData.analysis.redFlags,
-                                highlights: redFlagData.analysis.highlights,
-                                currentJobPosition: redFlagData.analysis.currentJobPosition
-                              }, null, 2)}
+                              {redFlagData.analysis ? JSON.stringify({
+                                hasJobHoppingHistory: redFlagData.analysis.hasJobHoppingHistory || false,
+                                hasContractRoles: redFlagData.analysis.hasContractRoles || false,
+                                isCurrentlyEmployed: redFlagData.analysis.isCurrentlyEmployed || false,
+                                averageTenureMonths: redFlagData.analysis.averageTenureMonths || 0,
+                                redFlags: redFlagData.analysis.redFlags || [],
+                                highlights: redFlagData.analysis.highlights || [],
+                                currentJobPosition: redFlagData.analysis.currentJobPosition || null
+                              }, null, 2) : "No analysis data available"}
                             </pre>
                           </div>
                         </div>
