@@ -2,6 +2,7 @@ import React from 'react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Briefcase, AlertTriangle, CheckCircle } from "lucide-react";
 import { extractWorkHistory } from "@/lib/debug-utils";
+import { extractResumeData, extractRedFlagData } from "@/lib/resume-data-extractor";
 
 interface ResumeWorkHistoryTabProps {
   redFlagData: any;
@@ -36,9 +37,18 @@ export function ResumeWorkHistoryTab({
     );
   }
 
-  // Extract work history roles from the analysis data
-  const workHistory = extractWorkHistory(redFlagData);
-  const potentialRedFlags = redFlagData?.analysis?.potentialRedFlags || [];
+  // Extract work history and red flags using our robust data extractor
+  const extractedData = extractResumeData(redFlagData);
+  const workHistory = extractedData.workHistory.length > 0 
+    ? extractedData.workHistory 
+    : extractWorkHistory(redFlagData); // Fallback to old method if needed
+    
+  // Extract red flags using our specialized extractor
+  const redFlags = extractRedFlagData(redFlagData);
+  // Fallback to old method if our extractor doesn't find anything
+  const potentialRedFlags = redFlags.length > 0 
+    ? redFlags.map(flag => ({ description: flag })) 
+    : redFlagData?.analysis?.potentialRedFlags || [];
   
   return (
     <div className="space-y-6">

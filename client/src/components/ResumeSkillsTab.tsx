@@ -3,6 +3,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Code } from "lucide-react";
 import { extractSkillsFromAnalysis, categorizeSkills } from "@/lib/debug-utils";
+import { extractResumeData } from "@/lib/resume-data-extractor";
 import { useToast } from "@/hooks/use-toast";
 
 interface ResumeSkillsTabProps {
@@ -44,8 +45,13 @@ export function ResumeSkillsTab({
     );
   }
 
-  // Get skills using our utility function
-  const skillsList = extractSkillsFromAnalysis(analysis);
+  // Get skills using our new robust data extractor
+  const extractedData = extractResumeData(analysis);
+  // Fall back to old method if our extractor doesn't find skills
+  const skillsList = extractedData.skills.length > 0 
+    ? extractedData.skills 
+    : extractSkillsFromAnalysis(analysis);
+  
   const { technicalSkills, softSkills } = categorizeSkills(skillsList);
   
   return (
