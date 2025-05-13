@@ -1062,7 +1062,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const completeEvent = {
         type: 'batchAnalysisComplete',
         jobId: jobDescriptionId,
-        total: resumeIds.length,
+        total: totalToProcess,
         successful,
         failed,
         message: `Batch analysis complete. Successfully analyzed: ${successful}, Failed: ${failed}`
