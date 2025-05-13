@@ -704,6 +704,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get resume scores for a job description (GET version for smaller batches)
+  app.get("/api/job-descriptions/:id/resume-scores", async (req: Request, res: Response) => {
+    try {
+      const jobDescriptionId = req.params.id;
+      const resumeIds = Array.isArray(req.query.resumeId) 
+        ? req.query.resumeId as string[]
+        : req.query.resumeId 
+        ? [req.query.resumeId as string] 
+        : [];
+      
+      // Validate input
+      if (resumeIds.length === 0) {
+        return res.status(400).json({ message: "No resume IDs provided in query parameters" });
+      }
+      
+      console.log(`GET scores request for job ${jobDescriptionId} with ${resumeIds.length} resumes`);
+      
+      // Get job description
+      const jobDescription = await storage.getJobDescription(jobDescriptionId);
+      if (!jobDescription) {
+        return res.status(404).json({ message: "Job description not found" });
+      }
+      
+      // Get analysis results for these resumes and this job
+      const analysisResults = await storage.getAnalysisResultsByJob(jobDescriptionId);
+      
+      // Filter only for the requested resumes
+      const filteredResults = analysisResults.filter(result => 
+        resumeIds.includes(result.resumeId)
+      );
+      
+      // Format the response to match the expected structure in the frontend
+      const scoreMap: Record<string, { score: number, matchedAt: Date }> = {};
+      
+      filteredResults.forEach(result => {
+        scoreMap[result.resumeId] = {
+          score: result.overallScore,
+          matchedAt: result.createdAt
+        };
+      });
+      
+      res.json(scoreMap);
+    } catch (error) {
+      console.error("Error processing resume scores GET request:", error);
+      res.status(500).json({ message: "Internal server error processing resume scores" });
+    }
+  });
+
   // Get resume scores for a job description or analyze in bulk
   app.post("/api/job-descriptions/:id/resume-scores", async (req: Request, res: Response) => {
     try {
