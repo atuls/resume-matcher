@@ -1,0 +1,42 @@
+No new resumes to process, skipping batch analysis
+3:48:28 PM [express] POST /api/job-descriptions/f17e9b1c-9e63-4ed5-9cae-a307b37c95ff/resume-scores 2…
+Error parsing raw response: SyntaxError: "[object Object]" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at <anonymous> (/home/runner/workspace/server/routes.ts:460:28)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+Error parsing skill matches: SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+    at <anonymous> (/home/runner/workspace/server/routes.ts:469:39)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+Error parsing raw response: SyntaxError: "[object Object]" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at <anonymous> (/home/runner/workspace/server/routes.ts:460:28)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+Error parsing skill matches: SyntaxError: "[object Object]" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at <anonymous> (/home/runner/workspace/server/routes.ts:469:39)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+Error parsing raw response: SyntaxError: "[object Object]" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at <anonymous> (/home/runner/workspace/server/routes.ts:460:28)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+Error parsing skill matches: SyntaxError: "[object Object]" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at <anonymous> (/home/runner/workspace/server/routes.ts:469:39)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+Error parsing raw response: SyntaxError: "[object Object]" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at <anonymous> (/home/runner/workspace/server/routes.ts:460:28)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+Error parsing skill matches: SyntaxError: "[object Object]" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at <anonymous> (/home/runner/workspace/server/routes.ts:469:39)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+Error parsing raw response: SyntaxError: "[object Object]" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at <anonymous> (/home/runner/workspace/server/routes.ts:460:28)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+Error parsing skill matches: SyntaxError: "[object Object]" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at <anonymous> (/home/runner/workspace/server/routes.ts:469:39)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)

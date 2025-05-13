@@ -457,7 +457,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let rawData = null;
         try {
           if (latestAnalysis.rawResponse) {
-            rawData = JSON.parse(latestAnalysis.rawResponse);
+            // Handle both cases: when it's already an object or when it's a JSON string
+            if (typeof latestAnalysis.rawResponse === 'object') {
+              rawData = latestAnalysis.rawResponse;
+            } else {
+              rawData = JSON.parse(latestAnalysis.rawResponse);
+            }
           }
         } catch (e) {
           console.error("Error parsing raw response:", e);
@@ -466,7 +471,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Extract requirements if available
         if (latestAnalysis.skillMatches) {
           try {
-            const skillMatches = JSON.parse(latestAnalysis.skillMatches);
+            // Handle both cases: when it's already an object or when it's a JSON string
+            let skillMatches;
+            if (typeof latestAnalysis.skillMatches === 'object') {
+              skillMatches = latestAnalysis.skillMatches;
+            } else if (latestAnalysis.skillMatches === '') {
+              skillMatches = [];
+            } else {
+              skillMatches = JSON.parse(latestAnalysis.skillMatches);
+            }
+            
             if (Array.isArray(skillMatches)) {
               allRequirements = skillMatches.map(match => match.requirement);
               hasRelevantAnalysis = true;
