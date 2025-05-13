@@ -138,7 +138,20 @@ const DataExtractionTestPage: React.FC = () => {
             <CardContent>
               <ScrollArea className="h-[200px]">
                 {Array.isArray(extractedData.workHistory) && extractedData.workHistory.length > 0 ? (
-                  <pre className="text-sm">{JSON.stringify(extractedData.workHistory, null, 2)}</pre>
+                  <ul className="list-disc pl-6 space-y-4">
+                    {extractedData.workHistory.map((job: any, index) => (
+                      <li key={index} className="mb-2">
+                        <div className="font-semibold">{job.title || job.Title}</div>
+                        <div className="text-gray-700">{job.Company || job.company}, {job.location || job.Location}</div>
+                        <div className="text-sm text-gray-600">
+                          {job.startDate || job.StartDate} - {job.endDate || job.EndDate || 'Present'}
+                        </div>
+                        {(job.description || job.Description) && (
+                          <p className="text-sm mt-1">{job.description || job.Description}</p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
                 ) : (
                   <div>
                     <p className="font-semibold">Summary:</p>

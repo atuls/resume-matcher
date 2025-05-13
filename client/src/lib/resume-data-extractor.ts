@@ -115,12 +115,12 @@ export function extractResumeData(analysisResult: any): ExtractedResumeData {
         const uniqueSkills: {[key: string]: boolean} = {};
         
         // Add existing skills
-        result.skills.forEach(skill => {
+        result.skills.forEach((skill: string) => {
           uniqueSkills[skill] = true;
         });
         
         // Add new skills
-        skillsFromMatches.forEach(skill => {
+        skillsFromMatches.forEach((skill: string) => {
           uniqueSkills[skill] = true;
         });
         
