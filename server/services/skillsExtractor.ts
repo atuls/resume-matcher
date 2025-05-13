@@ -25,6 +25,7 @@ export interface RedFlagAnalysis {
   redFlags: string[];
   highlights: string[];
   currentJobPosition?: string;
+  currentCompany?: string;
 }
 
 /**
@@ -321,9 +322,10 @@ export function analyzeRedFlags(
   // Detect if currently employed
   const isCurrentlyEmployed = recentJobs.some(job => job.isCurrentJob === true);
   
-  // Current job position
-  const currentJobPosition = isCurrentlyEmployed ? 
-    recentJobs.find(job => job.isCurrentJob)?.title : undefined;
+  // Current job position and company
+  const currentJob = recentJobs.find(job => job.isCurrentJob);
+  const currentJobPosition = isCurrentlyEmployed ? currentJob?.title : undefined;
+  const currentCompany = isCurrentlyEmployed ? currentJob?.company : undefined;
   
   // Check for contract roles
   const hasContractRoles = recentJobs.some(job => job.isContractRole === true);
@@ -431,6 +433,7 @@ export function analyzeRedFlags(
     recentRoles,
     redFlags,
     highlights,
-    currentJobPosition
+    currentJobPosition,
+    currentCompany
   };
 }
