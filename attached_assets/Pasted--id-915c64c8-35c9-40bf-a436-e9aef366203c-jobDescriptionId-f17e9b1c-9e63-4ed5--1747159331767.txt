@@ -1,0 +1,127 @@
+[
+  {
+    "id": "915c64c8-35c9-40bf-a436-e9aef366203c",
+    "jobDescriptionId": "f17e9b1c-9e63-4ed5-9cae-a307b37c95ff",
+    "resumeId": "11453d82-e289-4bd3-8738-cbcb3d0d6cab",
+    "overallScore": 95,
+    "skillMatches": [
+      {
+        "requirement": "Job requirements from summary",
+        "match": "full",
+        "confidence": 0.7,
+        "evidence": "Experience extracted from resume"
+      }
+    ],
+    "rawResponse": {
+      "skills": [],
+      "experience": "Experience extracted from resume",
+      "education": "Education extracted from resume",
+      "score": 95,
+      "matchedRequirements": [
+        {
+          "requirement": "Job requirements from summary",
+          "matched": true,
+          "confidence": 0.7
+        }
+      ],
+      "rawResponse": {
+        "rawText": "{\n  \"matching_score\": 95,\n  \"Summary\": \"The candidate is an exceptional match for the Brand Partnerships Manager role. With over 8 years of experience in sales, partnerships, and digital marketing, including significant experience in influencer marketing at Logitech, she brings the exact combination of skills required. Her background demonstrates strong consultative selling skills, deep industry knowledge in digital marketing and influencer strategies, and a proven track record of exceeding sales targets. She has managed high-volume sales pipelines, developed strategic partnerships, and shows the entrepreneurial mindset mentioned in the job requirements. Her experience with CRM systems (Salesforce) aligns perfectly with the technical requirements. The candidate has consistently shown career progression, moving from entry-level to leadership positions, and has exceeded revenue targets throughout her career. Her direct experience creating and managing influencer marketing campaigns for major brands makes her particularly valuable for this position.\",\n  \"Work History\": [\n    {\n      \"Title\": \"Senior Partner Manager\",\n      \"Company\": \"Logitech\",\n      \"location\": \"Newark, CA\",\n      \"startDate\": \"January 2022\",\n      \"endDate\": \"Present\",\n      \"description\": \"Led strategic partnerships with global creators and influencers across multiple product categories. Developed and executed 50+ social media campaigns with top-tier influencers, resulting in 120M+ impressions and $2.5M in attributable revenue. Built cross-functional partnerships with Marketing, Product and Finance teams to develop and launch influencer marketing programs. Managed a $1M+ annual budget for influencer campaigns and strategic partnerships. Negotiated contracts with agencies, creators and partners, achieving 15%+ savings on campaign costs. Created comprehensive campaign performance reports using data analytics to optimize future campaigns.\",\n      \"durationMonths\": 24,\n      \"isCurrentRole\": true\n    },\n    {\n      \"Title\": \"Account Executive\",\n      \"Company\": \"TikTok (ByteDance)\",\n      \"location\": \"San Jose, CA\",\n      \"startDate\": \"March 2019\",\n      \"endDate\": \"December 2021\",\n      \"description\": \"Managed and grew advertiser relationships across CPG, retail, and entertainment verticals. Surpassed annual sales targets by 20%, generating $8M+ in revenue. Led consultative sales presentations to C-suite executives, highlighting platform capabilities and strategic opportunities. Coordinated with cross-functional teams to develop customized advertising solutions for key accounts. Utilized Salesforce CRM to manage pipeline, forecast revenue, and track customer interactions. Recognized as a top-performing account executive for 7 consecutive quarters.\",\n      \"durationMonths\": 33,\n      \"isCurrentRole\": false\n    },\n    {\n      \"Title\": \"Senior Account Manager\",\n      \"Company\": \"Snapchat\",\n      \"location\": \"Santa Monica, CA\",\n      \"startDate\": \"June 2017\",\n      \"endDate\": \"February 2019\",\n      \"description\": \"Managed relationships with 30+ agency partners, ensuring successful campaign execution and optimization. Developed and presented quarterly business reviews to highlight performance metrics and strategic opportunities. Created custom sales decks and marketing strategies tailored to client objectives. Conducted product education sessions for agency teams to drive platform adoption. Exceeded quarterly revenue targets by an average of 15%.\",\n      \"durationMonths\": 20,\n      \"isCurrentRole\": false\n    },\n    {\n      \"Title\": \"Digital Media Planner\",\n      \"Company\": \"Horizon Media\",\n      \"location\": \"Los Angeles, CA\",\n      \"startDate\": \"August 2015\",\n      \"endDate\": \"May 2017\",\n      \"description\": \"Planned and executed digital advertising campaigns across social, display, and video platforms. Managed $5M+ in annual media spend across multiple client accounts. Analyzed campaign performance data to optimize media plans and improve ROI. Collaborated with creative teams to develop engaging ad concepts aligned with brand objectives. Prepared and presented campaign performance reports to clients.\",\n      \"durationMonths\": 21,\n      \"isCurrentRole\": false\n    }\n  ],\n  \"Skills\": [\n    \"Strategic Partnerships\",\n    \"Influencer Marketing\",\n    \"Sales Strategy\",\n    \"Revenue Generation\",\n    \"Client Relationship Management\",\n    \"Contract Negotiation\",\n    \"Digital Marketing\",\n    \"Social Media Platforms\",\n    \"Campaign Management\",\n    \"Budget Management\",\n    \"Performance Analytics\",\n    \"Cross-functional Collaboration\",\n    \"Salesforce CRM\",\n    \"Consultative Selling\",\n    \"Business Development\",\n    \"Pipeline Management\",\n    \"Market Research\",\n    \"Presentation Skills\"\n  ],\n  \"Red Flags\": []\n}",
+        "parsedJson": {
+          "matching_score": 95,
+          "Summary": "The candidate is an exceptional match for the Brand Partnerships Manager role. With over 8 years of experience in sales, partnerships, and digital marketing, including significant experience in influencer marketing at Logitech, she brings the exact combination of skills required. Her background demonstrates strong consultative selling skills, deep industry knowledge in digital marketing and influencer strategies, and a proven track record of exceeding sales targets. She has managed high-volume sales pipelines, developed strategic partnerships, and shows the entrepreneurial mindset mentioned in the job requirements. Her experience with CRM systems (Salesforce) aligns perfectly with the technical requirements. The candidate has consistently shown career progression, moving from entry-level to leadership positions, and has exceeded revenue targets throughout her career. Her direct experience creating and managing influencer marketing campaigns for major brands makes her particularly valuable for this position.",
+          "Work History": [
+            {
+              "Title": "Senior Partner Manager",
+              "Company": "Logitech",
+              "location": "Newark, CA",
+              "startDate": "January 2022",
+              "endDate": "Present",
+              "description": "Led strategic partnerships with global creators and influencers across multiple product categories. Developed and executed 50+ social media campaigns with top-tier influencers, resulting in 120M+ impressions and $2.5M in attributable revenue. Built cross-functional partnerships with Marketing, Product and Finance teams to develop and launch influencer marketing programs. Managed a $1M+ annual budget for influencer campaigns and strategic partnerships. Negotiated contracts with agencies, creators and partners, achieving 15%+ savings on campaign costs. Created comprehensive campaign performance reports using data analytics to optimize future campaigns.",
+              "durationMonths": 24,
+              "isCurrentRole": "true"
+            },
+            {
+              "Title": "Account Executive",
+              "Company": "TikTok (ByteDance)",
+              "location": "San Jose, CA",
+              "startDate": "March 2019",
+              "endDate": "December 2021",
+              "description": "Managed and grew advertiser relationships across CPG, retail, and entertainment verticals. Surpassed annual sales targets by 20%, generating $8M+ in revenue. Led consultative sales presentations to C-suite executives, highlighting platform capabilities and strategic opportunities. Coordinated with cross-functional teams to develop customized advertising solutions for key accounts. Utilized Salesforce CRM to manage pipeline, forecast revenue, and track customer interactions. Recognized as a top-performing account executive for 7 consecutive quarters.",
+              "durationMonths": 33,
+              "isCurrentRole": "false"
+            },
+            {
+              "Title": "Senior Account Manager",
+              "Company": "Snapchat",
+              "location": "Santa Monica, CA",
+              "startDate": "June 2017",
+              "endDate": "February 2019",
+              "description": "Managed relationships with 30+ agency partners, ensuring successful campaign execution and optimization. Developed and presented quarterly business reviews to highlight performance metrics and strategic opportunities. Created custom sales decks and marketing strategies tailored to client objectives. Conducted product education sessions for agency teams to drive platform adoption. Exceeded quarterly revenue targets by an average of 15%.",
+              "durationMonths": 20,
+              "isCurrentRole": "false"
+            },
+            {
+              "Title": "Digital Media Planner",
+              "Company": "Horizon Media",
+              "location": "Los Angeles, CA",
+              "startDate": "August 2015",
+              "endDate": "May 2017",
+              "description": "Planned and executed digital advertising campaigns across social, display, and video platforms. Managed $5M+ in annual media spend across multiple client accounts. Analyzed campaign performance data to optimize media plans and improve ROI. Collaborated with creative teams to develop engaging ad concepts aligned with brand objectives. Prepared and presented campaign performance reports to clients.",
+              "durationMonths": 21,
+              "isCurrentRole": "false"
+            }
+          ],
+          "Skills": [
+            "Strategic Partnerships",
+            "Influencer Marketing",
+            "Sales Strategy",
+            "Revenue Generation",
+            "Client Relationship Management",
+            "Contract Negotiation",
+            "Digital Marketing",
+            "Social Media Platforms",
+            "Campaign Management",
+            "Budget Management",
+            "Performance Analytics",
+            "Cross-functional Collaboration",
+            "Salesforce CRM",
+            "Consultative Selling",
+            "Business Development",
+            "Pipeline Management",
+            "Market Research",
+            "Presentation Skills"
+          ],
+          "Red Flags": []
+        },
+        "extractedSections": {
+          "redFlags": "",
+          "summary": "The candidate is an exceptional match for the Brand Partnerships Manager role. With over 8 years of experience in sales, partnerships, and digital marketing, including significant experience in influencer marketing at Logitech, she brings the exact combination of skills required. Her background demonstrates strong consultative selling skills, deep industry knowledge in digital marketing and influencer strategies, and a proven track record of exceeding sales targets. She has managed high-volume sales pipelines, developed strategic partnerships, and shows the entrepreneurial mindset mentioned in the job requirements. Her experience with CRM systems (Salesforce) aligns perfectly with the technical requirements. The candidate has consistently shown career progression, moving from entry-level to leadership positions, and has exceeded revenue targets throughout her career. Her direct experience creating and managing influencer marketing campaigns for major brands makes her particularly valuable for this position.",
+          "skills": [
+            "Strategic Partnerships",
+            "Influencer Marketing",
+            "Sales Strategy",
+            "Revenue Generation",
+            "Client Relationship Management",
+            "Contract Negotiation",
+            "Digital Marketing",
+            "Social Media Platforms",
+            "Campaign Management",
+            "Budget Management",
+            "Performance Analytics",
+            "Cross-functional Collaboration",
+            "Salesforce CRM",
+            "Consultative Selling",
+            "Business Development",
+            "Pipeline Management",
+            "Market Research",
+            "Presentation Skills"
+          ],
+          "workHistory": ""
+        }
+      }
+    },
+    "aiModel": "claude-3-7-sonnet-20250219",
+    "createdAt": "2025-05-13T14:00:59.044Z",
+    "updatedAt": "2025-05-13T14:00:59.044Z"
+  }
+]
