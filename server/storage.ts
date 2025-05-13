@@ -36,6 +36,7 @@ export interface IStorage {
   // Analysis Result methods
   getAnalysisResult(id: string): Promise<AnalysisResult | undefined>;
   getAnalysisResultsByJob(jobDescriptionId: string): Promise<AnalysisResult[]>;
+  getAnalysisResultsByResume(resumeId: string): Promise<AnalysisResult[]>;
   getAnalysisResultForResume(resumeId: string, jobDescriptionId: string): Promise<AnalysisResult | undefined>;
   createAnalysisResult(result: InsertAnalysisResult): Promise<AnalysisResult>;
   updateAnalysisResult(id: string, data: Partial<AnalysisResult>): Promise<AnalysisResult | undefined>;
@@ -248,6 +249,18 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(analysisResults)
       .where(eq(analysisResults.jobDescriptionId, jobDescriptionId))
+      .orderBy(desc(analysisResults.overallScore));
+  }
+  
+  async getAnalysisResultsByResume(resumeId: string): Promise<AnalysisResult[]> {
+    const { db } = await import('./db');
+    const { eq, desc } = await import('drizzle-orm');
+    const { analysisResults } = await import('@shared/schema');
+
+    return db
+      .select()
+      .from(analysisResults)
+      .where(eq(analysisResults.resumeId, resumeId))
       .orderBy(desc(analysisResults.overallScore));
   }
   
