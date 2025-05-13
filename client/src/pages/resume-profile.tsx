@@ -31,6 +31,7 @@ export default function ResumeProfilePage() {
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [redFlagLoading, setRedFlagLoading] = useState(false);
   const [isContactingCandidate, setIsContactingCandidate] = useState(false);
+  const [jobScoreLoading, setJobScoreLoading] = useState(false);
   
   // Resume query
   const { data: resume, error: resumeError, isLoading: resumeLoading } = useQuery({
@@ -61,12 +62,81 @@ export default function ResumeProfilePage() {
     enabled: !!resumeId,
   });
   
-  // Job scores query
+  // Get job descriptions for the dropdown
+  const { data: jobDescriptions } = useQuery({
+    queryKey: ['/api/job-descriptions'],
+    queryFn: () => getJobDescriptions(),
+  });
+  
+  // State for selected job
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  
+  // Job scores query - specifically for the selected job
+  const { 
+    data: jobScore,
+    refetch: refetchJobScore,
+    isLoading: jobScoreIsLoading
+  } = useQuery({
+    queryKey: [`/api/resume/${resumeId}/job-score/${selectedJobId}`],
+    queryFn: () => selectedJobId ? getResumeScores(resumeId!, selectedJobId) : Promise.resolve({}),
+    enabled: !!resumeId && !!selectedJobId,
+  });
+  
+  // General scores query - for all jobs
   const { data: resumeScore } = useQuery({
     queryKey: [`/api/resumes/${resumeId}/job-connections`],
     queryFn: () => getResumeScores(resumeId!),
     enabled: !!resumeId,
   });
+  
+  // Function to run analysis for a specific job
+  const runJobAnalysis = async () => {
+    if (!selectedJobId || !resumeId) {
+      toast({
+        title: "Please select a job",
+        description: "Select a job to analyze resume against",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setJobScoreLoading(true);
+    
+    try {
+      // Use the analyze endpoint to generate a score
+      const response = await fetch(`/api/analyze`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          jobDescriptionId: selectedJobId,
+          resumeIds: [resumeId]
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error analyzing resume: ${response.status} ${response.statusText}`);
+      }
+      
+      // Refetch the score
+      await refetchJobScore();
+      
+      toast({
+        title: "Analysis complete",
+        description: "Resume has been analyzed against the selected job",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error analyzing resume",
+        description: error.message || "An error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setJobScoreLoading(false);
+    }
+  };
 
   // Function to handle contacting a candidate
   const handleContactCandidate = async () => {
