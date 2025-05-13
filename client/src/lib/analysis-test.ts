@@ -152,16 +152,25 @@ export async function testAnalysisDataPaths(resumeId: string): Promise<DebugResu
  */
 export async function runAllTests(resumeId: string): Promise<{
   analysis: DebugResult;
-  redFlags: any;
+  redFlagAnalysis: any;
 }> {
   try {
     const analysis = await testAnalysisDataPaths(resumeId);
-    const redFlags = await testRedFlagDataPaths(resumeId);
+    const redFlagAnalysis = await testRedFlagDataPaths(resumeId);
     
-    return {
-      analysis,
-      redFlags
-    };
+    // Log test results
+    console.log("=== ANALYSIS TEST RESULTS ===");
+    console.log("Skills:", analysis.skills.foundPath, analysis.skills.data);
+    console.log("Work History:", analysis.workHistory.foundPath, analysis.workHistory.data);
+    console.log("Red Flags:", analysis.redFlags.foundPath, analysis.redFlags.data);
+    console.log("Matching Score:", analysis.matchingScore.foundPath, analysis.matchingScore.score);
+    console.log("Summary:", analysis.summary.foundPath, analysis.summary.text?.substring(0, 100) + "...");
+    
+    console.log("=== RED FLAG ANALYSIS TEST RESULTS ===");
+    console.log("Red Flags:", redFlagAnalysis.redFlags.foundPath, redFlagAnalysis.redFlags.data);
+    console.log("Work History:", redFlagAnalysis.workHistory.foundPath, redFlagAnalysis.workHistory.data);
+    
+    return { analysis, redFlagAnalysis };
   } catch (error) {
     console.error("Error running all tests:", error);
     throw error;
@@ -283,28 +292,3 @@ function findFirstValidPath(paths: Record<string, any>): { path: string, value: 
   return { path: firstPath || "", value: paths[firstPath] };
 }
 
-/**
- * Run both analysis and red flag analysis tests
- * @param resumeId The resume ID to test
- */
-export async function runAllTests(resumeId: string): Promise<{
-  analysis: DebugResult;
-  redFlagAnalysis: any;
-}> {
-  const analysis = await testAnalysisDataPaths(resumeId);
-  const redFlagAnalysis = await testRedFlagDataPaths(resumeId);
-  
-  // Log test results
-  console.log("=== ANALYSIS TEST RESULTS ===");
-  console.log("Skills:", analysis.skills.foundPath, analysis.skills.data);
-  console.log("Work History:", analysis.workHistory.foundPath, analysis.workHistory.data);
-  console.log("Red Flags:", analysis.redFlags.foundPath, analysis.redFlags.data);
-  console.log("Matching Score:", analysis.matchingScore.foundPath, analysis.matchingScore.score);
-  console.log("Summary:", analysis.summary.foundPath, analysis.summary.text.substring(0, 100) + "...");
-  
-  console.log("=== RED FLAG ANALYSIS TEST RESULTS ===");
-  console.log("Red Flags:", redFlagAnalysis.redFlags.foundPath, redFlagAnalysis.redFlags.data);
-  console.log("Work History:", redFlagAnalysis.workHistory.foundPath, redFlagAnalysis.workHistory.data);
-  
-  return { analysis, redFlagAnalysis };
-}

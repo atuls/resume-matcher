@@ -51,7 +51,10 @@ const AnalysisTestPage: React.FC = () => {
     setLoading(true);
     try {
       const results = await runAllTests(resumeId);
-      setAllTestResults(results);
+      setAllTestResults({
+        analysis: results.analysis,
+        redFlags: results.redFlagAnalysis
+      });
     } catch (error) {
       console.error("Test error:", error);
     } finally {

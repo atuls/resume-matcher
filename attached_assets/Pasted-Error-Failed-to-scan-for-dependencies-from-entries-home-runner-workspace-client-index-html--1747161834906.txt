@@ -1,0 +1,50 @@
+Error:   Failed to scan for dependencies from entries:
+  /home/runner/workspace/client/index.html
+
+  ✘ [ERROR] Multiple exports with the same name "runAllTests"
+
+    client/src/lib/analysis-test.ts:290:22:
+      290 │ export async function runAllTests(resumeId: string): Promise<{
+          ╵                       ~~~~~~~~~~~
+
+  The name "runAllTests" was originally exported here:
+
+    client/src/lib/analysis-test.ts:153:22:
+      153 │ export async function runAllTests(resumeId: string): Promise<{
+          ╵                       ~~~~~~~~~~~
+
+
+✘ [ERROR] The symbol "runAllTests" has already been declared
+
+    client/src/lib/analysis-test.ts:290:22:
+      290 │ export async function runAllTests(resumeId: string): Promise<{
+          ╵                       ~~~~~~~~~~~
+
+  The symbol "runAllTests" was originally declared here:
+
+    client/src/lib/analysis-test.ts:153:22:
+      153 │ export async function runAllTests(resumeId: string): Promise<{
+          ╵                       ~~~~~~~~~~~
+
+  Duplicate top-level function declarations are not allowed in an ECMAScript module. This file is considered to be an ECMAScript module because of the "export" keyword here:
+
+    client/src/lib/analysis-test.ts:290:0:
+      290 │ export async function runAllTests(resumeId: string): Promise<{
+          ╵ ~~~~~~
+
+
+    at failureErrorWithLog (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:1472:15)
+    at /home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:945:25
+    at runOnEndCallbacks (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:1315:45)
+    at buildResponseToResult (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:943:7)
+    at /home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:955:9
+    at new Promise (<anonymous>)
+    at requestCallbacks.on-end (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:954:54)
+    at handleRequest (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:647:17)
+    at handleIncomingPacket (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:672:7)
+    at Socket.readFromStdout (/home/runner/workspace/node_modules/vite/node_modules/esbuild/lib/main.js:600:7)
+    at Socket.emit (node:events:518:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:191:23)
