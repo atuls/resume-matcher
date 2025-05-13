@@ -799,7 +799,7 @@ export default function ResumeProfilePage() {
                           <div className="bg-gray-50 p-3 rounded-lg">
                             <div className="text-sm text-gray-500">Current Employment</div>
                             <div className="font-medium flex items-center">
-                              {redFlagData.analysis.isCurrentlyEmployed ? (
+                              {redFlagData.analysis && redFlagData.analysis.isCurrentlyEmployed ? (
                                 <>
                                   <CheckCircle className="h-4 w-4 mr-1.5 text-green-500" />
                                   Currently Employed
@@ -811,7 +811,7 @@ export default function ResumeProfilePage() {
                                 </>
                               )}
                             </div>
-                            {redFlagData.analysis.currentJobPosition && (
+                            {redFlagData.analysis && redFlagData.analysis.currentJobPosition && (
                               <div className="text-xs text-gray-500 mt-1">
                                 {redFlagData.analysis.currentJobPosition}
                               </div>
@@ -822,15 +822,19 @@ export default function ResumeProfilePage() {
                             <div className="text-sm text-gray-500">Avg. Job Tenure</div>
                             <div className="font-medium flex items-center">
                               <Briefcase className="h-4 w-4 mr-1.5 text-gray-500" />
-                              {redFlagData.analysis.averageTenureMonths} months
+                              {redFlagData.analysis && redFlagData.analysis.averageTenureMonths ? redFlagData.analysis.averageTenureMonths : 0} months
                             </div>
                             <div className="text-xs text-gray-500 mt-1">
-                              {redFlagData.analysis.averageTenureMonths < 12 ? (
-                                "Short average tenure"
-                              ) : redFlagData.analysis.averageTenureMonths < 24 ? (
-                                "Moderate average tenure"
+                              {redFlagData.analysis && redFlagData.analysis.averageTenureMonths ? (
+                                redFlagData.analysis.averageTenureMonths < 12 ? (
+                                  "Short average tenure"
+                                ) : redFlagData.analysis.averageTenureMonths < 24 ? (
+                                  "Moderate average tenure"
+                                ) : (
+                                  "Good average tenure"
+                                )
                               ) : (
-                                "Good average tenure"
+                                "No tenure data"
                               )}
                             </div>
                           </div>

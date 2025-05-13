@@ -1,0 +1,28 @@
+Cannot read properties of undefined (reading 'isCurrentlyEmployed')
+at ResumeProfilePage (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/src/pages/resume-profile.tsx:1536:226)
+at renderWithHooks (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=bed5211a:11548:26)
+at updateFunctionComponent (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=bed5211a:14582:28)
+at beginWork (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=bed5211a:15924:22)
+at HTMLUnknownElement.callCallback2 (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=bed5211a:3674:22)
+at Object.invokeGuardedCallbackDev (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=bed5211a:3699:24)
+at invokeGuardedCallback (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=bed5211a:3733:39)
+at beginWork$1 (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=bed5211a:19765:15)
+at performUnitOfWork (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=bed5211a:19198:20)
+at workLoopSync (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=bed5211a:19137:13)
+Cannot read properties of undefined (reading 'isCurrentlyEmployed')
+The above error occurred in the <ResumeProfilePage> component:
+
+    at ResumeProfilePage (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/src/pages/resume-profile.tsx:55:22)
+    at Route (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=bed5211a:323:16)
+    at Switch (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=bed5211a:379:17)
+    at Router
+    at main
+    at div
+    at Provider (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=bed5211a:38:15)
+    at TooltipProvider (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=bed5211a:61:5)
+    at QueryClientProvider (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=bed5211a:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+Cannot read properties of undefined (reading 'isCurrentlyEmployed')
