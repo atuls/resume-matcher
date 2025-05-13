@@ -9,13 +9,15 @@ interface ResumeWorkHistoryTabProps {
   redFlagLoading: boolean;
   isRedFlagLoading: boolean;
   redFlagError: any;
+  analysis?: any; // Add analysis data
 }
 
 export function ResumeWorkHistoryTab({
   redFlagData,
   redFlagLoading,
   isRedFlagLoading,
-  redFlagError
+  redFlagError,
+  analysis
 }: ResumeWorkHistoryTabProps) {
   if (redFlagLoading || isRedFlagLoading) {
     return (
@@ -37,11 +39,26 @@ export function ResumeWorkHistoryTab({
     );
   }
 
-  // Extract work history and red flags using our robust data extractor
-  const extractedData = extractResumeData(redFlagData);
-  const workHistory = extractedData.workHistory.length > 0 
-    ? extractedData.workHistory 
-    : extractWorkHistory(redFlagData); // Fallback to old method if needed
+  // Extract work history from both analysis and red flag data
+  const rfExtractedData = extractResumeData(redFlagData);
+  
+  // Also extract from analysis data if available
+  const analysisExtractedData = analysis ? extractResumeData(analysis) : {
+    workHistory: [],
+    skills: [],
+    redFlags: []
+  };
+  
+  // Use work history from either source, prioritizing analysis data
+  const workHistory = analysisExtractedData.workHistory.length > 0 
+    ? analysisExtractedData.workHistory 
+    : (rfExtractedData.workHistory.length > 0 
+      ? rfExtractedData.workHistory 
+      : extractWorkHistory(redFlagData)); // Fallback to old method if needed
+  
+  console.log("Work history from analysis:", analysisExtractedData.workHistory);
+  console.log("Work history from red flags:", rfExtractedData.workHistory);
+  console.log("Final work history:", workHistory);
     
   // Extract red flags using our specialized extractor
   const redFlags = extractRedFlagData(redFlagData);

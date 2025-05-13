@@ -331,6 +331,7 @@ export default function ResumeProfilePage() {
                     redFlagLoading={redFlagLoading}
                     isRedFlagLoading={isRedFlagLoading}
                     redFlagError={redFlagError}
+                    analysis={analysis}
                   />
                 </TabsContent>
                 
