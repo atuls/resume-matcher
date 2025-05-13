@@ -751,6 +751,16 @@ export default function CandidatesPage() {
                         )}
                       </div>
                     </th>
+                    
+                    <th 
+                      scope="col" 
+                      className="w-1/8 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-1 text-gray-500" />
+                        Date Analyzed
+                      </div>
+                    </th>
                     <th 
                       scope="col" 
                       className="w-1/8 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -813,9 +823,6 @@ export default function CandidatesPage() {
                                 >
                                   {resumeScores[resume.id].score}%
                                 </Badge>
-                                <span className="text-xs text-gray-500">
-                                  {formatDate(resumeScores[resume.id].matchedAt)}
-                                </span>
                               </div>
                               <Progress 
                                 value={resumeScores[resume.id].score} 
@@ -838,6 +845,16 @@ export default function CandidatesPage() {
                             <AlertCircle className="h-4 w-4 mr-1" />
                             <span className="text-sm">Select a job</span>
                           </div>
+                        )}
+                      </td>
+                      
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {selectedJobId && resumeScores[resume.id] ? (
+                          <div>
+                            {formatDate(resumeScores[resume.id].matchedAt)}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">—</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
