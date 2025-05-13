@@ -96,7 +96,7 @@ export default function ResumeProfilePage() {
   
   // Set the first available job as selected when data loads
   useEffect(() => {
-    if (jobDescriptions && jobDescriptions.length > 0 && !selectedJobId) {
+    if (jobDescriptions && jobDescriptions.length > 0 && selectedJobId === null) {
       // Get the first job description with a score for this resume if available
       if (resumeScore && Object.keys(resumeScore).length > 0) {
         // Find a matching job ID that exists in both resumeScore and jobDescriptions
@@ -371,14 +371,14 @@ export default function ResumeProfilePage() {
                 
                 <div className="space-y-3">
                   <Select 
-                    value={selectedJobId || ""} 
-                    onValueChange={(value) => setSelectedJobId(value ? value : null)}
+                    value={selectedJobId || "none"} 
+                    onValueChange={(value) => setSelectedJobId(value !== "none" ? value : null)}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select job position to match" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Select a job...</SelectItem>
+                      <SelectItem value="none">Select a job...</SelectItem>
                       {jobDescriptions?.map(job => (
                         <SelectItem key={job.id} value={job.id}>
                           {job.title}

@@ -1,0 +1,11 @@
+A  must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+at https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=19293888:872:13
+at renderWithHooks (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=19293888:11548:26)
+at updateForwardRef (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=19293888:14325:28)
+at beginWork (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=19293888:15946:22)
+at HTMLUnknownElement.callCallback2 (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=19293888:3674:22)
+at Object.invokeGuardedCallbackDev (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=19293888:3699:24)
+at invokeGuardedCallback (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=19293888:3733:39)
+at beginWork$1 (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=19293888:19765:15)
+at performUnitOfWork (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=19293888:19198:20)
+at workLoopSync (https://7e2bcf8e-72c4-4526-9afd-a6b3e62e0ff5-00-10kdt8opevucu.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=19293888:19137:13)
