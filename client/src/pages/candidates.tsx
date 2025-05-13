@@ -445,12 +445,39 @@ export default function CandidatesPage() {
   };
   
   // Batch analysis function to run all analyses on all resumes for selected job
-  const handleBatchAnalysis = async () => {
+  const handleBatchAnalysis = async (mode?: 'next10') => {
     if (!selectedJobId || !resumes || resumes.length === 0) return;
     
     try {
-      const resumeIds = resumes.map(resume => resume.id);
-      const totalResumes = resumeIds.length;
+      let resumeIds: string[];
+      let totalResumes: number;
+      
+      if (mode === 'next10') {
+        // Filter to find resumes that don't have scores for this job yet (unanalyzed)
+        const unanalyzedResumes = resumes.filter(resume => !resumeScores[resume.id]);
+        console.log(`Found ${unanalyzedResumes.length} unanalyzed resumes out of ${resumes.length} total`);
+        
+        // Take only the first 10 unanalyzed resumes
+        const next10Resumes = unanalyzedResumes.slice(0, 10);
+        
+        resumeIds = next10Resumes.map(resume => resume.id);
+        totalResumes = resumeIds.length;
+        
+        console.log(`Selected ${totalResumes} resumes for "Next 10" analysis:`, 
+          next10Resumes.map(r => r.candidateName || 'Unknown candidate'));
+        
+        if (totalResumes === 0) {
+          toast({
+            title: "No unanalyzed resumes",
+            description: "All resumes have already been analyzed for this job.",
+          });
+          return;
+        }
+      } else {
+        // Default mode: analyze all resumes
+        resumeIds = resumes.map(resume => resume.id);
+        totalResumes = resumeIds.length;
+      }
       
       // Set initial UI state
       setLoadingAnalysis(true);
@@ -483,8 +510,8 @@ export default function CandidatesPage() {
       console.log('Batch analysis initiated:', data);
       
       toast({
-        title: 'Batch Analysis Started',
-        description: `Analyzing ${resumeIds.length} resumes against the selected job.`,
+        title: mode === 'next10' ? 'Analyzing Next 10 Unanalyzed Resumes' : 'Batch Analysis Started',
+        description: `Analyzing ${resumeIds.length} resumes against the selected job. Results will update in the table as they complete.`,
         duration: 5000
       });
       
@@ -668,15 +695,27 @@ export default function CandidatesPage() {
                 <Button onClick={() => setShowUploader(true)}>Upload Resume</Button>
                 
                 {selectedJobId && resumes && resumes.length > 0 && (
-                  <Button 
-                    variant="outline" 
-                    className="flex items-center gap-2"
-                    onClick={() => handleBatchAnalysis()}
-                    disabled={loadingAnalysis}
-                  >
-                    <RotateCcw className={`h-4 w-4 ${loadingAnalysis ? 'animate-spin' : ''}`} />
-                    {loadingAnalysis ? 'Analyzing...' : 'Analyze All Candidates'}
-                  </Button>
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex items-center gap-2"
+                      onClick={() => handleBatchAnalysis()}
+                      disabled={loadingAnalysis}
+                    >
+                      <RotateCcw className={`h-4 w-4 ${loadingAnalysis ? 'animate-spin' : ''}`} />
+                      {loadingAnalysis ? 'Analyzing...' : 'Analyze All Candidates'}
+                    </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      className="flex items-center gap-2"
+                      onClick={() => handleBatchAnalysis('next10' as 'next10')}
+                      disabled={loadingAnalysis}
+                    >
+                      <RotateCcw className={`h-4 w-4 ${loadingAnalysis ? 'animate-spin' : ''}`} />
+                      {loadingAnalysis ? 'Analyzing...' : 'Analyze Next 10 Unanalyzed'}
+                    </Button>
+                  </div>
                 )}
               </div>
               
