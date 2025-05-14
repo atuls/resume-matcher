@@ -225,6 +225,14 @@ export default function ResumeProfilePage() {
     enabled: !!resumeId,
   });
   
+  // Effect to parse data when it's loaded
+  useEffect(() => {
+    if (analysis || redFlagData) {
+      console.log("Data changed, running centralized parser");
+      parseAnalysisData(analysis, redFlagData);
+    }
+  }, [analysis, redFlagData]);
+  
   // Set the first available job as selected when data loads
   useEffect(() => {
     if (jobDescriptions && jobDescriptions.length > 0 && selectedJobId === null) {

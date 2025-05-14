@@ -3,7 +3,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Briefcase, AlertTriangle, CheckCircle, Zap, Code } from "lucide-react";
 import { extractWorkHistory } from "@/lib/debug-utils";
-import { extractResumeData, extractRedFlagData } from "@/lib/resume-data-extractor";
+import { extractResumeData } from "@/lib/resume-data-extractor";
 import { parseRawResponse } from "@/lib/raw-response-parser";
 import { useToast } from "@/hooks/use-toast";
 
@@ -174,7 +174,7 @@ export function ResumeWorkHistoryTab({
   // First try using main analysis data if available (matching Skills tab source)
   const analysisRedFlags = analysisExtractedData.redFlags;
   // Then try red flag data
-  const rfRedFlags = extractRedFlagData(redFlagData);
+  const rfRedFlags = rfExtractedData.redFlags;
   // Finally fall back to old method if needed
   
   console.log("Red flags from analysis (source 1):", analysisRedFlags);
