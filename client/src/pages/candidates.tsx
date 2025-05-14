@@ -399,12 +399,9 @@ export default function CandidatesPage() {
           
           setResumeScores(scores);
           
-          // Get analysis data for the first few displayed resumes (max 5)
-          // This provides a balance between showing data and preventing API rate limiting
-          const displayedResumes = resumes.slice(0, 5);
-          
+          // Get analysis data for all candidates to ensure every row displays data
           Promise.all(
-            displayedResumes.map(resume => 
+            resumes.map(resume => 
               getResumeRedFlagAnalysis(resume.id, selectedJobId)
                 .then(data => ({
                   resumeId: resume.id,
