@@ -338,6 +338,8 @@ VERIFICATION: A key experience point in this resume is likely "${truncatedResume
           console.log(`Resume contains "HOTWORX"? ${truncatedResume.includes('HOTWORX')}`);
           console.log(`Resume first 200 chars: ${truncatedResume.substring(0, 200)}`);
           console.log(`Resume text length: ${truncatedResume.length}`);
+          console.log(`Full system prompt:\n${systemPrompt}`);
+          console.log(`\nFull user prompt:\n${userPrompt.substring(0, 500)}... (truncated)`);
           console.log("===========================================");
         } else {
           throw new Error('No analysis prompt found in settings');
