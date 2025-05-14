@@ -311,13 +311,13 @@ export default function ResumeProfilePage() {
         <div className="flex gap-2">
           <Button
             variant="default"
-            className="flex items-center bg-primary hover:bg-primary/90"
+            className="flex items-center bg-blue-600 hover:bg-blue-700 text-white"
             onClick={() => {
               const downloadUrl = `/api/resumes/${resumeId}/download`;
               window.open(downloadUrl, '_blank');
             }}
           >
-            <FileText className="mr-2 h-4 w-4" />
+            <FileSearch className="mr-2 h-4 w-4" />
             View Resume
           </Button>
           
