@@ -352,11 +352,42 @@ export default function ResumeProfilePage() {
                 </div>
               </div>
               
-              <div className="flex items-center">
-                <FileText className="mr-3 h-5 w-5 text-gray-500" />
+              <div className="flex items-start">
+                <FileText className="mr-3 h-5 w-5 text-gray-500 mt-0.5" />
                 <div>
                   <div className="text-sm text-gray-500">File</div>
-                  <div>{resume.fileName}</div>
+                  <div className="flex items-center gap-2">
+                    <a 
+                      href={`/api/resumes/${resumeId}/download`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 hover:underline"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const downloadUrl = `/api/resumes/${resumeId}/download`;
+                        window.open(downloadUrl, '_blank');
+                        
+                        toast({
+                          title: "Opening resume",
+                          description: "Resume file opened in a new tab"
+                        });
+                      }}
+                    >
+                      {resume.fileName}
+                    </a>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="h-7 px-2 text-xs"
+                      onClick={() => {
+                        const downloadUrl = `/api/resumes/${resumeId}/download`;
+                        window.open(downloadUrl, '_blank');
+                      }}
+                    >
+                      <Download className="h-3 w-3 mr-1" />
+                      Download
+                    </Button>
+                  </div>
                   <div className="text-sm text-gray-500">
                     {(resume.fileSize / 1024).toFixed(2)} KB - {resume.fileType}
                   </div>
@@ -470,9 +501,22 @@ export default function ResumeProfilePage() {
             <CardContent>
               <Tabs defaultValue="skills" className="w-full">
                 <TabsList className="mb-4">
-                  <TabsTrigger value="skills">Skills</TabsTrigger>
-                  <TabsTrigger value="history">Work History</TabsTrigger>
-                  <TabsTrigger value="debug">Debug Info</TabsTrigger>
+                  <TabsTrigger value="skills">
+                    <Code className="h-4 w-4 mr-2" />
+                    Skills
+                  </TabsTrigger>
+                  <TabsTrigger value="history">
+                    <Briefcase className="h-4 w-4 mr-2" />
+                    Work History
+                  </TabsTrigger>
+                  <TabsTrigger value="raw-text">
+                    <FileSearch className="h-4 w-4 mr-2" />
+                    Raw Text
+                  </TabsTrigger>
+                  <TabsTrigger value="debug">
+                    <AlertCircle className="h-4 w-4 mr-2" />
+                    Debug Info
+                  </TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="skills">
