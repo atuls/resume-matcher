@@ -299,9 +299,9 @@ export function analyzeRedFlags(
   }>,
   skills: string[],
   jobDescription?: string
-): RedFlagAnalysis {
+): DetailedRedFlagAnalysis {
   // Default analysis result with no red flags
-  const defaultAnalysis: RedFlagAnalysis = {
+  const defaultAnalysis: DetailedRedFlagAnalysis = {
     hasJobHoppingHistory: false,
     hasContractRoles: false,
     isCurrentlyEmployed: false,
