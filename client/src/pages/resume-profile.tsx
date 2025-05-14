@@ -401,7 +401,7 @@ export default function ResumeProfilePage() {
                       href={`/api/resumes/${resumeId}/download`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center text-blue-600 hover:text-blue-800 hover:underline font-medium group"
+                      className="flex items-center text-blue-600 hover:text-blue-800 hover:underline font-medium group bg-blue-50 hover:bg-blue-100 rounded-md px-2 py-1 transition-all duration-200"
                       onClick={(e) => {
                         e.preventDefault();
                         const downloadUrl = `/api/resumes/${resumeId}/download`;
@@ -414,20 +414,32 @@ export default function ResumeProfilePage() {
                       }}
                     >
                       <FileText className="mr-1 h-4 w-4 text-red-500" />
-                      <span className="border-b border-dashed border-blue-400 group-hover:border-blue-600">{resume.fileName}</span>
+                      <span className="font-medium mr-1">View PDF:</span>
+                      <span className="border-b border-blue-400 group-hover:border-blue-600">{resume.fileName}</span>
                       <ArrowUpRight className="ml-1 h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                     </a>
                     <Button 
                       size="sm" 
                       variant="outline" 
-                      className="h-7 px-2 text-xs"
+                      className="h-7 px-3 text-xs bg-green-50 hover:bg-green-100 text-green-700 hover:text-green-800 border-green-200 hover:border-green-300"
                       onClick={() => {
                         const downloadUrl = `/api/resumes/${resumeId}/download`;
-                        window.open(downloadUrl, '_blank');
+                        // This will trigger a file download rather than opening in a new tab
+                        const a = document.createElement('a');
+                        a.href = downloadUrl;
+                        a.download = resume.fileName || 'resume.pdf';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        
+                        toast({
+                          title: "Downloading resume",
+                          description: "Resume file is being downloaded"
+                        });
                       }}
                     >
                       <Download className="h-3 w-3 mr-1" />
-                      Download
+                      Download PDF
                     </Button>
                   </div>
                   <div className="text-sm text-gray-500">
