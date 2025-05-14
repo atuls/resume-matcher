@@ -744,6 +744,8 @@ export default function ResumeProfilePage() {
                     resumeId={resumeId!}
                     runSkillsAnalysis={runSkillsAnalysis}
                     setAnalysisLoading={setAnalysisLoading}
+                    parsedData={parsedAnalysisData}
+                    dataSource={parsingSource}
                   />
                 </TabsContent>
                 
@@ -758,6 +760,8 @@ export default function ResumeProfilePage() {
                       resumeData: resume // Pass the resume data with extracted text
                     }}
                     runSkillsAnalysis={runSkillsAnalysis} // Add ability to re-analyze from work history tab
+                    parsedData={parsedAnalysisData}
+                    dataSource={parsingSource}
                   />
                 </TabsContent>
                 

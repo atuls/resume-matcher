@@ -14,6 +14,8 @@ interface ResumeSkillsTabProps {
   resumeId: string;
   runSkillsAnalysis: () => Promise<void>;
   setAnalysisLoading: (loading: boolean) => void;
+  parsedData?: any; // Centralized parsed data
+  dataSource?: string; // Source indicator for the data
 }
 
 export function ResumeSkillsTab({

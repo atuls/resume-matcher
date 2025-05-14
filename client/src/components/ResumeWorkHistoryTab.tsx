@@ -14,6 +14,8 @@ interface ResumeWorkHistoryTabProps {
   redFlagError: any;
   analysis?: any; // Analysis data
   runSkillsAnalysis?: () => Promise<void>; // Optional re-analysis function
+  parsedData?: any; // Centralized parsed data
+  dataSource?: string; // Source indicator for the data
 }
 
 export function ResumeWorkHistoryTab({
