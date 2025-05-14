@@ -110,12 +110,36 @@ export function parseRawResponse(rawResponse: string | any): ParsedRawResponse {
     }
     
     // Extract Work_History field (with exact capitalization and underscore)
+    // Map the fields to ensure consistent structure with our UI expectations
     if (Array.isArray(parsedData.Work_History)) {
       console.log("Found Work_History field in raw response with", parsedData.Work_History.length, "entries");
-      result.workHistory = parsedData.Work_History;
+      result.workHistory = parsedData.Work_History.map(item => {
+        // Ensure consistent field casing and structure
+        return {
+          title: item.Title || item.title || '',
+          company: item.Company || item.company || '',
+          location: item.location || item.Location || '',
+          startDate: item.startDate || item.StartDate || '',
+          endDate: item.endDate || item.EndDate || '',
+          description: item.description || item.Description || '',
+          durationMonths: item.durationMonths || item.DurationMonths || 0, 
+          isCurrentRole: item.isCurrentRole || item.IsCurrentRole || false
+        };
+      });
     } else if (Array.isArray(parsedData.work_history)) {
       console.log("Found work_history field in raw response with", parsedData.work_history.length, "entries");
-      result.workHistory = parsedData.work_history;
+      result.workHistory = parsedData.work_history.map(item => {
+        return {
+          title: item.Title || item.title || '',
+          company: item.Company || item.company || '',
+          location: item.location || '',
+          startDate: item.startDate || '',
+          endDate: item.endDate || '',
+          description: item.description || '',
+          durationMonths: item.durationMonths || 0,
+          isCurrentRole: item.isCurrentRole || false
+        };
+      });
     } else if (Array.isArray(parsedData.workHistory)) {
       console.log("Found workHistory field in raw response with", parsedData.workHistory.length, "entries");
       result.workHistory = parsedData.workHistory;
@@ -124,22 +148,48 @@ export function parseRawResponse(rawResponse: string | any): ParsedRawResponse {
     // Extract Skills field (with exact capitalization)
     if (Array.isArray(parsedData.Skills)) {
       console.log("Found Skills field in raw response with", parsedData.Skills.length, "entries");
-      result.skills = parsedData.Skills;
+      result.skills = parsedData.Skills.map(skill => {
+        return typeof skill === 'string' ? skill : (skill.name || skill.Name || skill.toString());
+      }).filter(Boolean);
     } else if (Array.isArray(parsedData.skills)) {
       console.log("Found skills field in raw response with", parsedData.skills.length, "entries");
-      result.skills = parsedData.skills;
+      result.skills = parsedData.skills.map(skill => {
+        return typeof skill === 'string' ? skill : (skill.name || skill.Name || skill.toString());
+      }).filter(Boolean);
     }
     
     // Extract Red_Flags field (with exact capitalization and underscore)
     if (Array.isArray(parsedData.Red_Flags)) {
       console.log("Found Red_Flags field in raw response with", parsedData.Red_Flags.length, "entries");
-      result.redFlags = parsedData.Red_Flags;
+      result.redFlags = parsedData.Red_Flags.map(flag => {
+        if (typeof flag === 'string') {
+          return flag;
+        } else if (typeof flag === 'object') {
+          // Try to extract description from various property names
+          return flag.description || flag.issue || flag.text || flag.flag || JSON.stringify(flag);
+        }
+        return String(flag);
+      });
     } else if (Array.isArray(parsedData.red_flags)) {
       console.log("Found red_flags field in raw response with", parsedData.red_flags.length, "entries");
-      result.redFlags = parsedData.red_flags;
+      result.redFlags = parsedData.red_flags.map(flag => {
+        if (typeof flag === 'string') {
+          return flag;
+        } else if (typeof flag === 'object') {
+          return flag.description || flag.issue || flag.text || flag.flag || JSON.stringify(flag);
+        }
+        return String(flag);
+      });
     } else if (Array.isArray(parsedData.redFlags)) {
       console.log("Found redFlags field in raw response with", parsedData.redFlags.length, "entries");
-      result.redFlags = parsedData.redFlags;
+      result.redFlags = parsedData.redFlags.map(flag => {
+        if (typeof flag === 'string') {
+          return flag;
+        } else if (typeof flag === 'object') {
+          return flag.description || flag.issue || flag.text || flag.flag || JSON.stringify(flag);
+        }
+        return String(flag);
+      });
     }
     
     // Extract Summary field (with exact capitalization)
