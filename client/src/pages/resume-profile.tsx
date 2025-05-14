@@ -12,6 +12,7 @@ import {
 import { DebugPanel } from "@/components/DebugPanel";
 import { ResumeSkillsTab } from "@/components/ResumeSkillsTab";
 import { ResumeWorkHistoryTab } from "@/components/ResumeWorkHistoryTab";
+import { TestParserBtn } from "@/components/TestParserBtn";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
 import { formatDistance } from "date-fns";
@@ -633,6 +634,7 @@ export default function ResumeProfilePage() {
                       <div className="flex items-center">
                         <Zap className="h-4 w-4 text-blue-600 mr-2" />
                         <h3 className="font-medium text-blue-900">Raw LLM Response</h3>
+                        <TestParserBtn />
                       </div>
                       <AlertDescription className="mt-4">
                         <p className="text-sm text-blue-800 mb-2">
