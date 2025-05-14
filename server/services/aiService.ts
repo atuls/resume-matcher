@@ -145,6 +145,16 @@ export async function analyzeResume(
           .replace('{REQUIREMENTS}', requirementsText)
           .replace('{RESUME}', resumeText);
         console.log("Using custom analysis prompt from settings");
+        
+        // Add more detailed logging for debugging
+        console.log("======= RESUME ANALYSIS DEBUG =======");
+        console.log("Resume text snippet (first 150 chars):", resumeText.substring(0, 150));
+        console.log("Resume text length:", resumeText.length);
+        console.log("Job description snippet (first 150 chars):", jobDescription.substring(0, 150));
+        console.log("Requirements count:", requirements.length);
+        console.log("Custom prompt snippet (first 200 chars):", 
+          customPrompt.substring(0, 200) + "...");
+        console.log("====================================");
       }
     } catch (error) {
       console.log("Error fetching custom prompt:", error);

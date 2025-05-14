@@ -337,7 +337,12 @@ export async function analyzeResumeWithClaude(
     try {
       // We've already verified this is a TextBlock in the guard above
       let text = (contentBlock as TextBlock).text;
-      console.log("Raw Claude response (first 100 chars):", text.substring(0, 100).replace(/\n/g, ' '));
+      console.log("======= CLAUDE RESPONSE DEBUG =======");
+      console.log("Raw Claude response (first 300 chars):", text.substring(0, 300).replace(/\n/g, ' '));
+      console.log("Total response length:", text.length);
+      console.log("Response contains extracted_text?", text.includes('extractedText') || text.includes('extracted_text'));
+      console.log("Resume name appears in response?", text.includes('Olivia DeSpirito'));
+      console.log("====================================");
       
       // Claude sometimes wraps JSON in code blocks with ```json or ``` tags
       // Remove these if present to extract the raw JSON

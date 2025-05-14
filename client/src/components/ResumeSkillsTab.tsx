@@ -98,33 +98,7 @@ export function ResumeSkillsTab({
           </div>
         </div>
         
-        {/* Re-analyze Button */}
-        <div className="flex justify-end mt-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={async () => {
-              setAnalysisLoading(true);
-              try {
-                await runSkillsAnalysis();
-                toast({
-                  title: "Analysis complete",
-                  description: "Skills have been analyzed and updated.",
-                });
-              } catch (error) {
-                toast({
-                  title: "Analysis failed",
-                  description: error instanceof Error ? error.message : "An unexpected error occurred",
-                  variant: "destructive",
-                });
-              } finally {
-                setAnalysisLoading(false);
-              }
-            }}
-          >
-            Run Skills Analysis
-          </Button>
-        </div>
+
       </div>
     </div>
   );
