@@ -43,6 +43,7 @@ interface ResumeAnalysisResult {
     confidence: number;
   }>;
   rawResponse?: RawResponse; // Now properly typed
+  analysis_warning?: string; // Warning about possible fabrication or inconsistencies
 }
 
 // Type guard function to check if a ContentBlock is a TextBlock
