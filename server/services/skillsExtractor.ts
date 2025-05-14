@@ -11,7 +11,16 @@ const openai = new OpenAI({
 });
 
 // Types for the red flag analysis
-export interface RedFlagAnalysis {
+export interface RedFlagDetails {
+  description: string;
+  category?: string;
+  type?: string;
+  company?: string;
+  severity?: 'low' | 'medium' | 'high';
+}
+
+// Original RedFlagAnalysis format
+export interface DetailedRedFlagAnalysis {
   hasJobHoppingHistory: boolean;
   hasContractRoles: boolean;
   isCurrentlyEmployed: boolean;
@@ -26,6 +35,15 @@ export interface RedFlagAnalysis {
   highlights: string[];
   currentJobPosition?: string;
   currentCompany?: string;
+}
+
+// Simple RedFlagAnalysis format that's used in the UI
+export interface RedFlagAnalysis {
+  currentJobPosition?: string | null;
+  currentCompany?: string | null;
+  isCurrentlyEmployed?: boolean;
+  highlights?: string[];
+  redFlags?: string[];
 }
 
 /**

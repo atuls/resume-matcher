@@ -509,9 +509,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get red flags based on resume text
       majorRedFlags = await analyzeRedFlags(resume.extractedText);
       
+      // Extract current job position and company from resume if possible
+      let currentJobPosition = null;
+      let currentCompany = null;
+      let isCurrentlyEmployed = false;
+      
+      // Extract highlights from requirements
+      const highlights = allRequirements.slice(0, 3);
+      
+      if (Array.isArray(majorRedFlags) && majorRedFlags.length > 0) {
+        // Try to extract current position information
+        const positionInfo = majorRedFlags.find(flag => 
+          flag.category === 'currentPosition' || 
+          flag.type === 'currentPosition'
+        );
+        
+        if (positionInfo) {
+          currentJobPosition = positionInfo.description || null;
+          currentCompany = positionInfo.company || null;
+          isCurrentlyEmployed = true;
+        }
+      }
+      
+      // Return the data in a structure compatible with the frontend
       res.json({
+        resumeId: resume.id,
+        jobDescriptionId: req.query.jobDescriptionId?.toString() || null,
+        analysis: {
+          currentJobPosition,
+          currentCompany,
+          isCurrentlyEmployed,
+          redFlags: Array.isArray(majorRedFlags) 
+            ? majorRedFlags.map(flag => flag.description || flag.toString()) 
+            : [],
+          highlights
+        },
         requirements: allRequirements,
-        redFlags: majorRedFlags
+        redFlagsRaw: majorRedFlags
       });
     } catch (error) {
       console.error("Error analyzing red flags:", error);
