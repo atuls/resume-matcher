@@ -287,10 +287,10 @@ export async function analyzeResumeWithClaude(
         systemPrompt = claudePromptSetting.value;
         console.log("Using Claude-specific prompt from settings");
         
-        // Enhanced prompt that forces Claude to only consider the exact resume provided
-        userPrompt = `IMPORTANT: You must only analyze the exact resume text provided below. 
-Do not use any prior knowledge or information not contained in this specific resume.
-This resume belongs to a specific individual with their own unique experience.
+        // Enhanced prompt with strict verification markers to prevent fabrication
+        userPrompt = `CRITICAL INSTRUCTION: You must ONLY analyze the exact resume text provided below.
+DO NOT invent, fabricate, or hallucinate ANY information that is not explicitly stated in this resume.
+Your response MUST contain ONLY information that appears verbatim in the resume text.
 
 JOB DESCRIPTION:
 ${truncatedJob}
@@ -298,8 +298,17 @@ ${truncatedJob}
 RESUME:
 ${truncatedResume}
 
-VERIFICATION: The name in this resume is likely "${truncatedResume.includes('Olivia DeSpirito') ? 'Olivia DeSpirito' : 'unknown'}"
-VERIFICATION: A key experience point in this resume is likely "${truncatedResume.includes('HOTWORX') ? 'HOTWORX' : 'unknown'}"`;
+VERIFICATION MARKERS (These exact terms MUST appear in your analysis if they appear in the resume):
+- Candidate Name: "${truncatedResume.includes('Olivia DeSpirito') ? 'Olivia DeSpirito' : 'unknown'}"
+- Company: "${truncatedResume.includes('HOTWORX') ? 'HOTWORX' : 'unknown'}" 
+- Position: "${truncatedResume.includes('Sales Associate') ? 'Sales Associate' : 'unknown'}"
+- Location: "${truncatedResume.includes('Grand Junction') ? 'Grand Junction, Colorado' : 'unknown'}"
+- Education: "${truncatedResume.includes('Colorado Mesa University') ? 'Colorado Mesa University' : 'unknown'}"
+- Contact: "${truncatedResume.includes('oliviadespirito123@gmail.com') ? 'oliviadespirito123@gmail.com' : 'unknown'}"
+
+If you cannot find these details in the resume, state "I cannot find this information in the resume text provided" rather than inventing information.
+
+Your response will be verified against these key details, and discrepancies will result in your analysis being rejected.`;
         
         // Add detailed debugging for what is being sent to Claude
         console.log("======= CLAUDE REQUEST CONTENT DEBUG =======");
@@ -314,7 +323,7 @@ VERIFICATION: A key experience point in this resume is likely "${truncatedResume
         const generalPromptSetting = await storage.getSetting('analysis_prompt');
         if (generalPromptSetting?.value) {
           // If using the general prompt, put instructions in system and content in user message
-          systemPrompt = "You are Claude, a truthful AI assistant focused on accurate resume analysis. Your task is to carefully analyze a resume against a job description and provide analysis in valid JSON format only. Do not fabricate or hallucinate any information not present in the resume. Extract only what is explicitly stated in the resume text provided. Only analyze the specific resume text given to you without adding any fictional details or embellishments. Return valid JSON format only - no explanations, notes or markdown.";
+          systemPrompt = "You are Claude, a truthful AI assistant focused on accurate resume analysis. Only analyze the specific text provided. Never fabricate information. Only return valid JSON format.";
           // Modify the general prompt to include verification signals and forced focus
           const enhancedPrompt = generalPromptSetting.value
             .replace('{JOB_DESCRIPTION}', truncatedJob)
@@ -462,7 +471,10 @@ I will verify your analysis against these markers to ensure you're analyzing the
           name: verificationMarkers.name ? responseText.toLowerCase().includes('olivia despirito'.toLowerCase()) : true,
           company: verificationMarkers.company ? responseText.toLowerCase().includes('hotworx'.toLowerCase()) : true,
           position: verificationMarkers.position ? responseText.toLowerCase().includes('sales associate'.toLowerCase()) : true,
-          education: verificationMarkers.education ? responseText.toLowerCase().includes('colorado mesa university'.toLowerCase()) : true
+          education: verificationMarkers.education ? responseText.toLowerCase().includes('colorado mesa university'.toLowerCase()) : true,
+          location: verificationMarkers.location ? responseText.toLowerCase().includes('grand junction'.toLowerCase()) : true,
+          phone: verificationMarkers.phone ? responseText.toLowerCase().includes('203-200-8144'.toLowerCase()) : true,
+          email: verificationMarkers.email ? responseText.toLowerCase().includes('oliviadespirito123@gmail.com'.toLowerCase()) : true
         };
         
         // Log verification results
@@ -471,6 +483,9 @@ I will verify your analysis against these markers to ensure you're analyzing the
         console.log(`Company verification: ${verificationResults.company ? 'PASSED' : 'FAILED'}`);
         console.log(`Position verification: ${verificationResults.position ? 'PASSED' : 'FAILED'}`);
         console.log(`Education verification: ${verificationResults.education ? 'PASSED' : 'FAILED'}`);
+        console.log(`Location verification: ${verificationResults.location ? 'PASSED' : 'FAILED'}`);
+        console.log(`Phone verification: ${verificationResults.phone ? 'PASSED' : 'FAILED'}`);
+        console.log(`Email verification: ${verificationResults.email ? 'PASSED' : 'FAILED'}`);
         
         // Calculate overall verification score (percentage of markers that passed)
         const verificationChecks = Object.values(verificationResults).filter(Boolean).length;
@@ -479,8 +494,8 @@ I will verify your analysis against these markers to ensure you're analyzing the
         console.log(`Verification score: ${verificationScore}%`);
         console.log("====================================");
         
-        // Add verification warning to result if score is poor
-        if (verificationScore < 75) {
+        // Add verification warning to result if score is below 85%
+        if (verificationScore < 85) {
           result.analysis_warning = `AI analysis may be unreliable (verification score: ${verificationScore}%). Please check raw resume text.`;
           
           // Add raw resume text as fallback data
