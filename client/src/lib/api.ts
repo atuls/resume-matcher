@@ -237,6 +237,7 @@ export async function getResumeAnalysis(
   };
   rawResponse?: any;
   aiModel?: string;
+  analysis_warning?: string;
 }> {
   // Build URL based on whether jobDescriptionId is provided
   const baseUrl = `/api/resumes/${id}/analysis`;

@@ -629,7 +629,8 @@ Your response will be verified against these key details, and discrepancies will
           education: result.education,
           score: result.score,
           matchedRequirements: result.matchedRequirements,
-          rawResponse
+          rawResponse,
+          analysis_warning: result.analysis_warning
         };
       }
       
@@ -833,7 +834,8 @@ Your response will be verified against these key details, and discrepancies will
         education: typeof education === 'string' ? education : "Education extracted from resume",
         score: score,
         matchedRequirements: matchedRequirements,
-        rawResponse
+        rawResponse,
+        analysis_warning: result.analysis_warning // Pass along any analysis warnings
       };
     } catch (error) {
       console.error("Failed to parse resume analysis JSON from Claude:", error);
