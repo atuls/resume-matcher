@@ -4,21 +4,32 @@ import { createRequire } from 'module';
 // Import dynamically to support ESM
 const importDynamic = new Function('modulePath', 'return import(modulePath)');
 
-import { isMistralApiKeyAvailable, extractTextFromPDFWithMistral } from './mistralPdfExtraction';
+import { MistralPdfExtractor } from './MistralPdfExtractor';
 import { isOpenAIApiKeyAvailable, extractTextFromPDFWithOpenAI } from './openaiPdfExtraction';
 import { parsePDF } from './pdfParser';
 
-// Function to extract text from PDF with multiple extraction methods
+// Function to extract text from PDF with multiple extraction methods and fallbacks
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
     // First try Mistral OCR if available - it's the highest quality method
-    if (isMistralApiKeyAvailable()) {
+    if (MistralPdfExtractor.isApiKeyAvailable()) {
       try {
         // Try to use Mistral's OCR API for the best extraction quality
-        return await extractTextFromPDFWithMistral(buffer);
+        return await MistralPdfExtractor.extractText(buffer);
       } catch (mistralError) {
-        console.warn('Mistral OCR extraction failed, falling back to basic parser:', mistralError.message);
-        // If Mistral fails, we'll fall back to our basic parser
+        console.warn('Mistral OCR extraction failed, falling back to next method:', mistralError.message);
+        // If Mistral fails, we'll try OpenAI next (if available) or fall back to basic parser
+      }
+    }
+    
+    // Second, try OpenAI's Vision API if available
+    if (isOpenAIApiKeyAvailable()) {
+      try {
+        // Try to use OpenAI's Vision API for PDF extraction
+        return await extractTextFromPDFWithOpenAI(buffer);
+      } catch (openaiError) {
+        console.warn('OpenAI Vision API extraction failed, falling back to basic parser:', openaiError.message);
+        // If OpenAI fails, we'll fall back to our basic parser
       }
     }
     
