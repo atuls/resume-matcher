@@ -40,6 +40,7 @@ export default function ResumeProfilePage() {
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [redFlagLoading, setRedFlagLoading] = useState(false);
   const [isContactingCandidate, setIsContactingCandidate] = useState(false);
+  const [isRunningJobAnalysis, setIsRunningJobAnalysis] = useState(false);
   
   // Resume query
   const { data: resume, error: resumeError, isLoading: resumeLoading } = useQuery({
