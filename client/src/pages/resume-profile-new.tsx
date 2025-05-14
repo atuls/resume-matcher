@@ -310,8 +310,8 @@ export default function ResumeProfilePage() {
         
         <div className="flex gap-2">
           <Button
-            variant="outline"
-            className="flex items-center"
+            variant="default"
+            className="flex items-center bg-primary hover:bg-primary/90"
             onClick={() => {
               const downloadUrl = `/api/resumes/${resumeId}/download`;
               window.open(downloadUrl, '_blank');
@@ -484,10 +484,12 @@ export default function ResumeProfilePage() {
                     disabled={!selectedJobId || isRunningJobAnalysis}
                     className="w-full"
                   >
-                    {isRunningJobAnalysis ? (
+                    {isRunningJobAnalysis || analysisProgress.inProgress ? (
                       <>
                         <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                        Analyzing...
+                        {analysisProgress.inProgress 
+                          ? `${analysisProgress.progress}% - ${analysisProgress.message}`
+                          : 'Analyzing...'}
                       </>
                     ) : (
                       <>
@@ -579,6 +581,7 @@ export default function ResumeProfilePage() {
                     redFlagLoading={redFlagLoading}
                     isRedFlagLoading={isRedFlagLoading}
                     redFlagError={redFlagError}
+                    analysis={analysis}
                   />
                 </TabsContent>
                 
