@@ -30,6 +30,11 @@ export function extractResumeData(analysisResult: any): ExtractedResumeData {
     score: 0
   };
 
+  // If nothing provided, return empty result
+  if (!analysisResult) {
+    return result;
+  }
+
   try {
     // Normalize - unwrap array if needed
     const data = Array.isArray(analysisResult) ? analysisResult[0] : analysisResult;
@@ -73,17 +78,58 @@ export function extractResumeData(analysisResult: any): ExtractedResumeData {
     }
     
     // Check for direct array fields at top level of data or rawResponse
+    // Work History - try multiple field names to handle inconsistency
     if (Array.isArray(data.Work_History)) {
       console.log("Found work history at data.Work_History");
       result.workHistory = data.Work_History;
+    } else if (Array.isArray(data.work_history)) {
+      console.log("Found work history at data.work_history");
+      result.workHistory = data.work_history;
+    } else if (Array.isArray(data.workHistory)) {
+      console.log("Found work history at data.workHistory");
+      result.workHistory = data.workHistory;
+    } else if (Array.isArray(data['Work History'])) {
+      console.log("Found work history at data['Work History']");
+      result.workHistory = data['Work History'];
+    } else if (data.analysis && Array.isArray(data.analysis.workHistory)) {
+      console.log("Found work history at data.analysis.workHistory");
+      result.workHistory = data.analysis.workHistory;
     }
+    
+    // Skills - try multiple field names
     if (Array.isArray(data.Skills)) {
       console.log("Found skills at data.Skills");
       result.skills = data.Skills;
+    } else if (Array.isArray(data.skills)) {
+      console.log("Found skills at data.skills");
+      result.skills = data.skills;
+    } else if (Array.isArray(data['Skills'])) {
+      console.log("Found skills at data['Skills']");
+      result.skills = data['Skills'];
+    } else if (data.analysis && Array.isArray(data.analysis.skills)) {
+      console.log("Found skills at data.analysis.skills");
+      result.skills = data.analysis.skills;
     }
+    
+    // Red Flags - try multiple field names
     if (Array.isArray(data.Red_Flags)) {
       console.log("Found red flags at data.Red_Flags");
       result.redFlags = data.Red_Flags;
+    } else if (Array.isArray(data.redFlags)) {
+      console.log("Found red flags at data.redFlags");
+      result.redFlags = data.redFlags;
+    } else if (Array.isArray(data['Red Flags'])) {
+      console.log("Found red flags at data['Red Flags']");
+      result.redFlags = data['Red Flags'];
+    } else if (data.analysis && Array.isArray(data.analysis.redFlags)) {
+      console.log("Found red flags at data.analysis.redFlags");
+      result.redFlags = data.analysis.redFlags;
+    } else if (data.analysis && Array.isArray(data.analysis.potentialRedFlags)) {
+      console.log("Found red flags at data.analysis.potentialRedFlags");
+      result.redFlags = data.analysis.potentialRedFlags.map((flag: any) => {
+        if (typeof flag === 'string') return flag;
+        return flag.description || flag.issue || flag.text || JSON.stringify(flag);
+      });
     }
     
     // Extract from rawResponse
@@ -198,8 +244,32 @@ export function extractResumeData(analysisResult: any): ExtractedResumeData {
       }
     }
     
+    // Extract summary from various fields
+    if (typeof data.summary === 'string' && data.summary.trim()) {
+      result.summary = data.summary;
+    } else if (typeof data.Summary === 'string' && data.Summary.trim()) {
+      result.summary = data.Summary;
+    } else if (data.analysis && typeof data.analysis.summary === 'string' && data.analysis.summary.trim()) {
+      result.summary = data.analysis.summary;
+    }
+    
+    // Combine skills, work history and red flags from all sources if currently empty
+    // This ensures we have the most comprehensive data available
+    
+    // Log the extraction results for debugging
+    console.log("Final extraction results:");
+    console.log("- Skills:", result.skills.length > 0 ? "Found" : "Not found");
+    console.log("- Work History:", result.workHistory.length > 0 ? "Found" : "Not found");
+    console.log("- Red Flags:", result.redFlags.length > 0 ? "Found" : "Not found");
+    console.log("- Summary:", result.summary ? "Found" : "Not found");
+    console.log("- Score:", result.score);
+    
   } catch (error) {
     console.error("Error extracting resume data:", error);
+    // Don't swallow errors completely - at least log what data caused the problem
+    console.error("Source data:", analysisResult ? 
+      (typeof analysisResult === 'object' ? Object.keys(analysisResult).join(', ') : typeof analysisResult) 
+      : "null or undefined");
   }
   
   return result;

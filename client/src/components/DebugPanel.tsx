@@ -209,12 +209,12 @@ export function DebugPanel({ resumeId, analysis, redFlagData }: DebugPanelProps)
         } icon={FileBadge} />
       )}
       
-      {/* Data Path Analysis */}
+      {/* Data Extraction Analysis */}
       <Collapsible className="rounded-md border overflow-hidden">
         <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
           <div className="flex items-center">
             <FileText className="h-4 w-4 mr-2 text-primary" />
-            <h4 className="font-medium">Data Access Paths</h4>
+            <h4 className="font-medium">Data Extraction Analysis</h4>
           </div>
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" className="p-0 h-8 w-8">
@@ -223,41 +223,108 @@ export function DebugPanel({ resumeId, analysis, redFlagData }: DebugPanelProps)
           </CollapsibleTrigger>
         </div>
         <CollapsibleContent>
-          <div className="p-4 space-y-4">
-            <div>
-              <h5 className="text-sm font-medium">Skills Access Paths:</h5>
-              <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
-                {JSON.stringify(examineSkillsAccessPaths(analysis), null, 2)}
-              </pre>
-            </div>
-            
-            <div className="mt-4">
-              <h5 className="text-sm font-medium">Work History Access Paths:</h5>
-              <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
-                {JSON.stringify(examineWorkHistoryAccessPaths(redFlagData), null, 2)}
-              </pre>
-            </div>
-            
-            <div className="mt-4">
-              <h5 className="text-sm font-medium">Extracted Skills:</h5>
-              <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
-                {JSON.stringify(extractSkillsFromAnalysis(analysis), null, 2)}
-              </pre>
-            </div>
-            
-            <div className="mt-4">
-              <h5 className="text-sm font-medium">Categorized Skills:</h5>
-              <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
-                {JSON.stringify(categorizeSkills(extractSkillsFromAnalysis(analysis)), null, 2)}
-              </pre>
-            </div>
-            
-            <div className="mt-4">
-              <h5 className="text-sm font-medium">Extracted Work History:</h5>
-              <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
-                {JSON.stringify(extractWorkHistory(redFlagData), null, 2)}
-              </pre>
-            </div>
+          <div className="p-4">
+            <Tabs defaultValue="skills">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="skills">Skills</TabsTrigger>
+                <TabsTrigger value="work-history">Work History</TabsTrigger>
+                <TabsTrigger value="red-flags">Red Flags</TabsTrigger>
+              </TabsList>
+              
+              {/* Skills Tab Content */}
+              <TabsContent value="skills" className="space-y-4 pt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h5 className="text-sm font-medium mb-2">Skills Access Paths (Main Analysis):</h5>
+                    <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
+                      {JSON.stringify(examineSkillsAccessPaths(analysis), null, 2)}
+                    </pre>
+                  </div>
+                  
+                  <div>
+                    <h5 className="text-sm font-medium mb-2">Skills Access Paths (Red Flag Analysis):</h5>
+                    <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
+                      {JSON.stringify(examineSkillsAccessPaths(redFlagData), null, 2)}
+                    </pre>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <h5 className="text-sm font-medium mb-2">Extracted Skills (via Unified Extractor):</h5>
+                    <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
+                      {JSON.stringify(extractSkillsFromAnalysis(analysis), null, 2)}
+                    </pre>
+                  </div>
+                  
+                  <div>
+                    <h5 className="text-sm font-medium mb-2">Categorized Skills:</h5>
+                    <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
+                      {JSON.stringify(categorizeSkills(extractSkillsFromAnalysis(analysis)), null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              {/* Work History Tab Content */}
+              <TabsContent value="work-history" className="space-y-4 pt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h5 className="text-sm font-medium mb-2">Work History Access Paths (Main Analysis):</h5>
+                    <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
+                      {JSON.stringify(examineWorkHistoryAccessPaths(analysis), null, 2)}
+                    </pre>
+                  </div>
+                  
+                  <div>
+                    <h5 className="text-sm font-medium mb-2">Work History Access Paths (Red Flag Analysis):</h5>
+                    <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
+                      {JSON.stringify(examineWorkHistoryAccessPaths(redFlagData), null, 2)}
+                    </pre>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <h5 className="text-sm font-medium mb-2">Extracted Work History (Main Analysis):</h5>
+                    <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
+                      {JSON.stringify(extractWorkHistory(analysis), null, 2)}
+                    </pre>
+                  </div>
+                  
+                  <div>
+                    <h5 className="text-sm font-medium mb-2">Extracted Work History (Red Flag Analysis):</h5>
+                    <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
+                      {JSON.stringify(extractWorkHistory(redFlagData), null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              {/* Red Flags Tab Content */}
+              <TabsContent value="red-flags" className="space-y-4 pt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h5 className="text-sm font-medium mb-2">Main Analysis Red Flag Paths:</h5>
+                    <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
+                      {JSON.stringify(findFieldPath(analysis, ['redFlags', 'Red_Flags', 'red_flags', 'Red Flags']), null, 2)}
+                    </pre>
+                  </div>
+                  
+                  <div>
+                    <h5 className="text-sm font-medium mb-2">Red Flag Analysis Structure:</h5>
+                    <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
+                      {JSON.stringify(
+                        redFlagData?.analysis?.potentialRedFlags || 
+                        redFlagData?.redFlags || 
+                        redFlagData?.Red_Flags || 
+                        []
+                      , null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         </CollapsibleContent>
       </Collapsible>

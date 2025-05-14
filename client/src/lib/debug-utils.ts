@@ -140,22 +140,40 @@ export function extractWorkHistory(redFlagData: any): any[] {
 /**
  * Check if a field exists at any level in a nested object
  * @param obj The object to search
- * @param field The field name to look for
- * @returns The path to the field if found, null otherwise
+ * @param field The field name or array of field names to look for
+ * @returns Object with paths and values for all fields found
  */
-export function findFieldPath(obj: any, field: string): string | null {
-  if (!obj || typeof obj !== 'object') return null;
+export function findFieldPath(obj: any, field: string | string[]): Record<string, any> {
+  const results: Record<string, any> = {};
   
-  // Check if the field exists directly on this object
-  if (field in obj) return field;
+  if (!obj || typeof obj !== 'object') return results;
   
-  // Recursively check all nested objects
-  for (const key in obj) {
-    if (typeof obj[key] === 'object' && obj[key] !== null) {
-      const path = findFieldPath(obj[key], field);
-      if (path) return `${key}.${path}`;
+  // Convert single field to array for consistent handling
+  const fieldsToFind = Array.isArray(field) ? field : [field];
+  
+  // Search function that populates the results object
+  function search(currentObj: any, currentPath: string = '') {
+    if (!currentObj || typeof currentObj !== 'object') return;
+    
+    // Check each field we're looking for
+    for (const fieldName of fieldsToFind) {
+      if (fieldName in currentObj) {
+        const fullPath = currentPath ? `${currentPath}.${fieldName}` : fieldName;
+        results[fullPath] = currentObj[fieldName];
+      }
+    }
+    
+    // Recursively search all nested objects
+    for (const key in currentObj) {
+      if (typeof currentObj[key] === 'object' && currentObj[key] !== null) {
+        const nextPath = currentPath ? `${currentPath}.${key}` : key;
+        search(currentObj[key], nextPath);
+      }
     }
   }
   
-  return null;
+  // Start search from the root object
+  search(obj);
+  
+  return results;
 }
