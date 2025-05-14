@@ -639,10 +639,12 @@ export default function ResumeProfilePage() {
                           This is the raw response from the AI model. It contains the structured data used to populate the UI.
                         </p>
                         
-                        <div className="mt-2 p-4 bg-slate-900 rounded-md overflow-auto max-h-72">
+                        <div className="mt-2 p-4 bg-slate-900 rounded-md overflow-auto max-h-96">
                           <pre className="text-xs whitespace-pre-wrap font-mono text-green-400">
                             {typeof analysis?.rawResponse === 'string' 
-                              ? analysis.rawResponse 
+                              ? (analysis.rawResponse.startsWith('{') 
+                                 ? analysis.rawResponse // Already valid JSON string
+                                 : JSON.stringify(analysis.rawResponse, null, 2)) // Non-JSON string
                               : JSON.stringify(analysis?.rawResponse, null, 2)}
                           </pre>
                         </div>
