@@ -301,7 +301,9 @@ export default function ResumeProfilePage() {
             </Link>
           </Button>
           <h1 className="text-2xl font-bold">
-            {resume.candidateName || "Unnamed Candidate"}
+            {resume.candidateName && resume.candidateName.startsWith("# ") 
+              ? resume.candidateName.substring(2) 
+              : (resume.candidateName || "Unnamed Candidate")}
           </h1>
           {resume.candidateTitle && (
             <Badge className="ml-2" variant="secondary">{resume.candidateTitle}</Badge>
