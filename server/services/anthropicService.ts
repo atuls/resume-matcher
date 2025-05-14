@@ -326,12 +326,12 @@ Your response will be verified against these key details, and discrepancies will
         // Create a basic prompt with just the job and resume
         const basicPrompt = `
 Job Description:
-{JOB_DESCRIPTION}
+${truncatedJob}
 
 Resume:
-{RESUME}`.replace('{JOB_DESCRIPTION}', truncatedJob).replace('{RESUME}', truncatedResume);
-            
-          userPrompt = `CRITICAL INSTRUCTION: You must analyze ONLY the exact resume text provided below for the job description provided.
+${truncatedResume}`;
+        
+        userPrompt = `CRITICAL INSTRUCTION: You must analyze ONLY the exact resume text provided below for the job description provided.
 - Do NOT fabricate or hallucinate any work experience, skills, or education that does not appear in the resume.
 - Do NOT create fictional employment history, titles, or company names.
 - ONLY extract and analyze information that is explicitly mentioned in the resume text.
@@ -351,24 +351,21 @@ IMPORTANT VERIFICATION MARKERS (These exact terms MUST appear in your analysis i
 If you cannot find these details in the resume, state "I cannot find this information in the resume text provided" rather than inventing information.
 
 Your response will be verified against these key details, and discrepancies will result in your analysis being rejected.`;
-            
-          console.log("Using enhanced general analysis prompt from settings for Claude");
-          
-          // Add detailed debugging for what is being sent to Claude
-          console.log("======= CLAUDE REQUEST CONTENT DEBUG (GENERAL) =======");
-          console.log(`Resume ID debugging (if available in context): ${truncatedResume.includes('59b024e9-b079-4976-bd40-46e720602a3b') ? 'ID found in text' : 'ID not in text'}`);
-          console.log(`Resume contains "Olivia DeSpirito"? ${truncatedResume.includes('Olivia DeSpirito')}`);
-          console.log(`Resume contains "HOTWORX"? ${truncatedResume.includes('HOTWORX')}`);
-          console.log(`Resume first 200 chars: ${truncatedResume.substring(0, 200)}`);
-          console.log(`Resume text length: ${truncatedResume.length}`);
-          console.log(`Job description first 200 chars: ${truncatedJob.substring(0, 200)}`);
-          console.log(`Job description text length: ${truncatedJob.length}`);
-          console.log(`Full system prompt:\n${systemPrompt}`);
-          console.log(`\nFull user prompt:\n${userPrompt.substring(0, 500)}... (truncated)`);
-          console.log("===========================================");
-        } else {
-          throw new Error('No analysis prompt found in settings');
-        }
+        
+        console.log("Using basic prompt for Claude");
+        
+        // Add detailed debugging for what is being sent to Claude
+        console.log("======= CLAUDE REQUEST CONTENT DEBUG (BASIC) =======");
+        console.log(`Resume ID debugging (if available in context): ${truncatedResume.includes('59b024e9-b079-4976-bd40-46e720602a3b') ? 'ID found in text' : 'ID not in text'}`);
+        console.log(`Resume contains "Olivia DeSpirito"? ${truncatedResume.includes('Olivia DeSpirito')}`);
+        console.log(`Resume contains "HOTWORX"? ${truncatedResume.includes('HOTWORX')}`);
+        console.log(`Resume first 200 chars: ${truncatedResume.substring(0, 200)}`);
+        console.log(`Resume text length: ${truncatedResume.length}`);
+        console.log(`Job description first 200 chars: ${truncatedJob.substring(0, 200)}`);
+        console.log(`Job description text length: ${truncatedJob.length}`);
+        console.log(`Full system prompt:\n${systemPrompt}`);
+        console.log(`\nFull user prompt:\n${userPrompt.substring(0, 500)}... (truncated)`);
+        console.log("===========================================");
       }
     } catch (error) {
       console.error("Error loading custom Claude prompt:", error);
