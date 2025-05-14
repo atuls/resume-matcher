@@ -13,6 +13,7 @@ import { DebugPanel } from "@/components/DebugPanel";
 import { ResumeSkillsTab } from "@/components/ResumeSkillsTab";
 import { ResumeWorkHistoryTab } from "@/components/ResumeWorkHistoryTab";
 import { TestParserBtn } from "@/components/TestParserBtn";
+import { parseRawResponse, ParsedRawResponse } from "@/lib/raw-response-parser";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
 import { formatDistance } from "date-fns";
@@ -36,6 +37,10 @@ export default function ResumeProfilePage() {
   const [redFlagLoading, setRedFlagLoading] = useState(false);
   const [isContactingCandidate, setIsContactingCandidate] = useState(false);
   const [jobScoreLoading, setJobScoreLoading] = useState(false);
+  
+  // Centralized parsed data state
+  const [parsedAnalysisData, setParsedAnalysisData] = useState<ParsedRawResponse | null>(null);
+  const [parsingSource, setParsingSource] = useState<string>("none");
   
   // Resume query
   const { data: resume, error: resumeError, isLoading: resumeLoading } = useQuery({
