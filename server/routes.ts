@@ -746,7 +746,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/analyze", async (req: Request, res: Response) => {
     try {
       // Validate request data
-      const { resumeIds, jobDescriptionId } = analyzeResumeSchema.parse(req.body);
+      const { resumeIds, jobDescriptionId, force = false } = req.body;
+      
+      // Validate against schema (remove force parameter)
+      analyzeResumeSchema.parse({ resumeIds, jobDescriptionId });
       
       // For backwards compatibility, use the first resumeId if provided as an array
       const resumeId = Array.isArray(resumeIds) && resumeIds.length > 0 ? resumeIds[0] : null;
@@ -770,10 +773,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get job requirements
       const requirements = await storage.getJobRequirements(jobDescriptionId);
       
-      // Check for existing analysis
+      // Check for existing analysis (but only use it if not forced to re-analyze)
       const existingAnalysis = await storage.getAnalysisResultForResume(resumeId, jobDescriptionId);
-      if (existingAnalysis) {
+      if (existingAnalysis && !force) {
         // Return existing analysis instead of generating a new one
+        console.log(`Using existing analysis for resume ${resumeId} with job ${jobDescriptionId}`);
         return res.json({ 
           results: [existingAnalysis], 
           message: "Using existing analysis" 

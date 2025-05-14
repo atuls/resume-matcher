@@ -295,11 +295,13 @@ export async function downloadResume(id: string): Promise<Blob> {
 // Analysis API
 export async function analyzeResumes(
   jobDescriptionId: string, 
-  resumeIds: string[]
+  resumeIds: string[],
+  force: boolean = false
 ): Promise<{results: AnalysisResult[]}> {
   const response = await apiRequest("POST", "/api/analyze", {
     jobDescriptionId,
     resumeIds,
+    force,
   });
   
   return response.json();
