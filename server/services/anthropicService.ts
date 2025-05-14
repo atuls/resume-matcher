@@ -297,7 +297,12 @@ export async function analyzeResumeWithClaude(
 DO NOT invent, fabricate, or hallucinate ANY information that is not explicitly stated in this resume.
 Your response MUST contain ONLY information that appears verbatim in the resume text.
 
-${originalPrompt.replace('{JOB_DESCRIPTION}', truncatedJob).replace('{RESUME}', truncatedResume)}
+EXTRACTION FORMAT: Extract information EXACTLY as follows, copying dates and titles WORD FOR WORD:
+- For work experience: Use EXACT company names, EXACT job titles, EXACT start/end dates AS SHOWN in the resume 
+- For education: Use EXACT school names, EXACT degrees, EXACT dates AS SHOWN in the resume
+- For skills: List ONLY skills EXPLICITLY mentioned in the resume text
+
+${originalPrompt.replace('{JOB_DESCRIPTION}', truncatedJob).replace('{{JOB_DESCRIPTION}}', truncatedJob).replace('{RESUME}', truncatedResume).replace('{{CANDIDATE_RESUME}}', truncatedResume)}
 
 IMPORTANT VERIFICATION MARKERS (These exact terms MUST appear in your analysis if they appear in the resume):
 - Candidate Name: "${truncatedResume.includes('Olivia DeSpirito') ? 'Olivia DeSpirito' : 'unknown'}"

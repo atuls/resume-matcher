@@ -1,0 +1,469 @@
+POST /api/analyze request received
+resumeIds: [ '59b024e9-b079-4976-bd40-46e720602a3b' ]
+jobDescriptionId: c52c548e-6c74-4f58-944e-6730e8bfc2ad
+force: true
+================================
+======= RESUME DATA DEBUG =======
+Resume ID: 59b024e9-b079-4976-bd40-46e720602a3b
+Resume filename: Olivia_DeSpirito_resume.pdf
+Candidate name: Olivia DeSpirito
+Resume extracted text snippet: # Olivia DeSpirito 
+
+Redding, CT 06896
+(203)200-8144
+oliviadespirito123@gmail.com
+
+## Experience
+
+November 2024 - Present
+
+## HOTWORX Grand Junction, Colorado - Sales Associate
+
+- Provided exceptional...
+Resume text contains "Olivia DeSpirito"? true
+Resume text contains "HOTWORX"? true
+Resume text length: 4311
+================================
+Force re-analyzing resume 59b024e9-b079-4976-bd40-46e720602a3b with job c52c548e-6c74-4f58-944e-6730e8bfc2ad using custom prompt
+Using Claude for resume analysis
+Resume text length: 4311
+Job description text length: 8593
+Requirements count: 15
+Using custom analysis prompt from settings
+======= CLAUDE REQUEST CONTENT DEBUG (FULL) =======
+Resume ID debugging (if available in context): ID not in text
+Resume contains "Olivia DeSpirito"? true
+Resume contains "HOTWORX"? true
+FULL RESUME TEXT:
+# Olivia DeSpirito 
+
+Redding, CT 06896
+(203)200-8144
+oliviadespirito123@gmail.com
+
+## Experience
+
+November 2024 - Present
+
+## HOTWORX Grand Junction, Colorado - Sales Associate
+
+- Provided exceptional customer service, guiding potential members through fitness programs and membership options.
+- Consistently met and exceeded monthly sales targets through effective prospecting and consultative selling.
+- Conducted engaging studio tours and product demonstrations to educate clients on HOTWORX's infrared workout benefits.
+- Built strong relationships with members, fostering retention and referrals to increase studio growth.
+- Assisted in local marketing initiatives, including community events and social media promotions.
+- Utilized CRM software to track leads, follow-ups, and membership conversions.
+
+February 2022 - October 2024
+
+## Private family, Colorado - Nanny for Private Political Family
+
+- Provided attentive care and supervision for children, ensuring a safe and nurturing environment.
+- Organized household schedules, appointments, and travel arrangements for family members.
+- Managed household errands, including grocery shopping, dry cleaning, and bill payments.
+- Maintained open communication with parents regarding children's progress and needs.
+- Planned and facilitated educational and recreational activities to support child development.
+- Assisted with daily routines, including meal preparation, homework help, and bedtime schedules.
+
+December 2021 - January 2022
+
+## Coach, Colorado - Coach
+
+- Instructed and mentored gymnasts of various skill levels, from beginners to competitive athletes, in proper techniques, form, and safety protocols.
+- Designed and implemented personalized training programs to enhance strength, flexibility, and overall performance.
+- Motivated and encouraged gymnasts to build confidence, discipline, and teamwork through consistent coaching and support.
+
+- Conducted skill assessments and provided detailed feedback to help athletes set and achieve performance goals.
+
+May 2021 - November 2021
+Kids Club, Colorado - Selling Memberships
+
+- Promoted and sold daycare memberships by effectively communicating program benefits, services, and value to prospective families.
+- Conducted tours of the facility, highlighting safety features, learning programs, and amenities to build trust and generate interest.
+- Developed and maintained strong relationships with parents, addressing inquiries and providing detailed information on membership options.
+- Utilized persuasive sales techniques to meet and exceed enrollment goals.
+
+September 2019- April 2021
+Private Family, Connecticut - Nanny
+
+- Provided emotional support and positive discipline strategies to encourage good behavior.
+- Created a structured daily routine tailored to children's developmental needs.
+- Managed children's schedules, including school drop-offs/pick-ups, medical appointments, and extracurricular activities.
+- In charge of daily routine and caring for the infant .
+
+August 2018 - August 2019
+Cashier, Caraluzzies - Cashier
+
+- Resolved customer inquiries and concerns with professionalism, ensuring a positive shopping experience.
+- Applied discounts, coupons, and loyalty rewards accurately, following company policies.
+- Assisted with bagging and packaging items carefully to prevent damage.
+- Cross-sold and upsold products, promoting special offers and boosting sales.
+- Provided prompt, friendly, and efficient customer service while processing transactions accurately.
+- Handled cash, credit, and electronic payments, ensuring correct change and balancing the register at the end of each shift.
+
+
+# Skills 
+
+- Effectively able to Communicate
+- B2B \& B2C Sales
+- Prospecting \& Lead Generation
+- Cold Calling \& Territory Management
+
+- Healthcare \& Medical Terminology
+- Anatomy \& Physiology Understanding
+- Strong Presentation \& Public Speaking Skills
+- Client Education \& Training
+- Confident \& Competitive
+- Adaptability and Problem Solving
+- Networking and Relationship-Building
+- Strategic Thinking
+
+
+# Education 
+
+2016- 2020
+
+## Joel Barlow High School, Redding, Connecticut
+
+2020- Present
+Colorado Mesa University, Grand Junction, Colorado - Business Degree in Management
+
+## Awards
+
+- National Legacy Society
+- The National Society of Leadership and Success
+
+
+FULL JOB DESCRIPTION:
+# Head of Growth 
+
+## About Us
+
+We are a fast-growing influencer marketing agency specializing in data-driven campaigns. Our strategies leverage industry insights, social listening, and analytics to guide creative decisions. Then, we let the results take it from there-each strategic move is influenced by top-performing influencers and content.
+
+Everyone claims to be data-backed, but we prove it using our Optimization Flywheel, driving brands to exponentially higher ROI. Some of our recent achievements include:
+
+- Outperforming paid lower-funnel agencies by 5 x in conversions.
+- Achieving 500x above TikTok's ad benchmarks in watch time.
+- Ranking \#2 globally on TikTok's leaderboard for an entire month.
+
+
+## Role Overview
+
+As the Head of Growth, you will be responsible for increasing the volume and quality of inbound leads while enhancing brand visibility across key channels. This role requires a balance of data-driven strategy, creative marketing execution, and cross-functional collaboration. You will oversee demand generation, content strategy, partnerships, and paid media to drive sustainable growth.
+
+You will own the strategy for our acquisition efforts, ensuring that our brand presence scales and translates into meaningful business opportunities. This includes identifying new channels for growth, optimizing existing ones, and ensuring a continuous feedback loop to improve performance over time.
+
+## Key Responsibilities
+
+## Lead Generation \& Demand Generation
+
+- Develop and execute multi-channel strategies (organic, paid, partnerships) to consistently increase the number of high-quality inbound leads.
+- Implement and optimize paid media campaigns (Google, Meta, TikTok, LinkedIn) for lead acquisition and brand awareness.
+- Leverage SEO, content marketing, and CRO techniques to drive traffic and improve conversion rates.
+- Build and optimize lead nurturing workflows to ensure effective lead qualification
+- Develop and improve our lead lifecycle (clearly define MQLs, SQLs, etc.) so we can track demand gen performance objectively and accurately
+- Improve our current ROAS and ensure clear attribution to channels and spend
+- Test and iterate via landing page and website optimizations to improve website and form conversion
+
+
+## Brand Visibility \& Awareness
+
+- Own and enhance the company's brand positioning through thought leadership, PR, and strategic partnerships.
+- Work with content and creative teams to develop high-performing campaigns across digital and social media.
+- Develop influencer and industry relationships to amplify brand credibility and reach.
+- Experiment with emerging marketing channels and strategies to stay ahead of industry trends.
+- Gain industry recognition via award submissions, securing wins, and getting invited to keynote at major conferences.
+- Be an expert at gaining earned media (i.e. maximizing reach and awareness via creative strategies vs. relying solely on pay-to-play opportunities)
+
+
+## Customer Retention \& Expansion
+
+- Work closely with Account Management to develop strategies for increasing retention and customer lifetime value (LTV).
+- Implement automated lead nurturing programs that drive upsells and cross-sells.
+- Analyze customer behavior post-sale to optimize onboarding and engagement strategies.
+
+
+## Growth Analytics \& Optimization
+
+- Implement data-driven approaches to measure, analyze, and improve marketing performance.
+- Establish KPIs and build dashboards to track performance across all acquisition channels.
+- Continuously test and iterate growth strategies based on data insights.
+- Conduct competitive analysis to identify new growth opportunities.
+- Gain a detailed understanding of where our leads are finding us and what their path to purchase looks like.
+- Analyze drop-off rates on the demo signup page and identify ways to improve these KPIs.
+- Report on these KPIs in our weekly meetings.
+
+
+## Product-Led Growth \& Experimentation
+
+- Identify and remove friction points in the customer journey to drive conversions.
+- Run A/B tests on acquisition and retention strategies to determine the most effective approaches.
+- Leverage referral programs and viral loops to drive organic growth.
+
+
+## Website \& Social Media Optimization
+
+- Update and maintain our social profiles to ensure our core differentiation is properly shared.
+- Keep web pages updated to reflect our value proposition and offerings.
+- Create new landing pages tailored to different services to optimize conversions and engagement.
+- Leverage AI-driven personalization to tailor content and experiences to different audience segments.
+
+
+## Partnerships \& Community Building
+
+- Identify and develop partnerships that can expand our reach and drive lead acquisition.
+- Engage with industry communities and networks to establish the brand as a go-to authority in influencer marketing.
+- Develop co-marketing initiatives with complementary brands to reach new audiences.
+- Collaborate with sales and account management teams to ensure alignment between marketing efforts and business goals.
+
+# Cross-Department Collaboration \& Leadership 
+
+- Lead as a player-coach, getting your own hands in the weeds and leading projects from start-to-finish (we're a lean team and our leaders are biased towards actions and minimize delegation where possible)
+- Work closely with Sales, Customer Success, and Product teams to ensure alignment between growth initiatives and business goals.
+- Ensure acquisition efforts translate into high-quality conversions by optimizing the entire customer journey.
+- Collaborate with Finance and Operations to ensure growth initiatives are cost-effective and scalable, in addition to owning our Marketing team's P\&L and annual budget
+
+
+## Biggest Challenges in This Role
+
+- Balancing short-term lead generation goals with long-term brand-building initiatives.
+- Continuously optimizing campaigns while managing multiple acquisition channels.
+- Ensuring a steady flow of high-quality leads in an ever-changing digital landscape.
+- Keeping up with rapidly evolving platform algorithms and industry trends.
+
+
+## Key Performance Indicators (KPIs)
+
+- Lead Volume \& Quality: \% increase in inbound qualified leads.
+- Brand Awareness \& Engagement: Growth in website traffic, social engagement, and brand mentions.
+- Conversion Rates: \% improvement in lead-to-client conversion.
+- ROI on Growth Initiatives: CAC-to-LTV ratio and paid campaign efficiency.
+- Customer Retention \& Expansion: Increase in LTV and decrease in churn rate.
+- Website \& Social Performance: Improvements in engagement and conversions from updated pages and social profiles.
+- Demo Signup Optimization: Reduction in drop-off rates and improved signup conversions.
+- Industry Recognition: Number of awards won, keynote invitations, and media mentions.
+
+
+## Requirements
+
+- 7+ years of experience in growth marketing, digital marketing, or demand generation, with at least 3 years in a leadership role.
+- Proven track record of scaling lead generation efforts and driving significant business growth.
+- Expertise in digital advertising, SEO, content marketing, and conversion rate optimization.
+- Strong analytical skills with experience in A/B testing and data-driven decision-making.
+- Deep understanding of influencer marketing, social media, and emerging marketing channels.
+- Experience working in a fast-paced, high-growth environment.
+- Ability to collaborate cross-functionally with sales, product, and creative teams.
+- Proven ability to gain industry recognition via award submissions, keynote speaking engagements, and thought leadership.
+
+
+## Personality \& Attitude for Success
+
+- Must be highly collaborative and open to feedback, adapting to cross-functional input without frustration.
+- Needs to be flexible in a fast-paced and evolving role, comfortable with shifting priorities.
+- Should take ownership of workload management without overcommitting and then placing blame.
+- Must be easy to work with, fostering strong partnerships rather than alienating colleagues.
+- Should embrace a problem-solving mindset, proactively addressing client challenges rather than resisting pushback.
+- Needs to be strategic in selling the value of our services into larger clients and proving its worth even when direct adoption is initially low.
+- Should be proactive in advocating for experiments and iteration to drive better marketing outcomes.
+
+This is an exciting opportunity to take our company to the next level. If you're a growth-driven leader ready to make a significant impact, we'd love to hear from you!
+FULL SYSTEM PROMPT:
+You are Claude, a truthful AI assistant focused on accurate resume analysis. Only analyze the specific text provided. Never fabricate information. Return analysis in valid JSON format.
+FULL USER PROMPT:
+CRITICAL INSTRUCTION: You must ONLY analyze the exact resume text provided below.
+DO NOT invent, fabricate, or hallucinate ANY information that is not explicitly stated in this resume.
+Your response MUST contain ONLY information that appears verbatim in the resume text.
+
+You are a skilled HR professional with expertise in reviewing resumes and evaluating them again against job requirements to build a sophisticated analysis. You will be provided with a job description and a candidate resume. Your goal is to analyze the job requirements, candidate's resume, and provide a comprehensive analysis of how well the candidate's resume match the requirements of the job.
+First, carefully read the job description:
+<job_description>
+{# Head of Growth 
+
+## About Us
+
+We are a fast-growing influencer marketing agency specializing in data-driven campaigns. Our strategies leverage industry insights, social listening, and analytics to guide creative decisions. Then, we let the results take it from there-each strategic move is influenced by top-performing influencers and content.
+
+Everyone claims to be data-backed, but we prove it using our Optimization Flywheel, driving brands to exponentially higher ROI. Some of our recent achievements include:
+
+- Outperforming paid lower-funnel agencies by 5 x in conversions.
+- Achieving 500x above TikTok's ad benchmarks in watch time.
+- Ranking \#2 globally on TikTok's leaderboard for an entire month.
+
+
+## Role Overview
+
+As the Head of Growth, you will be responsible for increasing the volume and quality of inbound leads while enhancing brand visibility across key channels. This role requires a balance of data-driven strategy, creative marketing execution, and cross-functional collaboration. You will oversee demand generation, content strategy, partnerships, and paid media to drive sustainable growth.
+
+You will own the strategy for our acquisition efforts, ensuring that our brand presence scales and translates into meaningful business opportunities. This includes identifying new channels for growth, optimizing existing ones, and ensuring a continuous feedback loop to improve performance over time.
+
+## Key Responsibilities
+
+## Lead Generation \& Demand Generation
+
+- Develop and execute multi-channel strategies (organic, paid, partnerships) to consistently increase the number of high-quality inbound leads.
+- Implement and optimize paid media campaigns (Google, Meta, TikTok, LinkedIn) for lead acquisition and brand awareness.
+- Leverage SEO, content marketing, and CRO techniques to drive traffic and improve conversion rates.
+- Build and optimize lead nurturing workflows to ensure effective lead qualification
+- Develop and improve our lead lifecycle (clearly define MQLs, SQLs, etc.) so we can track demand gen performance objectively and accurately
+- Improve our current ROAS and ensure clear attribution to channels and spend
+- Test and iterate via landing page and website optimizations to improve website and form conversion
+
+
+## Brand Visibility \& Awareness
+
+- Own and enhance the company's brand positioning through thought leadership, PR, and strategic partnerships.
+- Work with content and creative teams to develop high-performing campaigns across digital and social media.
+- Develop influencer and industry relationships to amplify brand credibility and reach.
+- Experiment with emerging marketing channels and strategies to stay ahead of industry trends.
+- Gain industry recognition via award submissions, securing wins, and getting invited to keynote at major conferences.
+- Be an expert at gaining earned media (i.e. maximizing reach and awareness via creative strategies vs. relying solely on pay-to-play opportunities)
+
+
+## Customer Retention \& Expansion
+
+- Work closely with Account Management to develop strategies for increasing retention and customer lifetime value (LTV).
+- Implement automated lead nurturing programs that drive upsells and cross-sells.
+- Analyze customer behavior post-sale to optimize onboarding and engagement strategies.
+
+
+## Growth Analytics \& Optimization
+
+- Implement data-driven approaches to measure, analyze, and improve marketing performance.
+- Establish KPIs and build dashboards to track performance across all acquisition channels.
+- Continuously test and iterate growth strategies based on data insights.
+- Conduct competitive analysis to identify new growth opportunities.
+- Gain a detailed understanding of where our leads are finding us and what their path to purchase looks like.
+- Analyze drop-off rates on the demo signup page and identify ways to improve these KPIs.
+- Report on these KPIs in our weekly meetings.
+
+
+## Product-Led Growth \& Experimentation
+
+- Identify and remove friction points in the customer journey to drive conversions.
+- Run A/B tests on acquisition and retention strategies to determine the most effective approaches.
+- Leverage referral programs and viral loops to drive organic growth.
+
+
+## Website \& Social Media Optimization
+
+- Update and maintain our social profiles to ensure our core differentiation is properly shared.
+- Keep web pages updated to reflect our value proposition and offerings.
+- Create new landing pages tailored to different services to optimize conversions and engagement.
+- Leverage AI-driven personalization to tailor content and experiences to different audience segments.
+
+
+## Partnerships \& Community Building
+
+- Identify and develop partnerships that can expand our reach and drive lead acquisition.
+- Engage with industry communities and networks to establish the brand as a go-to authority in influencer marketing.
+- Develop co-marketing initiatives with complementary brands to reach new audiences.
+- Collaborate with sales and account management teams to ensure alignment between marketing efforts and business goals.
+
+# Cross-Department Collaboration \& Leadership 
+
+- Lead as a player-coach, getting your own hands in the weeds and leading projects from start-to-finish (we're a lean team and our leaders are biased towards actions and minimize delegation where possible)
+- Work closely with Sales, Customer Success, and Product teams to ensure alignment between growth initiatives and business goals.
+- Ensure acquisition efforts translate into high-quality conversions by optimizing the entire customer journey.
+- Collaborate with Finance and Operations to ensure growth initiatives are cost-effective and scalable, in addition to owning our Marketing team's P\&L and annual budget
+
+
+## Biggest Challenges in This Role
+
+- Balancing short-term lead generation goals with long-term brand-building initiatives.
+- Continuously optimizing campaigns while managing multiple acquisition channels.
+- Ensuring a steady flow of high-quality leads in an ever-changing digital landscape.
+- Keeping up with rapidly evolving platform algorithms and industry trends.
+
+
+## Key Performance Indicators (KPIs)
+
+- Lead Volume \& Quality: \% increase in inbound qualified leads.
+- Brand Awareness \& Engagement: Growth in website traffic, social engagement, and brand mentions.
+- Conversion Rates: \% improvement in lead-to-client conversion.
+- ROI on Growth Initiatives: CAC-to-LTV ratio and paid campaign efficiency.
+- Customer Retention \& Expansion: Increase in LTV and decrease in churn rate.
+- Website \& Social Performance: Improvements in engagement and conversions from updated pages and social profiles.
+- Demo Signup Optimization: Reduction in drop-off rates and improved signup conversions.
+- Industry Recognition: Number of awards won, keynote invitations, and media mentions.
+
+
+## Requirements
+
+- 7+ years of experience in growth marketing, digital marketing, or demand generation, with at least 3 years in a leadership role.
+- Proven track record of scaling lead generation efforts and driving significant business growth.
+- Expertise in digital advertising, SEO, content marketing, and conversion rate optimization.
+- Strong analytical skills with experience in A/B testing and data-driven decision-making.
+- Deep understanding of influencer marketing, social media, and emerging marketing channels.
+- Experience working in a fast-paced, high-growth environment.
+- Ability to collaborate cross-functionally with sales, product, and creative teams.
+- Proven ability to gain industry recognition via award submissions, keynote speaking engagements, and thought leadership.
+
+
+## Personality \& Attitude for Success
+
+- Must be highly collaborative and open to feedback, adapting to cross-functional input without frustration.
+- Needs to be flexible in a fast-paced and evolving role, comfortable with shifting priorities.
+- Should take ownership of workload management without overcommitting and then placing blame.
+- Must be easy to work with, fostering strong partnerships rather than alienating colleagues.
+- Should embrace a problem-solving mindset, proactively addressing client challenges rather than resisting pushback.
+- Needs to be strategic in selling the value of our services into larger clients and proving its worth even when direct adoption is initially low.
+- Should be proactive in advocating for experiments and iteration to drive better marketing outcomes.
+
+This is an exciting opportunity to take our company to the next level. If you're a growth-driven leader ready to make a significant impact, we'd love to hear from you!}
+</job_description>
+Next, review the candidate resume:
+<candidate_resume>
+{{CANDIDATE_RESUME}}
+</candidate_resume>
+Now, follow these steps:
+1. Analyze the job description:
+   - Identify key skills, qualifications, and experience required for the position.
+   - Note any specific educational requirements or certifications.
+   - Determine essential and preferred qualifications.
+2. Evaluate the candidate resume:
+   a) build a matching_score that uses these parameters:
+   - Compare the candidate's skills, qualifications, and experience to the job requirements 
+   - Assess the relevance of their work history to the job requirements
+   - Consider their educational background and any relevant certifications
+  b) build their work history consisting of their past jobs from the resume
+  c) builds their skills from the resume
+3. Identify red flags for potential issues such as (not limited to these):
+     a. Short stints at multiple jobs (job hopping)
+     b. Gaps in employment history
+     c. Predominantly contract work instead of full-time positions
+     d. Lack of career progression
+     e. Mismatched or irrelevant experience
+Present your analysis in the following format, each with a separate key in the JSON output:
+<analysis>
+matching_score: a numerical value between 0 and 100
+Summary: Your detailed analysis of the job requirements and evaluation of the candidate's resume. 
+Work History: a single array of jobs containing Title, Company, location, startDate, endDate, description, durationMonths, isCurrentRole
+Skills: a single array containing string items for each skill
+Red Flags: a single array containing string items for each red flag and the reason
+</analysis>
+Remember to be objective in your evaluation and base your matchings solely on the information provided in the job description and candidate resumes. 
+
+IMPORTANT JSON FORMATTING REQUIREMENTS:
+- Use ONLY double quotes (") for all string values and keys
+- If a string contains quotes, escape them properly with backslash (\")
+- NEVER use single quotes (') anywhere in the JSON
+- Ensure all arrays and objects have properly closed brackets
+- Verify your JSON is valid with no formatting errors before submitting
+- Do NOT include any text, markdown formatting, explanations, or notes outside the JSON object
+- TRIPLE-CHECK for escaped quotes, newlines, and special characters within strings
+
+YOUR ENTIRE RESPONSE MUST CONSIST OF NOTHING BUT A SINGLE VALID JSON OBJECT.
+
+IMPORTANT VERIFICATION MARKERS (These exact terms MUST appear in your analysis if they appear in the resume):
+- Candidate Name: "Olivia DeSpirito"
+- Company: "HOTWORX" 
+- Position: "Sales Associate"
+- Location: "Grand Junction, Colorado"
+- Education: "Colorado Mesa University"
+- Contact: "oliviadespirito123@gmail.com"
+
+If you cannot find these details in the resume, state "I cannot find this information in the resume text provided" rather than inventing information.
+
+Your response will be verified against these key details, and discrepancies will result in your analysis being rejected.
+===========================================

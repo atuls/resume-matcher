@@ -142,8 +142,11 @@ export async function analyzeResume(
       if (promptSetting?.value) {
         customPrompt = promptSetting.value
           .replace('{JOB_DESCRIPTION}', jobDescription)
+          .replace('{{JOB_DESCRIPTION}}', jobDescription)
           .replace('{REQUIREMENTS}', requirementsText)
-          .replace('{RESUME}', resumeText);
+          .replace('{{REQUIREMENTS}}', requirementsText)
+          .replace('{RESUME}', resumeText)
+          .replace('{{CANDIDATE_RESUME}}', resumeText);
         console.log("Using custom analysis prompt from settings");
         
         // Add more detailed logging for debugging
