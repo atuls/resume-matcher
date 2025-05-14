@@ -6,7 +6,8 @@ import { getResume, getResumeAnalysis, getJobDescriptions, getResumeScores, upda
 import { 
   User, FileText, Calendar, ArrowLeft, Mail, MapPin, Phone, Award, 
   Briefcase, Code, AlertCircle, BarChart3, CheckCircle, XCircle,
-  RefreshCw, UserCheck, Sparkles, AlertTriangle
+  RefreshCw, UserCheck, Sparkles, AlertTriangle, Download, ExternalLink,
+  Linkedin, FileText as FileIcon, FileSearch
 } from "lucide-react";
 import { DebugPanel } from "@/components/DebugPanel";
 import { ResumeSkillsTab } from "@/components/ResumeSkillsTab";
@@ -256,14 +257,48 @@ export default function ResumeProfilePage() {
                 </div>
               </div>
               
-              <div className="flex items-center">
-                <FileText className="mr-3 h-5 w-5 text-gray-500" />
+              <div className="flex items-start">
+                <FileText className="mr-3 h-5 w-5 text-gray-500 mt-0.5" />
                 <div>
                   <div className="text-sm text-gray-500">File</div>
-                  <div>{resume.fileName}</div>
+                  <div className="flex items-center gap-2">
+                    <span>{resume.fileName}</span>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="h-7 px-2 text-xs"
+                      onClick={() => window.open(`/api/resumes/${resumeId}/download`, '_blank')}
+                    >
+                      <Download className="h-3 w-3 mr-1" />
+                      Download
+                    </Button>
+                  </div>
                   <div className="text-sm text-gray-500">
                     {(resume.fileSize / 1024).toFixed(2)} KB - {resume.fileType}
                   </div>
+                </div>
+              </div>
+
+              {/* LinkedIn Profile Link */}
+              <div className="flex items-center">
+                <Linkedin className="mr-3 h-5 w-5 text-blue-600" />
+                <div>
+                  <div className="text-sm text-gray-500">LinkedIn</div>
+                  <Button 
+                    size="sm" 
+                    variant="link" 
+                    className="h-7 px-0 text-blue-600"
+                    onClick={() => {
+                      // Extract candidate name
+                      const name = resume.candidateName || 'Unnamed Candidate';
+                      // Create a LinkedIn search URL with the candidate name
+                      const searchQuery = encodeURIComponent(name);
+                      window.open(`https://www.linkedin.com/search/results/people/?keywords=${searchQuery}`, '_blank');
+                    }}
+                  >
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    Find on LinkedIn
+                  </Button>
                 </div>
               </div>
               
@@ -309,9 +344,22 @@ export default function ResumeProfilePage() {
             <CardContent>
               <Tabs defaultValue="skills" className="w-full">
                 <TabsList className="mb-4">
-                  <TabsTrigger value="skills">Skills</TabsTrigger>
-                  <TabsTrigger value="history">Work History</TabsTrigger>
-                  <TabsTrigger value="debug">Debug Info</TabsTrigger>
+                  <TabsTrigger value="skills">
+                    <Code className="h-4 w-4 mr-2" />
+                    Skills
+                  </TabsTrigger>
+                  <TabsTrigger value="history">
+                    <Briefcase className="h-4 w-4 mr-2" />
+                    Work History
+                  </TabsTrigger>
+                  <TabsTrigger value="raw-text">
+                    <FileSearch className="h-4 w-4 mr-2" />
+                    Raw Text
+                  </TabsTrigger>
+                  <TabsTrigger value="debug">
+                    <AlertCircle className="h-4 w-4 mr-2" />
+                    Debug
+                  </TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="skills">
@@ -332,6 +380,27 @@ export default function ResumeProfilePage() {
                     isRedFlagLoading={isRedFlagLoading}
                     redFlagError={redFlagError}
                   />
+                </TabsContent>
+                
+                <TabsContent value="raw-text">
+                  {resume && resume.extractedText ? (
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-medium">Extracted Resume Text</h3>
+                        <div className="flex items-center text-sm text-gray-500">
+                          <FileText className="h-4 w-4 mr-1" />
+                          <span>{(resume.extractedText.length / 1000).toFixed(1)}K characters</span>
+                        </div>
+                      </div>
+                      <div className="border rounded-md p-4 bg-gray-50 overflow-auto max-h-[500px]">
+                        <pre className="text-sm whitespace-pre-wrap font-mono">{resume.extractedText}</pre>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-40 text-gray-400">
+                      <p>No extracted text found for this resume.</p>
+                    </div>
+                  )}
                 </TabsContent>
                 
                 <TabsContent value="debug">
