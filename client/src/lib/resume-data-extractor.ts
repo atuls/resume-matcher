@@ -1,397 +1,212 @@
 /**
- * Utility for extracting structured data from resume analysis results
+ * Resume data extractor utility
+ * Extracts structured data from various formats of resume analysis API responses
  */
 
-// Types for extracted data
-export interface ExtractedResumeData {
-  skills: string[];
-  workHistory: any[];
-  education: string;
+type WorkHistoryItem = {
+  title?: string;
+  company?: string;
+  location?: string;
+  startDate?: string;
+  endDate?: string;
+  description?: string;
+  durationMonths?: number;
+  isCurrentRole?: boolean;
+  // Handle alternate field naming
+  Title?: string;
+  Company?: string;
+  Location?: string;
+  StartDate?: string;
+  EndDate?: string;
+  Description?: string;
+  DurationMonths?: number;
+  IsCurrentRole?: boolean;
+  current?: boolean;
+};
+
+type SkillItem = {
+  name?: string;
+  category?: string;
+  level?: string;
+  years?: number;
+  relevance?: string;
+  // Handle alternate field naming
+  Name?: string;
+  Category?: string;
+  Level?: string;
+  Years?: number;
+  Relevance?: string;
+};
+
+type RedFlagItem = {
+  description?: string;
+  impact?: string;
+  severity?: string;
+  // Handle alternate field naming
+  Description?: string;
+  Impact?: string;
+  Severity?: string;
+};
+
+type ExtractedResumeData = {
+  workHistory: WorkHistoryItem[];
+  skills: SkillItem[];
+  redFlags: RedFlagItem[];
   summary: string;
-  redFlags: string[];
-  score: number;
+  score?: number;
+};
+
+/**
+ * Helper to safely access JSON data with case-insensitive fallbacks
+ * @param obj The object to extract from
+ * @param key The primary key to check
+ * @param fallbackKeys Alternative keys to check if primary isn't found
+ * @returns The value or undefined
+ */
+function getField(obj: any, key: string, fallbackKeys: string[] = []): any {
+  if (!obj) return undefined;
+  
+  // Direct attempt with provided key
+  if (obj[key] !== undefined) return obj[key];
+  
+  // Try all fallback keys
+  for (const fallbackKey of fallbackKeys) {
+    if (obj[fallbackKey] !== undefined) return obj[fallbackKey];
+  }
+  
+  // Try lowercase/uppercase variants
+  const lowerKey = key.toLowerCase();
+  const upperKey = key.toUpperCase();
+  const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
+  
+  if (obj[lowerKey] !== undefined) return obj[lowerKey];
+  if (obj[upperKey] !== undefined) return obj[upperKey];
+  if (obj[capitalizedKey] !== undefined) return obj[capitalizedKey];
+  
+  return undefined;
 }
 
 /**
- * Extract structured data from a resume analysis result
- * This handles the complex nested structure and different response formats
- * 
- * @param analysisResult The raw analysis result from the API
- * @returns Structured data with normalized fields
+ * Extract structured resume data from various API response formats
+ * @param data The API response data to parse
+ * @returns Structured resume data
  */
-export function extractResumeData(analysisResult: any): ExtractedResumeData {
-  // Initialize with default empty values
+export function extractResumeData(data: any): ExtractedResumeData {
+  // Default empty result
   const result: ExtractedResumeData = {
-    skills: [],
     workHistory: [],
-    education: '',
-    summary: '',
+    skills: [],
     redFlags: [],
+    summary: "",
     score: 0
   };
-
-  // If nothing provided, return empty result
-  if (!analysisResult) {
-    return result;
+  
+  if (!data) return result;
+  
+  // Try to extract work history
+  const workHistorySource = getField(data, 'work_history', [
+    'workHistory', 
+    'Work_History', 
+    'work_experience', 
+    'workExperience', 
+    'employment'
+  ]);
+  
+  if (Array.isArray(workHistorySource)) {
+    result.workHistory = workHistorySource;
+  } else if (typeof data.rawResponse === 'string') {
+    // Try to extract from raw JSON in the response
+    try {
+      const parsedRaw = JSON.parse(data.rawResponse);
+      const workHistory = getField(parsedRaw, 'work_history', [
+        'workHistory', 
+        'Work_History', 
+        'work_experience', 
+        'workExperience', 
+        'employment'
+      ]);
+      
+      if (Array.isArray(workHistory)) {
+        result.workHistory = workHistory;
+      }
+    } catch (e) {
+      console.error('Error parsing raw response JSON:', e);
+    }
   }
-
-  try {
-    // Normalize - unwrap array if needed
-    const data = Array.isArray(analysisResult) ? analysisResult[0] : analysisResult;
-    
-    // Extract score from various possible formats
-    if (data.matching_score) {
-      result.score = data.matching_score;
-    } else if (data.overallScore) {
-      result.score = data.overallScore;
-    } else if (data.score) {
-      result.score = data.score;
-    } else {
-      result.score = 0;
-    }
-    
-    // Try to extract work history from red flag analysis (which has different structure)
-    if (data.analysis && data.analysis.recentRoles && Array.isArray(data.analysis.recentRoles)) {
-      console.log("Found work history in data.analysis.recentRoles");
-      result.workHistory = data.analysis.recentRoles;
-    }
-    
-    // Try to extract directly from the response (Claude's new format with Work_History field)
-    if (data.rawResponse) {
-      // Handle both string and object formats
-      if (typeof data.rawResponse === 'string') {
-        try {
-          const parsedResponse = JSON.parse(data.rawResponse);
-          
-          // Work History
-          if (Array.isArray(parsedResponse.Work_History)) {
-            console.log("Found work history directly in parsed rawResponse.Work_History", parsedResponse.Work_History.length, "entries");
-            result.workHistory = parsedResponse.Work_History;
-          }
-          
-          // Skills
-          if (Array.isArray(parsedResponse.Skills)) {
-            console.log("Found skills directly in parsed rawResponse.Skills");
-            result.skills = parsedResponse.Skills;
-          }
-          
-          // Red Flags
-          if (Array.isArray(parsedResponse.Red_Flags)) {
-            console.log("Found red flags directly in parsed rawResponse.Red_Flags");
-            result.redFlags = parsedResponse.Red_Flags;
-          }
-          
-          // Extract summary if available
-          if (typeof parsedResponse.Summary === 'string') {
-            console.log("Found summary in parsed rawResponse.Summary");
-            result.summary = parsedResponse.Summary;
-          }
-          
-          // Score
-          if (typeof parsedResponse.matching_score === 'number') {
-            console.log("Found matching_score in parsed rawResponse");
-            result.score = parsedResponse.matching_score;
-          }
-          
-        } catch (err) {
-          console.log("Failed to parse rawResponse as JSON - might not be JSON formatted");
-          // Ignore JSON parsing errors - this is just an attempt at direct extraction
-        }
-      } 
-      // Handle object format raw response 
-      else if (typeof data.rawResponse === 'object') {
-        // Try to extract from rawResponse object directly
-        
-        // Work History
-        if (Array.isArray(data.rawResponse.Work_History)) {
-          console.log("Found work history in object rawResponse.Work_History", data.rawResponse.Work_History.length, "entries");
-          result.workHistory = data.rawResponse.Work_History;
-        }
-        
-        // Skills
-        if (Array.isArray(data.rawResponse.Skills)) {
-          console.log("Found skills in object rawResponse.Skills");
-          result.skills = data.rawResponse.Skills;
-        }
-        
-        // Red Flags
-        if (Array.isArray(data.rawResponse.Red_Flags)) {
-          console.log("Found red flags in object rawResponse.Red_Flags");
-          result.redFlags = data.rawResponse.Red_Flags;
-        }
-        
-        // Text field
-        if (typeof data.rawResponse.text === 'string') {
-          // Try to extract JSON from text field if it looks like it might contain JSON
-          if (data.rawResponse.text.includes('{') && data.rawResponse.text.includes('}')) {
-            try {
-              // Find JSON-like pattern - anything between { and }
-              const jsonMatch = data.rawResponse.text.match(/(\{[\s\S]*\})/);
-              if (jsonMatch) {
-                const extractedJson = jsonMatch[0];
-                const parsedJson = JSON.parse(extractedJson);
-                
-                // Extract work history if available
-                if (Array.isArray(parsedJson.Work_History)) {
-                  console.log("Found work history in text field JSON.Work_History", parsedJson.Work_History.length, "entries");
-                  result.workHistory = parsedJson.Work_History;
-                }
-                
-                // Extract skills if available
-                if (Array.isArray(parsedJson.Skills)) {
-                  console.log("Found skills in text field JSON.Skills");
-                  result.skills = parsedJson.Skills; 
-                }
-                
-                // Extract red flags if available
-                if (Array.isArray(parsedJson.Red_Flags)) {
-                  console.log("Found red flags in text field JSON.Red_Flags");
-                  result.redFlags = parsedJson.Red_Flags;
-                }
-              }
-            } catch (e) {
-              // Ignore JSON parsing errors from text field
-            }
-          }
-        }
-      }
-    }
-    
-    // Check for direct array fields at top level of data or rawResponse
-    // Work History - try multiple field names to handle inconsistency
-    // Based on the screenshot, "Work_History" with underscore is the primary format
-    if (Array.isArray(data.Work_History)) {
-      console.log("Found work history at data.Work_History", data.Work_History.length, "entries");
-      result.workHistory = data.Work_History;
-    } else if (typeof data === 'string') {
-      // Try parsing JSON from string (sometimes the response is a string containing JSON)
-      try {
-        const parsedData = JSON.parse(data);
-        if (Array.isArray(parsedData.Work_History)) {
-          console.log("Found work history in parsed JSON string at Work_History", parsedData.Work_History.length, "entries");
-          result.workHistory = parsedData.Work_History;
-        }
-      } catch (e) {
-        // Ignore parsing errors - this is just an attempt to handle string responses
-      }
-    } else if (Array.isArray(data.work_history)) {
-      console.log("Found work history at data.work_history");
-      result.workHistory = data.work_history;
-    } else if (Array.isArray(data.workHistory)) {
-      console.log("Found work history at data.workHistory");
-      result.workHistory = data.workHistory;
-    } else if (Array.isArray(data['Work History'])) {
-      console.log("Found work history at data['Work History']");
-      result.workHistory = data['Work History'];
-    } else if (data.analysis && Array.isArray(data.analysis.workHistory)) {
-      console.log("Found work history at data.analysis.workHistory");
-      result.workHistory = data.analysis.workHistory;
-    } else if (data.analysis && Array.isArray(data.analysis.Work_History)) {
-      console.log("Found work history at data.analysis.Work_History");
-      result.workHistory = data.analysis.Work_History;
-    }
-    
-    // Skills - try multiple field names
-    if (Array.isArray(data.Skills)) {
-      console.log("Found skills at data.Skills");
-      result.skills = data.Skills;
-    } else if (Array.isArray(data.skills)) {
-      console.log("Found skills at data.skills");
-      result.skills = data.skills;
-    } else if (Array.isArray(data['Skills'])) {
-      console.log("Found skills at data['Skills']");
-      result.skills = data['Skills'];
-    } else if (data.analysis && Array.isArray(data.analysis.skills)) {
-      console.log("Found skills at data.analysis.skills");
-      result.skills = data.analysis.skills;
-    }
-    
-    // Red Flags - try multiple field names
-    if (Array.isArray(data.Red_Flags)) {
-      console.log("Found red flags at data.Red_Flags");
-      result.redFlags = data.Red_Flags;
-    } else if (Array.isArray(data.redFlags)) {
-      console.log("Found red flags at data.redFlags");
-      result.redFlags = data.redFlags;
-    } else if (Array.isArray(data['Red Flags'])) {
-      console.log("Found red flags at data['Red Flags']");
-      result.redFlags = data['Red Flags'];
-    } else if (data.analysis && Array.isArray(data.analysis.redFlags)) {
-      console.log("Found red flags at data.analysis.redFlags");
-      result.redFlags = data.analysis.redFlags;
-    } else if (data.analysis && Array.isArray(data.analysis.potentialRedFlags)) {
-      console.log("Found red flags at data.analysis.potentialRedFlags");
-      result.redFlags = data.analysis.potentialRedFlags.map((flag: any) => {
-        if (typeof flag === 'string') return flag;
-        return flag.description || flag.issue || flag.text || JSON.stringify(flag);
-      });
-    }
-    
-    // Extract from rawResponse
-    if (data.rawResponse) {
-      // Try to get skills
-      if (Array.isArray(data.rawResponse.skills)) {
-        result.skills = data.rawResponse.skills;
-      }
+  
+  // Try to extract skills
+  const skillsSource = getField(data, 'skills', [
+    'Skills', 
+    'technical_skills', 
+    'technicalSkills', 
+    'softSkills', 
+    'competencies'
+  ]);
+  
+  if (Array.isArray(skillsSource)) {
+    result.skills = skillsSource;
+  } else if (typeof data.rawResponse === 'string') {
+    // Try to extract from raw JSON in the response
+    try {
+      const parsedRaw = JSON.parse(data.rawResponse);
+      const skills = getField(parsedRaw, 'skills', [
+        'Skills', 
+        'technical_skills', 
+        'technicalSkills', 
+        'softSkills', 
+        'competencies'
+      ]);
       
-      // Get experience/work history
-      if (typeof data.rawResponse.experience === 'string') {
-        result.summary = data.rawResponse.experience;
+      if (Array.isArray(skills)) {
+        result.skills = skills;
       }
-      
-      // Try to get work history from parsedJson
-      if (data.rawResponse.parsedJson) {
-        if (Array.isArray(data.rawResponse.parsedJson['Work History'])) {
-          console.log("Found work history in data.rawResponse.parsedJson['Work History']");
-          result.workHistory = data.rawResponse.parsedJson['Work History'];
-        } else if (Array.isArray(data.rawResponse.parsedJson.WorkHistory)) {
-          console.log("Found work history in data.rawResponse.parsedJson.WorkHistory");
-          result.workHistory = data.rawResponse.parsedJson.WorkHistory;
-        }
-      }
-      
-      // Get education
-      if (typeof data.rawResponse.education === 'string') {
-        result.education = data.rawResponse.education;
-      }
-      
-      // Try to get nested data from rawResponse.rawResponse
-      if (data.rawResponse.rawResponse) {
-        // Try to extract JSON from rawText field if available
-        if (typeof data.rawResponse.rawResponse.rawText === 'string') {
-          try {
-            // Extract JSON parts from the rawText using regex
-            const jsonMatch = data.rawResponse.rawResponse.rawText.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-              const parsedJson = JSON.parse(jsonMatch[0]);
-              
-              // Extract skills if available
-              if (Array.isArray(parsedJson.Skills)) {
-                result.skills = parsedJson.Skills;
-              } else if (Array.isArray(parsedJson.skills)) {
-                result.skills = parsedJson.skills;
-              } else if (Array.isArray(parsedJson['skills'])) {
-                result.skills = parsedJson['skills']; 
-              }
-              
-              // Extract work history if available
-              if (Array.isArray(parsedJson['Work History'])) {
-                result.workHistory = parsedJson['Work History'];
-              } else if (Array.isArray(parsedJson.WorkHistory)) {
-                result.workHistory = parsedJson.WorkHistory;
-              } else if (Array.isArray(parsedJson.work_history)) {
-                result.workHistory = parsedJson.work_history;
-              } else if (Array.isArray(parsedJson.Work_History)) {
-                result.workHistory = parsedJson.Work_History;
-              }
-              
-              // Extract red flags if available
-              if (Array.isArray(parsedJson['Red Flags'])) {
-                result.redFlags = parsedJson['Red Flags'];
-              } else if (Array.isArray(parsedJson.RedFlags)) {
-                result.redFlags = parsedJson.RedFlags;
-              } else if (Array.isArray(parsedJson.red_flags)) {
-                result.redFlags = parsedJson.red_flags;
-              } else if (Array.isArray(parsedJson.Red_Flags)) {
-                result.redFlags = parsedJson.Red_Flags;
-              }
-              
-              // Extract summary if available
-              if (typeof parsedJson.Summary === 'string') {
-                result.summary = parsedJson.Summary;
-              } else if (typeof parsedJson.summary === 'string') {
-                result.summary = parsedJson.summary;
-              } else if (parsedJson.Summary && typeof parsedJson.Summary === 'object' && parsedJson.Summary.text) {
-                // Handle nested summary object
-                result.summary = parsedJson.Summary.text;
-              }
-            }
-          } catch (e) {
-            console.error("Error parsing JSON from rawText:", e);
-          }
-        }
-      }
+    } catch (e) {
+      console.error('Error parsing raw response JSON for skills:', e);
     }
-    
-    // Get skills from skillMatches if available
-    if (data.skillMatches && Array.isArray(data.skillMatches)) {
-      // Extract unique skill names from the matches
-      const skillsFromMatches = data.skillMatches.map((match: any) => {
-        return match.requirement || '';
-      }).filter(Boolean);
+  }
+  
+  // Try to extract red flags
+  const redFlagsSource = getField(data, 'red_flags', [
+    'redFlags', 
+    'Red_Flags', 
+    'warnings', 
+    'concerns'
+  ]);
+  
+  if (Array.isArray(redFlagsSource)) {
+    result.redFlags = redFlagsSource;
+  } else if (typeof data.rawResponse === 'string') {
+    // Try to extract from raw JSON in the response
+    try {
+      const parsedRaw = JSON.parse(data.rawResponse);
+      const redFlags = getField(parsedRaw, 'red_flags', [
+        'redFlags', 
+        'Red_Flags', 
+        'warnings', 
+        'concerns'
+      ]);
       
-      if (skillsFromMatches.length > 0) {
-        // Create a unique array of skills by using an object as a map
-        const uniqueSkills: {[key: string]: boolean} = {};
-        
-        // Add existing skills
-        result.skills.forEach((skill: string) => {
-          uniqueSkills[skill] = true;
-        });
-        
-        // Add new skills
-        skillsFromMatches.forEach((skill: string) => {
-          uniqueSkills[skill] = true;
-        });
-        
-        // Convert back to array
-        result.skills = Object.keys(uniqueSkills);
+      if (Array.isArray(redFlags)) {
+        result.redFlags = redFlags;
       }
+    } catch (e) {
+      console.error('Error parsing raw response JSON for red flags:', e);
     }
-    
-    // Extract summary from various fields
-    if (typeof data.summary === 'string' && data.summary.trim()) {
-      result.summary = data.summary;
-    } else if (typeof data.Summary === 'string' && data.Summary.trim()) {
-      result.summary = data.Summary;
-    } else if (data.analysis && typeof data.analysis.summary === 'string' && data.analysis.summary.trim()) {
-      result.summary = data.analysis.summary;
+  }
+  
+  // Try to extract summary
+  result.summary = getField(data, 'summary', ['Summary', 'overview', 'Overview']) || '';
+  
+  // Try to extract score
+  const scoreValue = getField(data, 'score', ['Score', 'matching_score', 'matchingScore']);
+  if (typeof scoreValue === 'number') {
+    result.score = scoreValue;
+  } else if (typeof scoreValue === 'string') {
+    const parsedScore = parseInt(scoreValue, 10);
+    if (!isNaN(parsedScore)) {
+      result.score = parsedScore;
     }
-    
-    // Combine skills, work history and red flags from all sources if currently empty
-    // This ensures we have the most comprehensive data available
-    
-    // Log the extraction results for debugging
-    console.log("Final extraction results:");
-    console.log("- Skills:", result.skills.length > 0 ? "Found" : "Not found");
-    console.log("- Work History:", result.workHistory.length > 0 ? "Found" : "Not found");
-    console.log("- Red Flags:", result.redFlags.length > 0 ? "Found" : "Not found");
-    console.log("- Summary:", result.summary ? "Found" : "Not found");
-    console.log("- Score:", result.score);
-    
-  } catch (error) {
-    console.error("Error extracting resume data:", error);
-    // Don't swallow errors completely - at least log what data caused the problem
-    console.error("Source data:", analysisResult ? 
-      (typeof analysisResult === 'object' ? Object.keys(analysisResult).join(', ') : typeof analysisResult) 
-      : "null or undefined");
   }
   
   return result;
-}
-
-/**
- * Extract red flags data from the dedicated red flags API response
- * 
- * @param redFlagResult The red flag analysis result
- * @returns Array of red flag strings
- */
-export function extractRedFlagData(redFlagResult: any): string[] {
-  try {
-    // Check if the redFlags field exists and contains a redFlags array
-    if (redFlagResult.redFlags && Array.isArray(redFlagResult.redFlags.redFlags)) {
-      return redFlagResult.redFlags.redFlags;
-    }
-    
-    // Try alternative paths
-    if (Array.isArray(redFlagResult.redFlags)) {
-      return redFlagResult.redFlags;
-    }
-    
-    // Return an empty array if no red flags found
-    return [];
-  } catch (error) {
-    console.error("Error extracting red flag data:", error);
-    return [];
-  }
 }

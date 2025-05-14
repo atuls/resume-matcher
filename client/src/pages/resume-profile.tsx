@@ -14,6 +14,7 @@ import { ResumeSkillsTab } from "@/components/ResumeSkillsTab";
 import { ResumeWorkHistoryTab } from "@/components/ResumeWorkHistoryTab";
 import { TestParserBtn } from "@/components/TestParserBtn";
 import { parseRawResponse, ParsedRawResponse } from "@/lib/raw-response-parser";
+import { extractResumeData } from "@/lib/resume-data-extractor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
 import { formatDistance } from "date-fns";
@@ -22,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -41,6 +42,129 @@ export default function ResumeProfilePage() {
   // Centralized parsed data state
   const [parsedAnalysisData, setParsedAnalysisData] = useState<ParsedRawResponse | null>(null);
   const [parsingSource, setParsingSource] = useState<string>("none");
+  
+  // Centralized parsing function that handles all data sources
+  const parseAnalysisData = (analysisData: any, redFlagData: any) => {
+    console.log("CENTRALIZED PARSER: Starting unified parsing process");
+    
+    // Step 1: Try to parse from analysis.rawResponse first (highest priority)
+    if (analysisData?.rawResponse) {
+      try {
+        console.log("CENTRALIZED PARSER: Attempting to parse from analysis.rawResponse");
+        const parsedData = parseRawResponse(analysisData.rawResponse);
+        
+        if (parsedData && 
+            ((parsedData.skills && parsedData.skills.length > 0) || 
+             (parsedData.workHistory && parsedData.workHistory.length > 0) ||
+             (parsedData.redFlags && parsedData.redFlags.length > 0))) {
+          console.log("CENTRALIZED PARSER: Successfully parsed from analysis.rawResponse", {
+            skills: parsedData.skills.length,
+            workHistory: parsedData.workHistory.length,
+            redFlags: parsedData.redFlags.length
+          });
+          setParsedAnalysisData(parsedData);
+          setParsingSource("analysis.rawResponse");
+          return parsedData;
+        }
+      } catch (error) {
+        console.error("CENTRALIZED PARSER: Error parsing analysis.rawResponse:", error);
+      }
+    }
+    
+    // Step 2: Try to parse from analysis.response next
+    if (analysisData?.response) {
+      try {
+        console.log("CENTRALIZED PARSER: Attempting to parse from analysis.response");
+        const parsedData = parseRawResponse(analysisData.response);
+        
+        if (parsedData && 
+            ((parsedData.skills && parsedData.skills.length > 0) || 
+             (parsedData.workHistory && parsedData.workHistory.length > 0) ||
+             (parsedData.redFlags && parsedData.redFlags.length > 0))) {
+          console.log("CENTRALIZED PARSER: Successfully parsed from analysis.response", {
+            skills: parsedData.skills.length,
+            workHistory: parsedData.workHistory.length,
+            redFlags: parsedData.redFlags.length
+          });
+          setParsedAnalysisData(parsedData);
+          setParsingSource("analysis.response");
+          return parsedData;
+        }
+      } catch (error) {
+        console.error("CENTRALIZED PARSER: Error parsing analysis.response:", error);
+      }
+    }
+    
+    // Step 3: Try to parse from redFlagData.rawResponse
+    if (redFlagData?.rawResponse) {
+      try {
+        console.log("CENTRALIZED PARSER: Attempting to parse from redFlagData.rawResponse");
+        const parsedData = parseRawResponse(redFlagData.rawResponse);
+        
+        if (parsedData && 
+            ((parsedData.skills && parsedData.skills.length > 0) || 
+             (parsedData.workHistory && parsedData.workHistory.length > 0) ||
+             (parsedData.redFlags && parsedData.redFlags.length > 0))) {
+          console.log("CENTRALIZED PARSER: Successfully parsed from redFlagData.rawResponse", {
+            skills: parsedData.skills.length,
+            workHistory: parsedData.workHistory.length,
+            redFlags: parsedData.redFlags.length
+          });
+          setParsedAnalysisData(parsedData);
+          setParsingSource("redFlagData.rawResponse");
+          return parsedData;
+        }
+      } catch (error) {
+        console.error("CENTRALIZED PARSER: Error parsing redFlagData.rawResponse:", error);
+      }
+    }
+    
+    // Step 4: If all previous attempts fail, create a composite result from different extractors
+    console.log("CENTRALIZED PARSER: All direct parsing attempts failed, creating fallback composite data");
+    const fallbackData: ParsedRawResponse = {
+      workHistory: [],
+      skills: [],
+      redFlags: [],
+      summary: "",
+      score: 0,
+      rawData: null
+    };
+    
+    try {
+      // Extract from main analysis data
+      if (analysisData) {
+        const extractedData = extractResumeData(analysisData);
+        fallbackData.skills = extractedData.skills || [];
+        fallbackData.workHistory = extractedData.workHistory || [];
+        fallbackData.redFlags = extractedData.redFlags || [];
+        fallbackData.summary = extractedData.summary || "";
+        
+        console.log("CENTRALIZED PARSER: Extracted data from standard extractor", {
+          skills: fallbackData.skills.length,
+          workHistory: fallbackData.workHistory.length,
+          redFlags: fallbackData.redFlags.length
+        });
+      }
+      
+      // If we still don't have work history, try from red flag data
+      if (fallbackData.workHistory.length === 0 && redFlagData) {
+        const rfExtractedData = extractResumeData(redFlagData);
+        if (rfExtractedData.workHistory && rfExtractedData.workHistory.length > 0) {
+          fallbackData.workHistory = rfExtractedData.workHistory;
+          console.log("CENTRALIZED PARSER: Used work history from red flag data");
+        }
+      }
+      
+      setParsedAnalysisData(fallbackData);
+      setParsingSource("fallback_composite");
+      return fallbackData;
+    } catch (error) {
+      console.error("CENTRALIZED PARSER: Error creating fallback composite data:", error);
+      setParsedAnalysisData(null);
+      setParsingSource("failed");
+      return null;
+    }
+  };
   
   // Resume query
   const { data: resume, error: resumeError, isLoading: resumeLoading } = useQuery({
