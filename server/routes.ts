@@ -580,6 +580,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Download resume file
+  app.get("/api/resumes/:id/download", async (req: Request, res: Response) => {
+    try {
+      const resumeId = req.params.id;
+      const resume = await storage.getResume(resumeId);
+      
+      if (!resume) {
+        return res.status(404).json({ message: "Resume not found" });
+      }
+      
+      // If we have the raw content (PDF data), serve it
+      if (resume.rawContent) {
+        const buffer = Buffer.from(resume.rawContent, 'base64');
+        
+        // Set appropriate headers based on file type
+        res.setHeader('Content-Type', resume.fileType || 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${resume.fileName || 'resume.pdf'}"`);
+        res.setHeader('Content-Length', buffer.length);
+        
+        return res.send(buffer);
+      }
+      
+      // If we don't have raw content, return just the text
+      res.setHeader('Content-Type', 'text/plain');
+      res.setHeader('Content-Disposition', `attachment; filename="${resume.fileName || 'resume.txt'}"`);
+      return res.send(resume.extractedText || 'No content available');
+      
+    } catch (error) {
+      console.error("Error downloading resume:", error);
+      res.status(500).json({ message: "Failed to download resume" });
+    }
+  });
+  
   // Create a new resume
   app.post(
     "/api/resumes",
