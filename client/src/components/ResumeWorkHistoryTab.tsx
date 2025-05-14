@@ -1,10 +1,11 @@
 import React from 'react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Briefcase, AlertTriangle, CheckCircle, Zap } from "lucide-react";
+import { AlertCircle, Briefcase, AlertTriangle, CheckCircle, Zap, Code } from "lucide-react";
 import { extractWorkHistory } from "@/lib/debug-utils";
 import { extractResumeData, extractRedFlagData } from "@/lib/resume-data-extractor";
 import { parseRawResponse } from "@/lib/raw-response-parser";
+import { useToast } from "@/hooks/use-toast";
 
 interface ResumeWorkHistoryTabProps {
   redFlagData: any;
@@ -12,6 +13,7 @@ interface ResumeWorkHistoryTabProps {
   isRedFlagLoading: boolean;
   redFlagError: any;
   analysis?: any; // Analysis data
+  runSkillsAnalysis?: () => Promise<void>; // Optional re-analysis function
 }
 
 export function ResumeWorkHistoryTab({
@@ -19,8 +21,11 @@ export function ResumeWorkHistoryTab({
   redFlagLoading,
   isRedFlagLoading,
   redFlagError,
-  analysis
+  analysis,
+  runSkillsAnalysis
 }: ResumeWorkHistoryTabProps) {
+  const { toast } = useToast();
+  
   if (redFlagLoading || isRedFlagLoading) {
     return (
       <div className="flex justify-center items-center h-36">
@@ -59,53 +64,24 @@ export function ResumeWorkHistoryTab({
   // Try to parse directly from rawResponse (best approach based on the screenshots)
   if (analysis?.rawResponse) {
     console.log("WorkHistory Tab: Found rawResponse field, attempting direct parsing");
-    console.log("WorkHistory Tab: Raw response type:", typeof analysis.rawResponse);
     
     try {
-      // Debug what's in the raw response
-      if (typeof analysis.rawResponse === 'string') {
-        // Check if the raw response contains our expected fields directly
-        if (analysis.rawResponse.includes("Work_History") && analysis.rawResponse.includes("Skills")) {
-          console.log("WorkHistory Tab: Raw response contains the expected fields!");
-        }
-        
-        // If it's a raw string from the debug tab (test sample data)
-        if (analysis.rawResponse.includes('"Work_History":')) {
-          console.log("WorkHistory Tab: Found Work_History array in raw response string");
-        }
-      } else if (typeof analysis.rawResponse === 'object') {
-        console.log("WorkHistory Tab: Raw response is an object with keys:", Object.keys(analysis.rawResponse));
-        
-        // If it's a nested structure with parsedJson
-        if (analysis.rawResponse.parsedJson) {
-          console.log("WorkHistory Tab: Raw response has parsed JSON with keys:", 
-            Object.keys(analysis.rawResponse.parsedJson));
-          
-          if (analysis.rawResponse.parsedJson.Work_History && 
-              Array.isArray(analysis.rawResponse.parsedJson.Work_History)) {
-            console.log("WorkHistory Tab: Found Work_History array in parsedJson with", 
-              analysis.rawResponse.parsedJson.Work_History.length, "entries");
-            workHistory = analysis.rawResponse.parsedJson.Work_History.map(item => ({
-              title: item.Title || item.title || '',
-              company: item.Company || item.company || '',
-              location: item.location || item.Location || '',
-              startDate: item.startDate || item.StartDate || '',
-              endDate: item.endDate || item.EndDate || '',
-              description: item.description || item.Description || '',
-              durationMonths: item.durationMonths || item.DurationMonths || 0,
-              isCurrentRole: item.isCurrentRole || item.IsCurrentRole || false
-            }));
-            dataSource = "parsed_json_work_history";
-            directDataAvailable = true;
-            console.log("WorkHistory Tab: Using Work_History from parsedJson");
-            return;
-          }
-        }
-        
-        // If rawResponse directly has Work_History
-        if (analysis.rawResponse.Work_History && Array.isArray(analysis.rawResponse.Work_History)) {
-          console.log("WorkHistory Tab: Found Work_History array directly in raw response object");
-          workHistory = analysis.rawResponse.Work_History.map(item => ({
+      // First, try to use the raw parser to extract the data
+      directData = parseRawResponse(analysis.rawResponse);
+      
+      if (directData && directData.workHistory && directData.workHistory.length > 0) {
+        console.log("WorkHistory Tab: Successfully parsed raw response. Found", directData.workHistory.length, "work history entries");
+        workHistory = directData.workHistory;
+        dataSource = "direct_raw_parser";
+        directDataAvailable = true;
+      }
+      // If rawResponse is an object with parsedJson field
+      else if (typeof analysis.rawResponse === 'object' && analysis.rawResponse.parsedJson) {
+        if (analysis.rawResponse.parsedJson.Work_History && 
+            Array.isArray(analysis.rawResponse.parsedJson.Work_History)) {
+          console.log("WorkHistory Tab: Found Work_History array in parsedJson with", 
+            analysis.rawResponse.parsedJson.Work_History.length, "entries");
+          workHistory = analysis.rawResponse.parsedJson.Work_History.map((item: any) => ({
             title: item.Title || item.title || '',
             company: item.Company || item.company || '',
             location: item.location || item.Location || '',
@@ -115,19 +91,26 @@ export function ResumeWorkHistoryTab({
             durationMonths: item.durationMonths || item.DurationMonths || 0,
             isCurrentRole: item.isCurrentRole || item.IsCurrentRole || false
           }));
-          dataSource = "direct_object_work_history";
+          dataSource = "parsed_json_work_history";
           directDataAvailable = true;
-          console.log("WorkHistory Tab: Using Work_History directly from object");
-          return;
         }
       }
-      
-      // Standard parser as last resort
-      directData = parseRawResponse(analysis.rawResponse);
-      
-      // Check if we successfully extracted work history
-      if (directData.workHistory && directData.workHistory.length > 0) {
-        console.log("SUCCESSFUL DIRECT EXTRACTION - Found Work_History array with", directData.workHistory.length, "entries");
+      // If rawResponse directly has Work_History
+      else if (typeof analysis.rawResponse === 'object' && 
+              analysis.rawResponse.Work_History && 
+              Array.isArray(analysis.rawResponse.Work_History)) {
+        console.log("WorkHistory Tab: Found Work_History array directly in raw response object");
+        workHistory = analysis.rawResponse.Work_History.map((item: any) => ({
+          title: item.Title || item.title || '',
+          company: item.Company || item.company || '',
+          location: item.location || item.Location || '',
+          startDate: item.startDate || item.StartDate || '',
+          endDate: item.endDate || item.EndDate || '',
+          description: item.description || item.Description || '',
+          durationMonths: item.durationMonths || item.DurationMonths || 0,
+          isCurrentRole: item.isCurrentRole || item.IsCurrentRole || false
+        }));
+        dataSource = "direct_object_work_history";
         directDataAvailable = true;
       }
     } catch (error) {
@@ -267,26 +250,56 @@ export function ResumeWorkHistoryTab({
   // Check if there are any warning flags in the analysis
   const hasAnalysisWarning = analysis && analysis.analysis_warning;
 
+  // Add button to re-run analysis directly from work history tab
+  const handleReAnalyze = async () => {
+    if (!runSkillsAnalysis) return;
+    
+    try {
+      await runSkillsAnalysis();
+      toast({
+        title: "Analysis initiated",
+        description: "Re-analyzing resume with custom prompt..."
+      });
+    } catch (error) {
+      console.error("Failed to run work history analysis:", error);
+      toast({
+        title: "Analysis failed",
+        description: "Could not re-analyze resume. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Show data source indicator */}
-      {dataSource && (
-        <div className="flex items-center mb-3">
-          <div className="flex items-center" title="Data source indicator">
-            {dataSource === 'direct_raw_parser' ? (
-              <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-md flex items-center">
-                <Zap className="h-3 w-3 mr-1" />
-                Using Work_History from direct LLM response
-              </span>
-            ) : (
-              <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-md flex items-center">
-                <Briefcase className="h-3 w-3 mr-1" />
-                Using {dataSource}
-              </span>
-            )}
-          </div>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center" title="Data source indicator">
+          {dataSource === 'direct_raw_parser' ? (
+            <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-md flex items-center">
+              <Zap className="h-3 w-3 mr-1" />
+              Using Work_History from direct LLM response
+            </span>
+          ) : (
+            <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-md flex items-center">
+              <Code className="h-3 w-3 mr-1" />
+              Using {dataSource}
+            </span>
+          )}
         </div>
-      )}
+        
+        {runSkillsAnalysis && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleReAnalyze} 
+            disabled={redFlagLoading || isRedFlagLoading}
+            className="text-xs"
+          >
+            {redFlagLoading || isRedFlagLoading ? "Analyzing..." : "Re-analyze Resume"}
+          </Button>
+        )}
+      </div>
       
       {/* Warning for potentially inconsistent analysis */}
       {hasAnalysisWarning && (

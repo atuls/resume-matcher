@@ -51,64 +51,58 @@ export function ResumeSkillsTab({
   let extractionSource = "";
   let directDataFound = false;
   
-  // Try the direct parser first (based on sample data format from screenshots)
+  // First, check if we have a raw response in the debug panel format
   if (analysis?.rawResponse) {
     console.log("Skills Tab: Found rawResponse, attempting direct parsing");
-    console.log("Raw response type:", typeof analysis.rawResponse);
     
     try {
-      // Debug what's in the raw response
-      if (typeof analysis.rawResponse === 'string') {
-        // Check if the raw response contains our expected fields directly
-        if (analysis.rawResponse.includes("Skills") && analysis.rawResponse.includes("Work_History")) {
-          console.log("Skills Tab: Raw response contains the expected fields!");
-        }
-        
-        // If it's a raw string from the debug tab (test sample data)
-        if (analysis.rawResponse.includes('"Skills":')) {
-          console.log("Skills Tab: Found Skills array in raw response string");
-        }
-      } else if (typeof analysis.rawResponse === 'object') {
-        console.log("Skills Tab: Raw response is an object with keys:", Object.keys(analysis.rawResponse));
-        
-        // If it's a nested structure with parsedJson
-        if (analysis.rawResponse.parsedJson) {
-          console.log("Skills Tab: Raw response has parsed JSON with keys:", 
-            Object.keys(analysis.rawResponse.parsedJson));
-          
-          if (analysis.rawResponse.parsedJson.Skills && 
-              Array.isArray(analysis.rawResponse.parsedJson.Skills)) {
-            console.log("Skills Tab: Found Skills array in parsedJson");
-            skillsList = analysis.rawResponse.parsedJson.Skills;
-            extractionSource = "parsed_json_skills";
-            directDataFound = true;
-            console.log("Skills Tab: Using Skills from parsedJson with", skillsList.length, "skills");
-            return;
-          }
-        }
-        
-        // If rawResponse directly has Skills
-        if (analysis.rawResponse.Skills && Array.isArray(analysis.rawResponse.Skills)) {
-          console.log("Skills Tab: Found Skills array directly in raw response object");
-          skillsList = analysis.rawResponse.Skills;
-          extractionSource = "direct_object_skills";
-          directDataFound = true;
-          console.log("Skills Tab: Using Skills directly from object with", skillsList.length, "skills");
-          return;
-        }
-      }
-      
-      // Try the general parser as a last resort
+      // Try to use the raw parser to extract the data
       const directData = parseRawResponse(analysis.rawResponse);
       
-      if (directData.skills.length > 0) {
-        console.log("Skills Tab: SUCCESSFUL DIRECT EXTRACTION - Found Skills array with", directData.skills.length, "entries");
+      if (directData && directData.skills && directData.skills.length > 0) {
+        console.log("Skills Tab: Successfully parsed raw response. Found", directData.skills.length, "skills");
         skillsList = directData.skills;
         extractionSource = "direct_raw_parser";
         directDataFound = true;
       }
     } catch (error) {
       console.error("Skills Tab: Error parsing raw response:", error);
+    }
+  }
+  
+  // Check if we have a response field that might contain the data (as seen in the screenshots)
+  if (!directDataFound && analysis?.response) {
+    console.log("Skills Tab: Trying to extract from response field");
+    
+    try {
+      // Try to parse the response field
+      let responseData;
+      
+      if (typeof analysis.response === 'string') {
+        try {
+          responseData = JSON.parse(analysis.response);
+        } catch (e) {
+          console.log("Skills Tab: response field is not JSON");
+          responseData = { text: analysis.response };
+        }
+      } else {
+        responseData = analysis.response;
+      }
+      
+      // Check if the response has a skills array
+      if (responseData && Array.isArray(responseData.skills)) {
+        console.log("Skills Tab: Found skills array in response field with", responseData.skills.length, "items");
+        skillsList = responseData.skills;
+        extractionSource = "response_field";
+        directDataFound = true;
+      } else if (responseData && Array.isArray(responseData.Skills)) {
+        console.log("Skills Tab: Found Skills array in response field with", responseData.Skills.length, "items");
+        skillsList = responseData.Skills;
+        extractionSource = "response_field";
+        directDataFound = true;
+      }
+    } catch (error) {
+      console.error("Skills Tab: Error extracting from response field:", error);
     }
   }
   
@@ -131,31 +125,58 @@ export function ResumeSkillsTab({
   
   console.log("Skills Tab: Final source:", extractionSource, "with", skillsList.length, "skills");
   
+  // Use the skills list to categorize skills
   const { technicalSkills, softSkills } = categorizeSkills(skillsList);
   
   // Check if there are any warning flags in the analysis
   const hasAnalysisWarning = analysis && analysis.analysis_warning;
   
+  // Add button to re-run analysis directly from skills tab
+  const handleReAnalyze = async () => {
+    try {
+      await runSkillsAnalysis();
+      toast({
+        title: "Analysis initiated",
+        description: "Re-analyzing skills from resume..."
+      });
+    } catch (error) {
+      console.error("Failed to run skills analysis:", error);
+      toast({
+        title: "Analysis failed",
+        description: "Could not re-analyze skills. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+  
   return (
     <div>
       {/* Show data source indicator */}
-      {extractionSource && (
-        <div className="flex items-center mb-3">
-          <div className="flex items-center" title="Data source indicator">
-            {extractionSource === 'direct_raw_parser' ? (
-              <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-md flex items-center">
-                <Zap className="h-3 w-3 mr-1" />
-                Using Skills from direct LLM response
-              </span>
-            ) : (
-              <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-md flex items-center">
-                <Code className="h-3 w-3 mr-1" />
-                Using {extractionSource}
-              </span>
-            )}
-          </div>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center" title="Data source indicator">
+          {extractionSource === 'direct_raw_parser' ? (
+            <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-md flex items-center">
+              <Zap className="h-3 w-3 mr-1" />
+              Using Skills from direct LLM response
+            </span>
+          ) : (
+            <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-md flex items-center">
+              <Code className="h-3 w-3 mr-1" />
+              Using {extractionSource}
+            </span>
+          )}
         </div>
-      )}
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleReAnalyze} 
+          disabled={analysisLoading}
+          className="text-xs"
+        >
+          {analysisLoading ? "Analyzing..." : "Re-analyze Skills"}
+        </Button>
+      </div>
       
       {/* Warning for potentially inconsistent analysis */}
       {hasAnalysisWarning && (
@@ -221,8 +242,6 @@ export function ResumeSkillsTab({
             )}
           </div>
         </div>
-        
-
       </div>
     </div>
   );
