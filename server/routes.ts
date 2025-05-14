@@ -603,6 +603,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Analyze or re-analyze a resume
+  app.post("/api/resumes/:id/analysis", async (req: Request, res: Response) => {
+    try {
+      const resumeId = req.params.id;
+      const forceRerun = req.query.forceRerun === 'true';
+      
+      // Get resume
+      const resume = await storage.getResume(resumeId);
+      if (!resume) {
+        return res.status(404).json({ message: "Resume not found" });
+      }
+      
+      // Find a suitable job description to use for the analysis
+      // First, check if there's a job ID in the query params
+      let jobDescriptionId = req.query.jobDescriptionId as string | undefined;
+      
+      // If no job ID provided, check if there are any existing analyses for this resume
+      if (!jobDescriptionId) {
+        const existingAnalyses = await storage.getAnalysisResultsByResume(resumeId);
+        if (existingAnalyses.length > 0) {
+          // Use the job ID from the most recent analysis
+          jobDescriptionId = existingAnalyses[0].jobDescriptionId;
+        } else {
+          // Get the first available job description
+          const allJobs = await storage.getAllJobDescriptions();
+          if (allJobs.length > 0) {
+            jobDescriptionId = allJobs[0].id;
+          } else {
+            return res.status(400).json({ message: "No job descriptions available for analysis" });
+          }
+        }
+      }
+      
+      // Get job description
+      const jobDescription = await storage.getJobDescription(jobDescriptionId);
+      if (!jobDescription) {
+        return res.status(404).json({ message: "Job description not found" });
+      }
+      
+      // Get job requirements
+      const requirements = await storage.getJobRequirements(jobDescriptionId);
+      
+      // Check for existing analysis (but only use it if not forced to re-analyze)
+      const existingAnalysis = await storage.getAnalysisResultForResume(resumeId, jobDescriptionId);
+      if (existingAnalysis && !forceRerun) {
+        // Return existing analysis instead of generating a new one
+        console.log(`Using existing analysis for resume ${resumeId} with job ${jobDescriptionId}`);
+        return res.json({ 
+          results: [existingAnalysis], 
+          message: "Using existing analysis" 
+        });
+      }
+      
+      // Run job match analysis
+      // Ensure that tags is never null before passing to analyzeResume
+      const requirementsWithTags = requirements.map(req => ({
+        requirement: req.requirement,
+        importance: req.importance,
+        tags: req.tags || [] // Convert null to empty array
+      }));
+      
+      // Run analysis with custom prompt
+      console.log(`Running fresh analysis for resume ${resumeId} with job ${jobDescriptionId}`);
+      
+      const analysisResult = await analyzeResume(
+        resume.extractedText,
+        jobDescription.description,
+        requirementsWithTags
+      );
+      
+      // Store analysis result
+      const overallScore = 
+        analysisResult.overallScore !== undefined && 
+        analysisResult.overallScore !== null && 
+        !isNaN(analysisResult.overallScore) 
+          ? analysisResult.overallScore 
+          : 50; // Default to middle score if missing
+      
+      const skillMatches = 
+        Array.isArray(analysisResult.skillMatches) 
+          ? JSON.stringify(analysisResult.skillMatches) 
+          : JSON.stringify([]);
+      
+      const result = await storage.createAnalysisResult({
+        resumeId,
+        jobDescriptionId,
+        overallScore,
+        skillMatches,
+        rawResponse: JSON.stringify(analysisResult.rawResponse || {}),
+        aiModel: analysisResult.aiModel || 'unknown'
+      });
+      
+      // Extract additional fields if not already present
+      if (!resume.candidateName && analysisResult.candidateName) {
+        await storage.updateResume(resumeId, {
+          candidateName: analysisResult.candidateName
+        });
+      }
+      
+      if (!resume.candidateTitle && analysisResult.candidateTitle) {
+        await storage.updateResume(resumeId, {
+          candidateTitle: analysisResult.candidateTitle
+        });
+      }
+      
+      res.json({ results: [result], message: "Analysis complete" });
+    } catch (error) {
+      console.error("Error analyzing resume:", error);
+      res.status(500).json({ message: "Failed to analyze resume" });
+    }
+  });
+  
   // Download resume file
   app.get("/api/resumes/:id/download", async (req: Request, res: Response) => {
     try {
