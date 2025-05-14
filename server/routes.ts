@@ -60,9 +60,16 @@ const clients = new Map<string, WebSocket>();
 
 // Simplified function to check AI services availability
 async function checkAIServicesAvailability() {
-  const openaiAvailable = process.env.OPENAI_API_KEY?.length > 20;
+  // Check if OpenAI API key is available and valid
+  const openaiKey = process.env.OPENAI_API_KEY || '';
+  const openaiAvailable = openaiKey.length > 20;
+  
+  // Check if Anthropic API key is available
   const anthropicAvailable = isAnthropicApiKeyAvailable();
-  const mistralAvailable = process.env.MISTRAL_API_KEY?.length > 20;
+  
+  // Check if Mistral API key is available and valid
+  const mistralKey = process.env.MISTRAL_API_KEY || '';
+  const mistralAvailable = mistralKey.length > 20;
 
   return {
     openai: openaiAvailable,
@@ -227,11 +234,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Extract text from the file
           try {
-            extractedText = await extractTextFromFile(req.file.buffer);
+            extractedText = await extractTextFromFile(req.file.buffer, req.file.originalname);
             console.log("Extracted text from file, length:", extractedText.length);
-          } catch (error) {
+          } catch (error: any) {
             console.error("Error extracting text from file:", error);
-            return res.status(400).json({ message: "Failed to extract text from file" });
+            return res.status(400).json({ 
+              message: `Failed to extract text from file: ${error.message || "Unknown error"}` 
+            });
           }
         }
         
@@ -566,13 +575,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (req.file) {
           fileContent = req.file.buffer.toString("base64");
           
-          // Extract text from the file
+          // Get the file extension to validate supported types
+          const fileExtension = req.file.originalname.split('.').pop()?.toLowerCase();
+          
+          if (!fileExtension || !['pdf', 'docx', 'doc', 'txt'].includes(fileExtension)) {
+            return res.status(400).json({ 
+              message: "Unsupported file format. Please upload PDF, DOCX, DOC, or TXT files only." 
+            });
+          }
+          
+          // Extract text from the file with improved error handling
           try {
-            extractedText = await extractTextFromFile(req.file.buffer);
+            console.log(`Processing ${fileExtension.toUpperCase()} file: ${req.file.originalname} (${req.file.size} bytes)`);
+            extractedText = await extractTextFromFile(req.file.buffer, req.file.originalname);
             console.log("Extracted text from file, length:", extractedText.length);
-          } catch (error) {
+            
+            // Check if we got meaningful text
+            if (!extractedText || extractedText.trim().length < 50) {
+              console.warn("Extracted text is too short or empty:", extractedText);
+              return res.status(400).json({ 
+                message: "Unable to extract meaningful text from this document. The file may be corrupted, password-protected, or contain only images without text."
+              });
+            }
+          } catch (error: any) {
             console.error("Error extracting text from file:", error);
-            return res.status(400).json({ message: "Failed to extract text from file" });
+            return res.status(400).json({
+              message: `Failed to extract text from file: ${error.message || "Unknown error"}`
+            });
           }
         }
         
@@ -591,28 +620,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (!candidateName || !currentTitle) {
           try {
-            const parsedData = await parseResume(resumeText);
-            candidateName = candidateName || parsedData.name;
-            currentTitle = currentTitle || parsedData.title;
-            currentCompany = currentCompany || parsedData.company;
+            const parsedData = parseResume(resumeText);
+            candidateName = candidateName || parsedData.candidateName;
+            currentTitle = currentTitle || parsedData.candidateTitle;
+            // currentCompany can remain null if not provided, as it's not part of the basic parseResume output
           } catch (error) {
             console.error("Error parsing resume:", error);
             // Continue with basic information
           }
         }
         
-        // Validate the data
-        const insertData = insertResumeSchema.parse({
+        // Prepare the data for the resume with only valid schema fields
+        const resumeData = {
           candidateName: candidateName || "Unknown Candidate",
+          candidateTitle: currentTitle || null,
+          rawContent: fileContent as string,
           extractedText: resumeText,
-          fileContent: fileContent || null,
-          fileName: req.file?.originalname || null,
-          fileType: req.file?.mimetype || null,
-          currentTitle: currentTitle || null,
-          currentCompany: currentCompany || null,
-          contacted: false,
-          contactedAt: null,
-        });
+          fileName: req.file?.originalname as string,
+          fileSize: req.file?.size as number,
+          fileType: req.file?.mimetype as string,
+          contactedInRippling: false,
+        };
+        
+        // Validate the data against the schema
+        const insertData = insertResumeSchema.parse(resumeData);
         
         const resume = await storage.createResume(insertData);
         res.status(201).json(resume);

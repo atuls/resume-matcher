@@ -9,15 +9,22 @@ import { isOpenAIApiKeyAvailable, extractTextFromPDFWithOpenAI } from './openaiP
 import { parsePDF } from './pdfParser';
 
 // Function to extract text from PDF with multiple extraction methods and fallbacks
-export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
+export async function extractTextFromPDF(buffer: Buffer, fileName?: string): Promise<string> {
   try {
+    // Log file information if provided
+    if (fileName) {
+      console.log(`Processing PDF file: ${fileName}`);
+    }
+    
     // First try Mistral OCR if available - it's the highest quality method
     if (MistralPdfExtractor.isApiKeyAvailable()) {
       try {
         // Try to use Mistral's OCR API for the best extraction quality
         return await MistralPdfExtractor.extractText(buffer);
-      } catch (mistralError) {
-        console.warn('Mistral OCR extraction failed, falling back to next method:', mistralError.message);
+      } catch (error) {
+        const mistralError = error as Error;
+        console.warn('Mistral OCR extraction failed, falling back to next method:', 
+          mistralError.message || 'Unknown error');
         // If Mistral fails, we'll try OpenAI next (if available) or fall back to basic parser
       }
     }
@@ -27,8 +34,10 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
       try {
         // Try to use OpenAI's Vision API for PDF extraction
         return await extractTextFromPDFWithOpenAI(buffer);
-      } catch (openaiError) {
-        console.warn('OpenAI Vision API extraction failed, falling back to basic parser:', openaiError.message);
+      } catch (error) {
+        const openaiError = error as Error;
+        console.warn('OpenAI Vision API extraction failed, falling back to basic parser:', 
+          openaiError.message || 'Unknown error');
         // If OpenAI fails, we'll fall back to our basic parser
       }
     }
@@ -70,12 +79,16 @@ export async function extractTextFromDOCX(buffer: Buffer): Promise<string> {
 }
 
 // Function to determine file type and extract text
-export async function extractTextFromFile(buffer: Buffer, fileName: string): Promise<string> {
+export async function extractTextFromFile(buffer: Buffer, fileName?: string): Promise<string> {
+  if (!fileName) {
+    throw new Error('Filename is required to determine file format');
+  }
+  
   const fileExtension = fileName.split('.').pop()?.toLowerCase();
 
   switch (fileExtension) {
     case 'pdf':
-      return extractTextFromPDF(buffer);
+      return extractTextFromPDF(buffer, fileName);
     case 'docx':
     case 'doc':
       return extractTextFromDOCX(buffer);
