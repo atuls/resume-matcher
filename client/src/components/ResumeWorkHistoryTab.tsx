@@ -1,7 +1,7 @@
 import React from 'react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Briefcase, AlertTriangle, CheckCircle } from "lucide-react";
+import { AlertCircle, Briefcase, AlertTriangle, CheckCircle, Zap } from "lucide-react";
 import { extractWorkHistory } from "@/lib/debug-utils";
 import { extractResumeData, extractRedFlagData } from "@/lib/resume-data-extractor";
 import { parseRawResponse } from "@/lib/raw-response-parser";
@@ -161,6 +161,25 @@ export function ResumeWorkHistoryTab({
 
   return (
     <div className="space-y-6">
+      {/* Show data source indicator */}
+      {dataSource && (
+        <div className="flex items-center mb-3">
+          <div className="flex items-center" title="Data source indicator">
+            {dataSource === 'direct_raw_parser' ? (
+              <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-md flex items-center">
+                <Zap className="h-3 w-3 mr-1" />
+                Using Work_History from direct LLM response
+              </span>
+            ) : (
+              <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-md flex items-center">
+                <Briefcase className="h-3 w-3 mr-1" />
+                Using {dataSource}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+      
       {/* Warning for potentially inconsistent analysis */}
       {hasAnalysisWarning && (
         <Alert className="mb-4 bg-amber-50 border-amber-200">
