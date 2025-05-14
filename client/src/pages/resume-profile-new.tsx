@@ -213,7 +213,6 @@ export default function ResumeProfilePage() {
         </div>
         
         <div className="flex gap-2">
-          {/* Add direct resume link */}
           <Button
             variant="outline"
             className="flex items-center"
@@ -258,17 +257,6 @@ export default function ResumeProfilePage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {resume.candidateName && (
-                <div className="flex items-start">
-                  <User className="mr-3 h-5 w-5 text-gray-500 mt-0.5" />
-                  <div>
-                    <div className="font-medium">{resume.candidateName}</div>
-                    {resume.candidateTitle && (
-                      <div className="text-sm text-gray-500">{resume.candidateTitle}</div>
-                    )}
-                  </div>
-                </div>
-              )}
               
               <div className="flex items-center">
                 <Calendar className="mr-3 h-5 w-5 text-gray-500" />

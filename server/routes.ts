@@ -746,7 +746,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/analyze", async (req: Request, res: Response) => {
     try {
       // Validate request data
-      const { resumeId, jobDescriptionId } = analyzeResumeSchema.parse(req.body);
+      const { resumeIds, jobDescriptionId } = analyzeResumeSchema.parse(req.body);
+      
+      // For backwards compatibility, use the first resumeId if provided as an array
+      const resumeId = Array.isArray(resumeIds) && resumeIds.length > 0 ? resumeIds[0] : null;
+      
+      if (!resumeId) {
+        return res.status(400).json({ message: "No resume ID provided" });
+      }
       
       // Get resume
       const resume = await storage.getResume(resumeId);
