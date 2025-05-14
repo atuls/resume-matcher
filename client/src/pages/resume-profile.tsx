@@ -620,6 +620,7 @@ export default function ResumeProfilePage() {
                       ...analysis,
                       resumeData: resume // Pass the resume data with extracted text
                     }}
+                    runSkillsAnalysis={runSkillsAnalysis} // Add ability to re-analyze from work history tab
                   />
                 </TabsContent>
                 
