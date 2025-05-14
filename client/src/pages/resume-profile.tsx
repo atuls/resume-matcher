@@ -536,7 +536,10 @@ export default function ResumeProfilePage() {
                     redFlagLoading={redFlagLoading}
                     isRedFlagLoading={isRedFlagLoading}
                     redFlagError={redFlagError}
-                    analysis={analysis}
+                    analysis={{
+                      ...analysis,
+                      resumeData: resume // Pass the resume data with extracted text
+                    }}
                   />
                 </TabsContent>
                 

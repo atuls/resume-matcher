@@ -49,12 +49,68 @@ export function ResumeWorkHistoryTab({
     redFlags: []
   };
   
-  // Use work history from either source, prioritizing analysis data
-  const workHistory = analysisExtractedData.workHistory.length > 0 
-    ? analysisExtractedData.workHistory 
-    : (rfExtractedData.workHistory.length > 0 
-      ? rfExtractedData.workHistory 
-      : extractWorkHistory(redFlagData)); // Fallback to old method if needed
+  // Try to parse work history from the resume itself if it's passed through the analysis object
+  let parsedWorkHistory: any[] = [];
+  
+  // For unstructured data that might be in the analysis object (from the raw resume)
+  try {
+    if (analysis?.resumeData?.extractedText) {
+      // Simple parser for work experience section in the format from the screenshots
+      const extractedText = analysis.resumeData.extractedText;
+      const workExperienceIndex = extractedText.indexOf('## WORK EXPERIENCE');
+      
+      if (workExperienceIndex !== -1) {
+        // Get text starting from work experience section
+        const workText = extractedText.substring(workExperienceIndex);
+        
+        // Look for job entries that start with ## pattern
+        const jobEntries = workText.split(/^## (?!WORK EXPERIENCE)/m).filter((entry, index) => index > 0);
+        
+        if (jobEntries.length > 0) {
+          parsedWorkHistory = jobEntries.map(entry => {
+            // Try to extract title, company, date
+            const lines = entry.trim().split('\n');
+            const titleLine = lines[0] || '';
+            
+            // Look for a line with a date pattern containing a dash
+            const dateLine = lines.find(line => /\d{1,2}\/\d{4}|\d{1,2}-\d{4}|[A-Za-z]+ \d{4} [—-] |[A-Za-z]+ \d{4} to |[A-Za-z]+ \d{4}[ —-]/i.test(line)) || '';
+            
+            // Attempt to parse details from the title line
+            let title = titleLine.split('|')[0]?.trim() || titleLine;
+            let company = titleLine.includes('|') ? titleLine.split('|')[1]?.trim() : '';
+            
+            // Get description - any lines after the first date line
+            const descriptionStartIdx = lines.indexOf(dateLine) + 1;
+            const description = lines.slice(descriptionStartIdx).join('\n').trim();
+            
+            return {
+              Title: title,
+              Company: company,
+              startDate: dateLine,
+              endDate: dateLine.includes('Current') || dateLine.includes('Present') ? 'Present' : '',
+              description: description
+            };
+          });
+          
+          console.log("Successfully parsed work history from raw resume text", parsedWorkHistory);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error parsing work history from raw text:", error);
+  }
+  
+  // Use work history sources in priority order:
+  // 1. Directly parsed from resume text (most accurate)
+  // 2. From AI analysis data
+  // 3. From red flag analysis
+  const workHistory = parsedWorkHistory.length > 0
+    ? parsedWorkHistory
+    : (analysisExtractedData.workHistory.length > 0 
+      ? analysisExtractedData.workHistory 
+      : (rfExtractedData.workHistory.length > 0 
+        ? rfExtractedData.workHistory 
+        : extractWorkHistory(redFlagData))); // Last fallback to old method
   
   console.log("Work history from analysis:", analysisExtractedData.workHistory);
   console.log("Work history from red flags:", rfExtractedData.workHistory);
@@ -69,13 +125,7 @@ export function ResumeWorkHistoryTab({
   
   return (
     <div className="space-y-6">
-      {/* Work History Debug Section */}
-      <div className="mb-4 p-4 bg-gray-50 rounded-md">
-        <h3 className="text-sm font-medium mb-2">Work History Analysis Debug:</h3>
-        <pre className="text-xs overflow-auto max-h-40 p-3 bg-gray-100 rounded-md">
-          {JSON.stringify(redFlagData, null, 2) || "No red flag analysis data available"}
-        </pre>
-      </div>
+      {/* Work History Debug Section - Only shown in Debug tab now */}
       
       {/* Red Flags Section */}
       <div className="rounded-md border p-4">
