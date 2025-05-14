@@ -24,7 +24,9 @@ export function ResumeWorkHistoryTab({
   isRedFlagLoading,
   redFlagError,
   analysis,
-  runSkillsAnalysis
+  runSkillsAnalysis,
+  parsedData,
+  dataSource
 }: ResumeWorkHistoryTabProps) {
   const { toast } = useToast();
   
@@ -55,52 +57,63 @@ export function ResumeWorkHistoryTab({
   // 2. From existing extractors as fallback
   
   // Initialize variables
-  let dataSource = "";
+  let workHistorySource = "";
   let workHistory: any[] = [];
   
-  // Parse raw response directly (highest priority)
-  // This handles the exact format seen in your screenshots with Work_History field
-  let directData = { workHistory: [], skills: [], redFlags: [], summary: "", score: 0, rawData: null };
-  let directDataAvailable = false;
-  
-  // Try to parse directly from rawResponse (best approach based on the screenshots)
-  if (analysis?.rawResponse) {
-    console.log("WorkHistory Tab: Found rawResponse field, attempting direct parsing");
+  // Priority 1: Use centralized parsed data if available
+  if (parsedData && parsedData.workHistory && parsedData.workHistory.length > 0) {
+    console.log("WorkHistory Tab: Using centralized parsed data. Found", parsedData.workHistory.length, "work history entries");
+    workHistory = parsedData.workHistory;
+    workHistorySource = dataSource || "centralized_parser";
+  }
+  // Priority 2: Parse raw response directly
+  else {
+    // This handles the exact format seen in your screenshots with Work_History field
+    let directData = { workHistory: [], skills: [], redFlags: [], summary: "", score: 0, rawData: null };
+    let directDataAvailable = false;
     
-    try {
-      // First, try to use the raw parser to extract the data
-      directData = parseRawResponse(analysis.rawResponse);
+    // Try to parse directly from rawResponse
+    if (analysis?.rawResponse) {
+      console.log("WorkHistory Tab: Found rawResponse field, attempting direct parsing");
       
-      if (directData && directData.workHistory && directData.workHistory.length > 0) {
-        console.log("WorkHistory Tab: Successfully parsed raw response. Found", directData.workHistory.length, "work history entries");
-        workHistory = directData.workHistory;
-        dataSource = "direct_raw_parser";
-        directDataAvailable = true;
-      }
-      // If rawResponse is an object with parsedJson field
-      else if (typeof analysis.rawResponse === 'object' && analysis.rawResponse.parsedJson) {
-        if (analysis.rawResponse.parsedJson.Work_History && 
-            Array.isArray(analysis.rawResponse.parsedJson.Work_History)) {
-          console.log("WorkHistory Tab: Found Work_History array in parsedJson with", 
-            analysis.rawResponse.parsedJson.Work_History.length, "entries");
-          workHistory = analysis.rawResponse.parsedJson.Work_History.map((item: any) => ({
-            title: item.Title || item.title || '',
-            company: item.Company || item.company || '',
-            location: item.location || item.Location || '',
-            startDate: item.startDate || item.StartDate || '',
-            endDate: item.endDate || item.EndDate || '',
-            description: item.description || item.Description || '',
-            durationMonths: item.durationMonths || item.DurationMonths || 0,
-            isCurrentRole: item.isCurrentRole || item.IsCurrentRole || false
-          }));
-          dataSource = "parsed_json_work_history";
+      try {
+        // First, try to use the raw parser to extract the data
+        directData = parseRawResponse(analysis.rawResponse);
+        
+        if (directData && directData.workHistory && directData.workHistory.length > 0) {
+          console.log("WorkHistory Tab: Successfully parsed raw response. Found", directData.workHistory.length, "work history entries");
+          workHistory = directData.workHistory;
+          workHistorySource = "direct_raw_parser";
           directDataAvailable = true;
+        } 
+        // If rawResponse is an object with parsedJson field
+        else if (typeof analysis.rawResponse === 'object' && analysis.rawResponse.parsedJson) {
+          if (analysis.rawResponse.parsedJson.Work_History && 
+              Array.isArray(analysis.rawResponse.parsedJson.Work_History)) {
+            console.log("WorkHistory Tab: Found Work_History array in parsedJson with", 
+              analysis.rawResponse.parsedJson.Work_History.length, "entries");
+            workHistory = analysis.rawResponse.parsedJson.Work_History.map((item: any) => ({
+              title: item.Title || item.title || '',
+              company: item.Company || item.company || '',
+              location: item.location || item.Location || '',
+              startDate: item.startDate || item.StartDate || '',
+              endDate: item.endDate || item.EndDate || '',
+              description: item.description || item.Description || '',
+              durationMonths: item.durationMonths || item.DurationMonths || 0,
+              isCurrentRole: item.isCurrentRole || item.IsCurrentRole || false
+            }));
+            workHistorySource = "parsed_json_work_history";
+            directDataAvailable = true;
+          }
         }
+      } catch (error) {
+        console.error("WorkHistory Tab: Error parsing raw response:", error);
       }
+      
       // If rawResponse directly has Work_History
-      else if (typeof analysis.rawResponse === 'object' && 
-              analysis.rawResponse.Work_History && 
-              Array.isArray(analysis.rawResponse.Work_History)) {
+      if (typeof analysis.rawResponse === 'object' && 
+          analysis.rawResponse.Work_History && 
+          Array.isArray(analysis.rawResponse.Work_History)) {
         console.log("WorkHistory Tab: Found Work_History array directly in raw response object");
         workHistory = analysis.rawResponse.Work_History.map((item: any) => ({
           title: item.Title || item.title || '',
@@ -112,11 +125,9 @@ export function ResumeWorkHistoryTab({
           durationMonths: item.durationMonths || item.DurationMonths || 0,
           isCurrentRole: item.isCurrentRole || item.IsCurrentRole || false
         }));
-        dataSource = "direct_object_work_history";
+        workHistorySource = "direct_object_work_history";
         directDataAvailable = true;
       }
-    } catch (error) {
-      console.error("WorkHistory Tab: Error parsing raw response:", error);
     }
   }
   

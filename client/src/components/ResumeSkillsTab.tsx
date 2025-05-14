@@ -24,7 +24,9 @@ export function ResumeSkillsTab({
   analysisError,
   resumeId,
   runSkillsAnalysis,
-  setAnalysisLoading
+  setAnalysisLoading,
+  parsedData,
+  dataSource
 }: ResumeSkillsTabProps) {
   const { toast } = useToast();
   
@@ -48,13 +50,20 @@ export function ResumeSkillsTab({
     );
   }
 
-  // Use the direct parser first (highest priority)
-  let skillsList: string[] = [];
+  // Initialize skills list and extraction source
+  let skillsList: any[] = [];
   let extractionSource = "";
   let directDataFound = false;
   
-  // First, check if we have a raw response in the debug panel format
-  if (analysis?.rawResponse) {
+  // Priority 1: Use centralized parsed data if available
+  if (parsedData && parsedData.skills && parsedData.skills.length > 0) {
+    console.log("Skills Tab: Using centralized parsed data. Found", parsedData.skills.length, "skills");
+    skillsList = parsedData.skills;
+    extractionSource = dataSource || "centralized_parser";
+    directDataFound = true;
+  }
+  // Priority 2: Check raw response in debug panel format
+  else if (analysis?.rawResponse && !directDataFound) {
     console.log("Skills Tab: Found rawResponse, attempting direct parsing");
     
     try {
@@ -72,7 +81,7 @@ export function ResumeSkillsTab({
     }
   }
   
-  // Check if we have a response field that might contain the data (as seen in the screenshots)
+  // Priority 3: Check response field
   if (!directDataFound && analysis?.response) {
     console.log("Skills Tab: Trying to extract from response field");
     
@@ -108,7 +117,7 @@ export function ResumeSkillsTab({
     }
   }
   
-  // If direct parser didn't find skills, fall back to the standard extractor
+  // Priority 4: Use standard extractor
   if (!directDataFound) {
     console.log("Skills Tab: Direct parsing failed, falling back to standard extractor");
     const extractedData = extractResumeData(analysis);
@@ -156,7 +165,12 @@ export function ResumeSkillsTab({
       {/* Show data source indicator */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center" title="Data source indicator">
-          {extractionSource === 'direct_raw_parser' ? (
+          {extractionSource === 'centralized_parser' || dataSource ? (
+            <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-md flex items-center">
+              <Zap className="h-3 w-3 mr-1" />
+              Using Centralized Parser ({dataSource || extractionSource})
+            </span>
+          ) : extractionSource === 'direct_raw_parser' ? (
             <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-md flex items-center">
               <Zap className="h-3 w-3 mr-1" />
               Using Skills from direct LLM response
