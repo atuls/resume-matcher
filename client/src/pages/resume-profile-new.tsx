@@ -503,26 +503,32 @@ export default function ResumeProfilePage() {
                 </div>
               
                 {/* Matched Jobs List */}
-                {resumeScore && resumeScore.length > 0 && (
+                {resumeScore && Array.isArray(resumeScore) && resumeScore.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="text-sm text-gray-500 mb-1">Matched Jobs</h4>
-                    {resumeScore.map((score: any) => (
-                      <div key={score.jobDescriptionId} className="p-3 bg-gray-50 rounded-md">
-                        <div className="flex justify-between items-center">
-                          <div className="font-medium">{score.jobDescription?.title || "Untitled Job"}</div>
-                          <Badge className={parseInt(score.score) >= 70 ? "bg-green-500" : "bg-amber-500"}>
-                            {score.score}%
-                          </Badge>
+                    {resumeScore.map((score: any) => {
+                      // Extract score values safely
+                      const scoreValue = score.score ? 
+                        (typeof score.score === 'number' ? score.score : parseInt(score.score)) : 0;
+                      
+                      return (
+                        <div key={score.jobDescriptionId} className="p-3 bg-gray-50 rounded-md">
+                          <div className="flex justify-between items-center">
+                            <div className="font-medium">{score.jobDescription?.title || "Untitled Job"}</div>
+                            <Badge className={scoreValue >= 70 ? "bg-green-500" : "bg-amber-500"}>
+                              {scoreValue}%
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            Matched {formatDistance(new Date(score.matchedAt), new Date(), { addSuffix: true })}
+                          </div>
                         </div>
-                        <div className="text-sm text-gray-500">
-                          Matched {formatDistance(new Date(score.matchedAt), new Date(), { addSuffix: true })}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )} 
                 
-                {(!resumeScore || resumeScore.length === 0) && (
+                {(!resumeScore || !Array.isArray(resumeScore) || resumeScore.length === 0) && (
                   <div className="text-sm text-gray-500 italic">
                     No job matches yet. Select a job and run analysis to find matches.
                   </div>

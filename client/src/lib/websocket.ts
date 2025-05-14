@@ -30,17 +30,20 @@ class WebSocketService {
     
     try {
       // Determine the WebSocket URL based on the current location
-      // Instead of using the Vite dev socket approach (which is showing undefined port),
-      // we'll use the full host with path for a more reliable connection
+      // Use the current origin (protocol + host) to ensure we connect to the correct server
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const host = window.location.host;
       
-      // Use the complete URL to ensure we connect to the right endpoint
+      // Since we're using the path '/ws' on the server, include it in the URL
       const wsUrl = `${protocol}//${host}/ws`;
       
-      console.log(`Connecting to WebSocket at ${wsUrl} (protocol: ${protocol}, host: ${host})`);
+      console.log(`Connecting to WebSocket at ${wsUrl}`);
       
-      this.socket = new WebSocket(wsUrl);
+      // Generate a random client ID to help with debugging
+      const clientId = Math.random().toString(36).substring(2, 10);
+      
+      // Use a simple token to help with connection debugging (not for security)
+      this.socket = new WebSocket(`${wsUrl}?clientId=${clientId}`);
       
       this.socket.onopen = this.handleOpen.bind(this);
       this.socket.onmessage = this.handleMessage.bind(this);
