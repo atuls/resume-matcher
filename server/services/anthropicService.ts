@@ -281,21 +281,22 @@ export async function analyzeResumeWithClaude(
     let systemPrompt = '';
     let userPrompt = '';
     try {
-      // First, try to get the Claude-specific prompt
-      const claudePromptSetting = await storage.getSetting('claude_analysis_prompt');
-      if (claudePromptSetting?.value) {
-        systemPrompt = claudePromptSetting.value;
-        console.log("Using Claude-specific prompt from settings");
+      // First, try to get the general prompt which should work for Claude too
+      const analysisPromptSetting = await storage.getSetting('analysis_prompt');
+      if (analysisPromptSetting?.value) {
+        // Use a minimal system prompt and put the custom prompt in the user message
+        systemPrompt = "You are Claude, a truthful AI assistant focused on accurate resume analysis. Only analyze the specific text provided. Never fabricate information. Return analysis in valid JSON format.";
+        console.log("Using custom analysis prompt from settings");
         
         // Get custom analysis prompt but add strict verification requirements
-        const originalClaudePrompt = claudePromptSetting.value;
+        const originalPrompt = analysisPromptSetting.value;
         
         // Enhanced prompt with strict verification markers to prevent fabrication
         userPrompt = `CRITICAL INSTRUCTION: You must ONLY analyze the exact resume text provided below.
 DO NOT invent, fabricate, or hallucinate ANY information that is not explicitly stated in this resume.
 Your response MUST contain ONLY information that appears verbatim in the resume text.
 
-${originalClaudePrompt.replace('{JOB_DESCRIPTION}', truncatedJob).replace('{RESUME}', truncatedResume)}
+${originalPrompt.replace('{JOB_DESCRIPTION}', truncatedJob).replace('{RESUME}', truncatedResume)}
 
 IMPORTANT VERIFICATION MARKERS (These exact terms MUST appear in your analysis if they appear in the resume):
 - Candidate Name: "${truncatedResume.includes('Olivia DeSpirito') ? 'Olivia DeSpirito' : 'unknown'}"
@@ -318,15 +319,17 @@ Your response will be verified against these key details, and discrepancies will
         console.log(`Resume text length: ${truncatedResume.length}`);
         console.log("===========================================");
       } else {
-        // Fall back to the general analysis prompt if no Claude-specific one exists
-        const generalPromptSetting = await storage.getSetting('analysis_prompt');
-        if (generalPromptSetting?.value) {
-          // If using the general prompt, put instructions in system and content in user message
-          systemPrompt = "You are Claude, a truthful AI assistant focused on accurate resume analysis. Only analyze the specific text provided. Never fabricate information. Only return valid JSON format.";
-          // Modify the general prompt to include verification signals and forced focus
-          const enhancedPrompt = generalPromptSetting.value
-            .replace('{JOB_DESCRIPTION}', truncatedJob)
-            .replace('{RESUME}', truncatedResume);
+        // If no analysis prompt setting exists, use default minimal prompt
+        console.log("No analysis prompt found in settings, using default minimal prompt");
+        systemPrompt = "You are Claude, a truthful AI assistant focused on accurate resume analysis. Only analyze the specific text provided. Never fabricate information. Return analysis in valid JSON format.";
+        
+        // Create a basic prompt with just the job and resume
+        const basicPrompt = `
+Job Description:
+{JOB_DESCRIPTION}
+
+Resume:
+{RESUME}`.replace('{JOB_DESCRIPTION}', truncatedJob).replace('{RESUME}', truncatedResume);
             
           userPrompt = `CRITICAL INSTRUCTION: You must analyze ONLY the exact resume text provided below for the job description provided.
 - Do NOT fabricate or hallucinate any work experience, skills, or education that does not appear in the resume.
@@ -335,7 +338,7 @@ Your response will be verified against these key details, and discrepancies will
 - If the resume lacks certain information, acknowledge this gap rather than inventing details.
 - Your analysis must be based SOLELY on the exact resume content, not what you think a good resume should contain.
 
-${enhancedPrompt}
+${basicPrompt}
 
 IMPORTANT VERIFICATION MARKERS (These exact terms MUST appear in your analysis if they appear in the resume):
 - Candidate Name: "${truncatedResume.includes('Olivia DeSpirito') ? 'Olivia DeSpirito' : 'unknown'}"
