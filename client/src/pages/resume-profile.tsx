@@ -7,7 +7,7 @@ import {
   User, FileText, Calendar, ArrowLeft, Mail, MapPin, Phone, Award, 
   Briefcase, Code, AlertCircle, BarChart3, CheckCircle, XCircle,
   RefreshCw, UserCheck, Sparkles, AlertTriangle, Loader2, Download, FileSearch,
-  ArrowUpRight
+  ArrowUpRight, Zap
 } from "lucide-react";
 import { DebugPanel } from "@/components/DebugPanel";
 import { ResumeSkillsTab } from "@/components/ResumeSkillsTab";
