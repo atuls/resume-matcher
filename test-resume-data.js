@@ -1,6 +1,6 @@
 // Test script to debug resume data mismatch issue
-const { pool } = require('./server/db');
-const { config } = require('dotenv');
+import { pool } from './server/db.js';
+import { config } from 'dotenv';
 
 // Load environment variables
 config();

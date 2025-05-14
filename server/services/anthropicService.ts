@@ -284,6 +284,15 @@ export async function analyzeResumeWithClaude(
         
         // Use a simplified user prompt when we have a custom system prompt
         userPrompt = `JOB DESCRIPTION:\n${truncatedJob}\n\nRESUME:\n${truncatedResume}`;
+        
+        // Add detailed debugging for what is being sent to Claude
+        console.log("======= CLAUDE REQUEST CONTENT DEBUG =======");
+        console.log(`Resume ID debugging (if available in context): ${truncatedResume.includes('59b024e9-b079-4976-bd40-46e720602a3b') ? 'ID found in text' : 'ID not in text'}`);
+        console.log(`Resume contains "Olivia DeSpirito"? ${truncatedResume.includes('Olivia DeSpirito')}`);
+        console.log(`Resume contains "HOTWORX"? ${truncatedResume.includes('HOTWORX')}`);
+        console.log(`Resume first 200 chars: ${truncatedResume.substring(0, 200)}`);
+        console.log(`Resume text length: ${truncatedResume.length}`);
+        console.log("===========================================");
       } else {
         // Fall back to the general analysis prompt if no Claude-specific one exists
         const generalPromptSetting = await storage.getSetting('analysis_prompt');
@@ -294,6 +303,15 @@ export async function analyzeResumeWithClaude(
             .replace('{JOB_DESCRIPTION}', truncatedJob)
             .replace('{RESUME}', truncatedResume);
           console.log("Using general analysis prompt from settings for Claude");
+          
+          // Add detailed debugging for what is being sent to Claude
+          console.log("======= CLAUDE REQUEST CONTENT DEBUG (GENERAL) =======");
+          console.log(`Resume ID debugging (if available in context): ${truncatedResume.includes('59b024e9-b079-4976-bd40-46e720602a3b') ? 'ID found in text' : 'ID not in text'}`);
+          console.log(`Resume contains "Olivia DeSpirito"? ${truncatedResume.includes('Olivia DeSpirito')}`);
+          console.log(`Resume contains "HOTWORX"? ${truncatedResume.includes('HOTWORX')}`);
+          console.log(`Resume first 200 chars: ${truncatedResume.substring(0, 200)}`);
+          console.log(`Resume text length: ${truncatedResume.length}`);
+          console.log("===========================================");
         } else {
           throw new Error('No analysis prompt found in settings');
         }
