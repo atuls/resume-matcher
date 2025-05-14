@@ -34,13 +34,56 @@ export function extractResumeData(analysisResult: any): ExtractedResumeData {
     // Normalize - unwrap array if needed
     const data = Array.isArray(analysisResult) ? analysisResult[0] : analysisResult;
     
-    // Extract score - usually at the top level
-    result.score = data.overallScore || 0;
+    // Extract score from various possible formats
+    if (data.matching_score) {
+      result.score = data.matching_score;
+    } else if (data.overallScore) {
+      result.score = data.overallScore;
+    } else if (data.score) {
+      result.score = data.score;
+    } else {
+      result.score = 0;
+    }
     
     // Try to extract work history from red flag analysis (which has different structure)
     if (data.analysis && data.analysis.recentRoles && Array.isArray(data.analysis.recentRoles)) {
       console.log("Found work history in data.analysis.recentRoles");
       result.workHistory = data.analysis.recentRoles;
+    }
+    
+    // Try to extract work history directly from the response (Claude's new format with Work_History field)
+    if (data.rawResponse && typeof data.rawResponse === 'string') {
+      try {
+        const parsedResponse = JSON.parse(data.rawResponse);
+        if (Array.isArray(parsedResponse.Work_History)) {
+          console.log("Found work history directly in response.Work_History");
+          result.workHistory = parsedResponse.Work_History;
+        }
+        if (Array.isArray(parsedResponse.Skills)) {
+          console.log("Found skills directly in response.Skills");
+          result.skills = parsedResponse.Skills;
+        }
+        if (Array.isArray(parsedResponse.Red_Flags)) {
+          console.log("Found red flags directly in response.Red_Flags");
+          result.redFlags = parsedResponse.Red_Flags;
+        }
+      } catch (err) {
+        // Ignore JSON parsing errors - this is just an attempt at direct extraction
+      }
+    }
+    
+    // Check for direct array fields at top level of data or rawResponse
+    if (Array.isArray(data.Work_History)) {
+      console.log("Found work history at data.Work_History");
+      result.workHistory = data.Work_History;
+    }
+    if (Array.isArray(data.Skills)) {
+      console.log("Found skills at data.Skills");
+      result.skills = data.Skills;
+    }
+    if (Array.isArray(data.Red_Flags)) {
+      console.log("Found red flags at data.Red_Flags");
+      result.redFlags = data.Red_Flags;
     }
     
     // Extract from rawResponse
@@ -86,6 +129,8 @@ export function extractResumeData(analysisResult: any): ExtractedResumeData {
                 result.skills = parsedJson.Skills;
               } else if (Array.isArray(parsedJson.skills)) {
                 result.skills = parsedJson.skills;
+              } else if (Array.isArray(parsedJson['skills'])) {
+                result.skills = parsedJson['skills']; 
               }
               
               // Extract work history if available
@@ -95,6 +140,8 @@ export function extractResumeData(analysisResult: any): ExtractedResumeData {
                 result.workHistory = parsedJson.WorkHistory;
               } else if (Array.isArray(parsedJson.work_history)) {
                 result.workHistory = parsedJson.work_history;
+              } else if (Array.isArray(parsedJson.Work_History)) {
+                result.workHistory = parsedJson.Work_History;
               }
               
               // Extract red flags if available
@@ -104,6 +151,8 @@ export function extractResumeData(analysisResult: any): ExtractedResumeData {
                 result.redFlags = parsedJson.RedFlags;
               } else if (Array.isArray(parsedJson.red_flags)) {
                 result.redFlags = parsedJson.red_flags;
+              } else if (Array.isArray(parsedJson.Red_Flags)) {
+                result.redFlags = parsedJson.Red_Flags;
               }
               
               // Extract summary if available
@@ -111,6 +160,9 @@ export function extractResumeData(analysisResult: any): ExtractedResumeData {
                 result.summary = parsedJson.Summary;
               } else if (typeof parsedJson.summary === 'string') {
                 result.summary = parsedJson.summary;
+              } else if (parsedJson.Summary && typeof parsedJson.Summary === 'object' && parsedJson.Summary.text) {
+                // Handle nested summary object
+                result.summary = parsedJson.Summary.text;
               }
             }
           } catch (e) {
