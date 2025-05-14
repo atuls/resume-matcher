@@ -213,6 +213,19 @@ export default function ResumeProfilePage() {
         </div>
         
         <div className="flex gap-2">
+          {/* Add direct resume link */}
+          <Button
+            variant="outline"
+            className="flex items-center"
+            onClick={() => {
+              const downloadUrl = `/api/resumes/${resumeId}/download`;
+              window.open(downloadUrl, '_blank');
+            }}
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            View Resume
+          </Button>
+          
           <Button
             variant="outline"
             className="flex items-center"
