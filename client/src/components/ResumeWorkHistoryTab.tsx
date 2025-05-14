@@ -40,36 +40,93 @@ export function ResumeWorkHistoryTab({
     );
   }
 
-  // Extract work history from both analysis and red flag data
-  const rfExtractedData = extractResumeData(redFlagData);
+  // Important: 
+  // We need to prioritize extracting everything from the same data source for consistency
+  // Order of priority:
+  // 1. From main analysis data (preferred source for consistency with Skills tab)
+  // 2. From red flag analysis data (fallback) 
+  // 3. From legacy extractWorkHistory method (last resort)
   
-  // Also extract from analysis data if available
   const analysisExtractedData = analysis ? extractResumeData(analysis) : {
     workHistory: [],
     skills: [],
-    redFlags: []
+    redFlags: [],
+    summary: ""
   };
   
-  // Use work history sources in priority order:
-  // 1. From AI analysis data (preferred source)
-  // 2. From red flag analysis data
-  // 3. Fallback to old method if needed
-  const workHistory = analysisExtractedData.workHistory.length > 0 
-    ? analysisExtractedData.workHistory 
-    : (rfExtractedData.workHistory.length > 0 
-      ? rfExtractedData.workHistory 
-      : extractWorkHistory(redFlagData));
+  const rfExtractedData = extractResumeData(redFlagData);
   
-  console.log("Work history from analysis:", analysisExtractedData.workHistory);
-  console.log("Work history from red flags:", rfExtractedData.workHistory);
+  // For logging and debugging
+  console.log("Source priority order: 1) main analysis, 2) red flag analysis, 3) legacy method");
+  console.log("Work history from analysis (source 1):", analysisExtractedData.workHistory);
+  console.log("Work history from red flags (source 2):", rfExtractedData.workHistory);
+  console.log("Legacy work history method result (source 3):", extractWorkHistory(redFlagData));
+  
+  // Determine which source we're using (for potential indicators in the UI)
+  let dataSource = "";
+  let workHistory = [];
+  
+  if (analysisExtractedData.workHistory && analysisExtractedData.workHistory.length > 0) {
+    workHistory = analysisExtractedData.workHistory;
+    dataSource = "main_analysis";
+    console.log("Using work history from main analysis (source 1) for consistency");
+  } else if (rfExtractedData.workHistory && rfExtractedData.workHistory.length > 0) {
+    workHistory = rfExtractedData.workHistory;
+    dataSource = "red_flag_analysis";
+    console.log("Using work history from red flag analysis (source 2)");
+  } else {
+    workHistory = extractWorkHistory(redFlagData);
+    dataSource = "legacy_method";
+    console.log("Using work history from legacy extraction method (source 3)");
+  }
+  
+  console.log("Final work history source:", dataSource);
   console.log("Final work history:", workHistory);
     
-  // Extract red flags using our specialized extractor
-  const redFlags = extractRedFlagData(redFlagData);
-  // Fallback to old method if our extractor doesn't find anything
-  const potentialRedFlags = redFlags.length > 0 
-    ? redFlags.map(flag => ({ description: flag })) 
-    : redFlagData?.analysis?.potentialRedFlags || [];
+  // Extract red flags using the same source priority order for consistency
+  // First try using main analysis data if available (matching Skills tab source)
+  const analysisRedFlags = analysisExtractedData.redFlags;
+  // Then try red flag data
+  const rfRedFlags = extractRedFlagData(redFlagData);
+  // Finally fall back to old method if needed
+  
+  console.log("Red flags from analysis (source 1):", analysisRedFlags);
+  console.log("Red flags from red flag analysis (source 2):", rfRedFlags);
+  console.log("Legacy red flags (source 3):", redFlagData?.analysis?.potentialRedFlags || []);
+  
+  // Determine red flag source based on same priority ordering
+  let redFlagSource = "";
+  let redFlags = [];
+  
+  if (analysisRedFlags && analysisRedFlags.length > 0) {
+    redFlags = analysisRedFlags;
+    redFlagSource = "main_analysis";
+    console.log("Using red flags from main analysis (source 1) for consistency");
+  } else if (rfRedFlags && rfRedFlags.length > 0) {
+    redFlags = rfRedFlags;
+    redFlagSource = "red_flag_analysis";
+    console.log("Using red flags from red flag analysis (source 2)");
+  } else {
+    redFlags = redFlagData?.analysis?.potentialRedFlags || [];
+    redFlagSource = "legacy_method";
+    console.log("Using red flags from legacy extraction method (source 3)");
+  }
+  
+  console.log("Final red flags source:", redFlagSource);
+  console.log("Final red flags:", redFlags);
+  
+  // Format for UI display - ensure consistent structure regardless of source
+  const potentialRedFlags = redFlags.map(flag => {
+    if (typeof flag === 'string') {
+      return { description: flag };
+    } else if (typeof flag === 'object') {
+      return {
+        title: flag.title || flag.category || "Potential Issue",
+        description: flag.description || flag.issue || flag.text || JSON.stringify(flag)
+      };
+    }
+    return { description: JSON.stringify(flag) };
+  });
   
   // Check if there are any warning flags in the analysis
   const hasAnalysisWarning = analysis && analysis.analysis_warning;
@@ -102,9 +159,28 @@ export function ResumeWorkHistoryTab({
       
       {/* Red Flags Section */}
       <div className="rounded-md border p-4">
-        <div className="flex items-center space-x-2 mb-4">
-          <AlertTriangle className="h-5 w-5 text-amber-500" />
-          <h3 className="font-medium">Potential Red Flags</h3>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <AlertTriangle className="h-5 w-5 text-amber-500" />
+            <h3 className="font-medium">Potential Red Flags</h3>
+          </div>
+          
+          {/* Source indicator for transparency */}
+          <div className="flex items-center">
+            <div className={`px-2 py-1 rounded-md text-xs ${
+              redFlagSource === "main_analysis" 
+                ? "bg-blue-100 text-blue-800" 
+                : redFlagSource === "red_flag_analysis" 
+                  ? "bg-amber-100 text-amber-800" 
+                  : "bg-gray-100 text-gray-800"
+            }`}>
+              {redFlagSource === "main_analysis" 
+                ? "Using main analysis data" 
+                : redFlagSource === "red_flag_analysis" 
+                  ? "Using red flag analysis data" 
+                  : "Using legacy data format"}
+            </div>
+          </div>
         </div>
         
         {potentialRedFlags.length > 0 ? (
@@ -130,9 +206,28 @@ export function ResumeWorkHistoryTab({
       
       {/* Work History Roles */}
       <div className="rounded-md border p-4">
-        <div className="flex items-center space-x-2 mb-4">
-          <Briefcase className="h-5 w-5 text-blue-500" />
-          <h3 className="font-medium">Work History</h3>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <Briefcase className="h-5 w-5 text-blue-500" />
+            <h3 className="font-medium">Work History</h3>
+          </div>
+          
+          {/* Source indicator for transparency */}
+          <div className="flex items-center">
+            <div className={`px-2 py-1 rounded-md text-xs ${
+              dataSource === "main_analysis" 
+                ? "bg-blue-100 text-blue-800" 
+                : dataSource === "red_flag_analysis" 
+                  ? "bg-amber-100 text-amber-800" 
+                  : "bg-gray-100 text-gray-800"
+            }`}>
+              {dataSource === "main_analysis" 
+                ? "Using main analysis data" 
+                : dataSource === "red_flag_analysis" 
+                  ? "Using red flag analysis data" 
+                  : "Using legacy data format"}
+            </div>
+          </div>
         </div>
         
         {workHistory.length > 0 ? (
