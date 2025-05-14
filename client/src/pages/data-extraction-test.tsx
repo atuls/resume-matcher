@@ -1,218 +1,176 @@
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { extractResumeData, extractRedFlagData, ExtractedResumeData } from '@/lib/resume-data-extractor';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { extractResumeData } from '@/lib/resume-data-extractor';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, FileText, Code, Briefcase, Check, MoreHorizontal } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ResumeSkillsTab } from "@/components/ResumeSkillsTab";
+import { ResumeWorkHistoryTab } from "@/components/ResumeWorkHistoryTab";
 
-const DataExtractionTestPage: React.FC = () => {
-  const [resumeId, setResumeId] = useState('395a8706-7c15-4238-82ea-9823cedb824f');
-  const [loading, setLoading] = useState(false);
-  const [extractedData, setExtractedData] = useState<ExtractedResumeData | null>(null);
-  const [redFlags, setRedFlags] = useState<string[]>([]);
-  const [rawAnalysisData, setRawAnalysisData] = useState<any>(null);
-  const [rawRedFlagData, setRawRedFlagData] = useState<any>(null);
+export default function DataExtractionTest() {
+  const [jsonInput, setJsonInput] = useState('');
+  const [extractedData, setExtractedData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleTest = async () => {
-    if (!resumeId) return;
-    
-    setLoading(true);
-    setError(null);
-    
+  const handleExtract = () => {
     try {
-      // Fetch analysis data
-      const analysisResponse = await fetch(`/api/resumes/${resumeId}/analysis`, {
-        method: 'GET',
-        credentials: 'include'
-      });
+      setError(null);
       
-      if (!analysisResponse.ok) {
-        throw new Error(`Failed to fetch analysis: ${analysisResponse.status} ${analysisResponse.statusText}`);
-      }
+      // Try to parse the input as JSON
+      const parsedData = JSON.parse(jsonInput);
       
-      const analysisData = await analysisResponse.json();
-      setRawAnalysisData(analysisData);
+      // Use our extraction function
+      const extracted = extractResumeData(parsedData);
       
-      // Fetch red flag data
-      const redFlagResponse = await fetch(`/api/resumes/${resumeId}/red-flag-analysis`, {
-        method: 'GET',
-        credentials: 'include'
-      });
+      // Set the result
+      setExtractedData(extracted);
       
-      if (!redFlagResponse.ok) {
-        throw new Error(`Failed to fetch red flag analysis: ${redFlagResponse.status} ${redFlagResponse.statusText}`);
-      }
-      
-      const redFlagData = await redFlagResponse.json();
-      setRawRedFlagData(redFlagData);
-      
-      // Extract structured data
-      const extractedResumeData = extractResumeData(analysisData);
-      setExtractedData(extractedResumeData);
-      
-      // Extract red flags
-      const extractedRedFlags = extractRedFlagData(redFlagData);
-      setRedFlags(extractedRedFlags);
-      
-    } catch (error: any) {
-      console.error("Error extracting data:", error);
-      setError(error.message || 'Unknown error occurred');
-    } finally {
-      setLoading(false);
+      console.log("Extracted data:", extracted);
+    } catch (err: any) {
+      setError(err.message || "An error occurred during extraction");
+      console.error("Error during extraction:", err);
     }
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Resume Data Extraction Test</h1>
-      <p className="text-gray-600 mb-4">This page tests the extraction of structured data from the resume analysis API</p>
+    <div className="container mx-auto py-8">
+      <h1 className="text-2xl font-bold mb-6">Resume Data Extraction Test</h1>
       
-      <div className="mb-4">
-        <Label htmlFor="resumeId">Resume ID</Label>
-        <div className="flex gap-2">
-          <Input 
-            id="resumeId" 
-            value={resumeId} 
-            onChange={(e) => setResumeId(e.target.value)} 
-            placeholder="Enter resume ID"
-            className="max-w-md"
-          />
-          <Button onClick={handleTest} disabled={loading}>
-            {loading ? 'Testing...' : 'Test Extraction'}
-          </Button>
-        </div>
-      </div>
-      
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          <p><strong>Error:</strong> {error}</p>
-        </div>
-      )}
-      
-      {extractedData && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Extracted Skills</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[200px]">
-                {extractedData.skills.length > 0 ? (
-                  <ul className="list-disc pl-6">
-                    {extractedData.skills.map((skill, index) => (
-                      <li key={index}>{skill}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gray-500">No skills extracted</p>
-                )}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Red Flags</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[200px]">
-                {redFlags.length > 0 ? (
-                  <ul className="list-disc pl-6">
-                    {redFlags.map((flag, index) => (
-                      <li key={index} className="text-red-600">{flag}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gray-500">No red flags extracted</p>
-                )}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-          
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle>Work History</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[200px]">
-                {Array.isArray(extractedData.workHistory) && extractedData.workHistory.length > 0 ? (
-                  <ul className="list-disc pl-6 space-y-4">
-                    {extractedData.workHistory.map((job: any, index) => (
-                      <li key={index} className="mb-2">
-                        <div className="font-semibold">{job.title || job.Title}</div>
-                        <div className="text-gray-700">{job.Company || job.company}, {job.location || job.Location}</div>
-                        <div className="text-sm text-gray-600">
-                          {job.startDate || job.StartDate} - {job.endDate || job.EndDate || 'Present'}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>JSON Input</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Textarea 
+              className="min-h-[400px] font-mono text-sm"
+              value={jsonInput}
+              onChange={(e) => setJsonInput(e.target.value)}
+              placeholder='Paste AI response JSON here...'
+            />
+            
+            <div className="mt-4 flex justify-end">
+              <Button onClick={handleExtract}>
+                Extract Data
+              </Button>
+            </div>
+            
+            {error && (
+              <Alert className="mt-4 border-red-200 bg-red-50">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-800">
+                  {error}
+                </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Extracted Data</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {extractedData ? (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium text-lg">Extraction Results</h3>
+                  <Badge variant="outline" className="ml-2">
+                    Score: {extractedData.score}
+                  </Badge>
+                </div>
+                
+                <Tabs defaultValue="summary">
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="summary">
+                      <Check className="h-4 w-4 mr-2" />
+                      Summary
+                    </TabsTrigger>
+                    <TabsTrigger value="skills">
+                      <Code className="h-4 w-4 mr-2" />
+                      Skills
+                    </TabsTrigger>
+                    <TabsTrigger value="work-history">
+                      <Briefcase className="h-4 w-4 mr-2" />
+                      Work History
+                    </TabsTrigger>
+                    <TabsTrigger value="raw">
+                      <MoreHorizontal className="h-4 w-4 mr-2" />
+                      Raw Data
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="summary">
+                    <div className="border rounded-md p-4 overflow-auto max-h-[400px]">
+                      <h4 className="font-medium mb-2">Summary</h4>
+                      <p className="whitespace-pre-wrap">{extractedData.summary || "No summary extracted"}</p>
+                      
+                      <h4 className="font-medium mt-4 mb-2">Red Flags</h4>
+                      {extractedData.redFlags && extractedData.redFlags.length > 0 ? (
+                        <ul className="list-disc pl-5 space-y-1">
+                          {extractedData.redFlags.map((flag: string, i: number) => (
+                            <li key={i} className="text-red-600">{flag}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-gray-500 italic">No red flags extracted</p>
+                      )}
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="skills">
+                    <div className="border rounded-md p-4 overflow-auto max-h-[400px]">
+                      {extractedData.skills && extractedData.skills.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {extractedData.skills.map((skill: string, i: number) => (
+                            <Badge key={i} variant="secondary">{skill}</Badge>
+                          ))}
                         </div>
-                        {(job.description || job.Description) && (
-                          <p className="text-sm mt-1">{job.description || job.Description}</p>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div>
-                    <p className="font-semibold">Summary:</p>
-                    <p className="whitespace-pre-line">{extractedData.summary}</p>
-                  </div>
-                )}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-          
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle>Matching Score: {extractedData.score}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
-                <div 
-                  className="bg-blue-600 h-4 rounded-full"
-                  style={{ width: `${extractedData.score}%` }}
-                ></div>
+                      ) : (
+                        <p className="text-gray-500 italic">No skills extracted</p>
+                      )}
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="work-history">
+                    <div className="border rounded-md p-4 overflow-auto max-h-[400px]">
+                      {extractedData.workHistory && extractedData.workHistory.length > 0 ? (
+                        <div className="space-y-4">
+                          {extractedData.workHistory.map((job: any, i: number) => (
+                            <div key={i} className="border-b pb-3 last:border-b-0 last:pb-0">
+                              <h4 className="font-medium">{job.company || job.title || 'Unnamed Role'}</h4>
+                              {job.title && job.company && <p className="text-sm">{job.title} at {job.company}</p>}
+                              {job.dates && <p className="text-sm text-gray-500">{job.dates}</p>}
+                              {job.description && <p className="text-sm mt-2">{job.description}</p>}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 italic">No work history extracted</p>
+                      )}
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="raw">
+                    <div className="border rounded-md p-4 bg-gray-50 overflow-auto max-h-[400px]">
+                      <pre className="text-xs font-mono whitespace-pre-wrap">
+                        {JSON.stringify(extractedData, null, 2)}
+                      </pre>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
-              
-              <p className="text-sm text-gray-500 mt-2">Extracted from the analysis API</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-      
-      {/* Debug section for raw data */}
-      <div className="mt-8">
-        <h2 className="text-xl font-bold mb-2">Raw API Responses (For Debugging)</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Raw Analysis Data</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[300px]">
-                {rawAnalysisData && (
-                  <pre className="text-xs">{JSON.stringify(rawAnalysisData, null, 2)}</pre>
-                )}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Raw Red Flag Data</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[300px]">
-                {rawRedFlagData && (
-                  <pre className="text-xs">{JSON.stringify(rawRedFlagData, null, 2)}</pre>
-                )}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </div>
+            ) : (
+              <div className="flex items-center justify-center h-40 text-gray-400">
+                <p>No data extracted yet. Paste JSON and click "Extract Data".</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
-};
-
-export default DataExtractionTestPage;
+}
