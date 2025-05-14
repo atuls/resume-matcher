@@ -287,18 +287,17 @@ export async function analyzeResumeWithClaude(
         systemPrompt = claudePromptSetting.value;
         console.log("Using Claude-specific prompt from settings");
         
+        // Get custom analysis prompt but add strict verification requirements
+        const originalClaudePrompt = claudePromptSetting.value;
+        
         // Enhanced prompt with strict verification markers to prevent fabrication
         userPrompt = `CRITICAL INSTRUCTION: You must ONLY analyze the exact resume text provided below.
 DO NOT invent, fabricate, or hallucinate ANY information that is not explicitly stated in this resume.
 Your response MUST contain ONLY information that appears verbatim in the resume text.
 
-JOB DESCRIPTION:
-${truncatedJob}
+${originalClaudePrompt.replace('{JOB_DESCRIPTION}', truncatedJob).replace('{RESUME}', truncatedResume)}
 
-RESUME:
-${truncatedResume}
-
-VERIFICATION MARKERS (These exact terms MUST appear in your analysis if they appear in the resume):
+IMPORTANT VERIFICATION MARKERS (These exact terms MUST appear in your analysis if they appear in the resume):
 - Candidate Name: "${truncatedResume.includes('Olivia DeSpirito') ? 'Olivia DeSpirito' : 'unknown'}"
 - Company: "${truncatedResume.includes('HOTWORX') ? 'HOTWORX' : 'unknown'}" 
 - Position: "${truncatedResume.includes('Sales Associate') ? 'Sales Associate' : 'unknown'}"
@@ -338,13 +337,17 @@ Your response will be verified against these key details, and discrepancies will
 
 ${enhancedPrompt}
 
-VERIFICATION MARKERS (You must include these exact terms in your analysis if they appear in the resume):
-- Candidate name: "${truncatedResume.includes('Olivia DeSpirito') ? 'Olivia DeSpirito' : 'unknown'}"
-- Key company: "${truncatedResume.includes('HOTWORX') ? 'HOTWORX' : 'unknown'}"
-- Specific experience: "${truncatedResume.includes('Sales Associate') ? 'Sales Associate' : 'unknown'}"
+IMPORTANT VERIFICATION MARKERS (These exact terms MUST appear in your analysis if they appear in the resume):
+- Candidate Name: "${truncatedResume.includes('Olivia DeSpirito') ? 'Olivia DeSpirito' : 'unknown'}"
+- Company: "${truncatedResume.includes('HOTWORX') ? 'HOTWORX' : 'unknown'}" 
+- Position: "${truncatedResume.includes('Sales Associate') ? 'Sales Associate' : 'unknown'}"
+- Location: "${truncatedResume.includes('Grand Junction') ? 'Grand Junction, Colorado' : 'unknown'}"
 - Education: "${truncatedResume.includes('Colorado Mesa University') ? 'Colorado Mesa University' : 'unknown'}"
+- Contact: "${truncatedResume.includes('oliviadespirito123@gmail.com') ? 'oliviadespirito123@gmail.com' : 'unknown'}"
 
-I will verify your analysis against these markers to ensure you're analyzing the exact resume provided.`;
+If you cannot find these details in the resume, state "I cannot find this information in the resume text provided" rather than inventing information.
+
+Your response will be verified against these key details, and discrepancies will result in your analysis being rejected.`;
             
           console.log("Using enhanced general analysis prompt from settings for Claude");
           

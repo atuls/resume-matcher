@@ -399,7 +399,7 @@ export default function ResumeProfilePage() {
                       href={`/api/resumes/${resumeId}/download`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 hover:underline"
+                      className="flex items-center text-blue-600 hover:text-blue-800 hover:underline font-medium"
                       onClick={(e) => {
                         e.preventDefault();
                         const downloadUrl = `/api/resumes/${resumeId}/download`;
@@ -411,7 +411,9 @@ export default function ResumeProfilePage() {
                         });
                       }}
                     >
+                      <FilePdf className="mr-1 h-4 w-4 text-red-500" />
                       {resume.fileName}
+                      <ExternalLink className="ml-1 h-3.5 w-3.5" />
                     </a>
                     <Button 
                       size="sm" 
