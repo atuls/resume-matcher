@@ -967,10 +967,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Extract additional fields if not already present
-      if (!resume.currentTitle && analysisResult.candidateTitle) {
-        await storage.updateResume(resumeId, {
-          currentTitle: analysisResult.candidateTitle
-        });
+      // Add detailed logging for debugging the resume update issue
+      console.log("======= RESUME UPDATE DEBUG =======");
+      console.log("Resume candidateTitle:", resume.candidateTitle);
+      console.log("Analysis result candidateTitle:", analysisResult.candidateTitle);
+      console.log("===================================");
+      
+      if (!resume.candidateTitle && analysisResult.candidateTitle) {
+        try {
+          // Fixed: using candidateTitle instead of currentTitle
+          await storage.updateResume(resumeId, {
+            candidateTitle: analysisResult.candidateTitle
+          });
+          console.log("Successfully updated candidateTitle to:", analysisResult.candidateTitle);
+        } catch (error) {
+          console.error("Error updating resume candidateTitle:", error);
+          // Non-critical, continue execution
+        }
       }
       
       res.json({ results: [result], message: "Analysis complete" });
@@ -1311,10 +1324,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
             
             // Extract additional fields if not already present
-            if (!resume.currentTitle && analysisResult.candidateTitle) {
-              await storage.updateResume(resumeId, {
-                currentTitle: analysisResult.candidateTitle
-              });
+            if (!resume.candidateTitle && analysisResult.candidateTitle) {
+              try {
+                // Fixed: using candidateTitle instead of currentTitle
+                await storage.updateResume(resumeId, {
+                  candidateTitle: analysisResult.candidateTitle
+                });
+                console.log("Successfully updated candidateTitle to:", analysisResult.candidateTitle);
+              } catch (error) {
+                console.error("Error updating resume candidateTitle:", error);
+                // Non-critical, continue execution
+              }
             }
             
             // Add a score entry to the mapping for the client to display
