@@ -708,17 +708,14 @@ export default function ResumeProfilePage() {
                           </pre>
                         </div>
                         
-                        {/* Add the DebugPanel for advanced inspection */}
-                        <DebugPanel rawResponse={analysis?.rawResponse} />
+                        {/* Enhanced Debug Panel */}
+                        <DebugPanel 
+                          resumeId={resumeId!}
+                          analysis={analysis}
+                          redFlagData={redFlagData}
+                        />
                       </AlertDescription>
                     </Alert>
-                    
-                    {/* Regular Debug Panel */}
-                    <DebugPanel
-                      resumeId={resumeId!}
-                      analysis={analysis}
-                      redFlagData={redFlagData}
-                    />
                   </div>
                 </TabsContent>
               </Tabs>
