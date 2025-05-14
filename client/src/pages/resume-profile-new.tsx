@@ -2,7 +2,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getResume, getResumeAnalysis, getJobDescriptions, getResumeScores, updateResumeContactedStatus, getResumeRedFlagAnalysis } from "@/lib/api";
+import { 
+  getResume, 
+  getResumeAnalysis, 
+  getJobDescriptions, 
+  getResumeScores, 
+  updateResumeContactedStatus, 
+  getResumeRedFlagAnalysis,
+  downloadResume
+} from "@/lib/api";
 import { 
   User, FileText, Calendar, ArrowLeft, Mail, MapPin, Phone, Award, 
   Briefcase, Code, AlertCircle, BarChart3, CheckCircle, XCircle,
@@ -267,7 +275,42 @@ export default function ResumeProfilePage() {
                       size="sm" 
                       variant="outline" 
                       className="h-7 px-2 text-xs"
-                      onClick={() => window.open(`/api/resumes/${resumeId}/download`, '_blank')}
+                      onClick={async () => {
+                        try {
+                          // Show loading toast
+                          toast({
+                            title: "Downloading...",
+                            description: "Preparing file for download"
+                          });
+                          
+                          // Get file as blob
+                          const blob = await downloadResume(resumeId!);
+                          
+                          // Create download link
+                          const url = window.URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = resume.fileName || 'resume.pdf';
+                          document.body.appendChild(a);
+                          a.click();
+                          
+                          // Clean up
+                          window.URL.revokeObjectURL(url);
+                          document.body.removeChild(a);
+                          
+                          toast({
+                            title: "Download complete",
+                            description: "Your file has been downloaded successfully."
+                          });
+                        } catch (error) {
+                          console.error("Error downloading file:", error);
+                          toast({
+                            title: "Download failed",
+                            description: "Unable to download the resume file.",
+                            variant: "destructive"
+                          });
+                        }
+                      }}
                     >
                       <Download className="h-3 w-3 mr-1" />
                       Download

@@ -279,6 +279,19 @@ export async function deleteResume(id: string): Promise<void> {
   return;
 }
 
+// Function to download resume file
+export async function downloadResume(id: string): Promise<Blob> {
+  const response = await fetch(`/api/resumes/${id}/download`, {
+    credentials: "include",
+  });
+  
+  if (!response.ok) {
+    throw new Error("Failed to download resume file");
+  }
+  
+  return response.blob();
+}
+
 // Analysis API
 export async function analyzeResumes(
   jobDescriptionId: string, 
