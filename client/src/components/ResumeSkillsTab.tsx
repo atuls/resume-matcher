@@ -54,13 +54,61 @@ export function ResumeSkillsTab({
   // Try the direct parser first (based on sample data format from screenshots)
   if (analysis?.rawResponse) {
     console.log("Skills Tab: Found rawResponse, attempting direct parsing");
-    const directData = parseRawResponse(analysis.rawResponse);
+    console.log("Raw response type:", typeof analysis.rawResponse);
     
-    if (directData.skills.length > 0) {
-      console.log("Skills Tab: SUCCESSFUL DIRECT EXTRACTION - Found Skills array with", directData.skills.length, "entries");
-      skillsList = directData.skills;
-      extractionSource = "direct_raw_parser";
-      directDataFound = true;
+    try {
+      // Debug what's in the raw response
+      if (typeof analysis.rawResponse === 'string') {
+        // Check if the raw response contains our expected fields directly
+        if (analysis.rawResponse.includes("Skills") && analysis.rawResponse.includes("Work_History")) {
+          console.log("Skills Tab: Raw response contains the expected fields!");
+        }
+        
+        // If it's a raw string from the debug tab (test sample data)
+        if (analysis.rawResponse.includes('"Skills":')) {
+          console.log("Skills Tab: Found Skills array in raw response string");
+        }
+      } else if (typeof analysis.rawResponse === 'object') {
+        console.log("Skills Tab: Raw response is an object with keys:", Object.keys(analysis.rawResponse));
+        
+        // If it's a nested structure with parsedJson
+        if (analysis.rawResponse.parsedJson) {
+          console.log("Skills Tab: Raw response has parsed JSON with keys:", 
+            Object.keys(analysis.rawResponse.parsedJson));
+          
+          if (analysis.rawResponse.parsedJson.Skills && 
+              Array.isArray(analysis.rawResponse.parsedJson.Skills)) {
+            console.log("Skills Tab: Found Skills array in parsedJson");
+            skillsList = analysis.rawResponse.parsedJson.Skills;
+            extractionSource = "parsed_json_skills";
+            directDataFound = true;
+            console.log("Skills Tab: Using Skills from parsedJson with", skillsList.length, "skills");
+            return;
+          }
+        }
+        
+        // If rawResponse directly has Skills
+        if (analysis.rawResponse.Skills && Array.isArray(analysis.rawResponse.Skills)) {
+          console.log("Skills Tab: Found Skills array directly in raw response object");
+          skillsList = analysis.rawResponse.Skills;
+          extractionSource = "direct_object_skills";
+          directDataFound = true;
+          console.log("Skills Tab: Using Skills directly from object with", skillsList.length, "skills");
+          return;
+        }
+      }
+      
+      // Try the general parser as a last resort
+      const directData = parseRawResponse(analysis.rawResponse);
+      
+      if (directData.skills.length > 0) {
+        console.log("Skills Tab: SUCCESSFUL DIRECT EXTRACTION - Found Skills array with", directData.skills.length, "entries");
+        skillsList = directData.skills;
+        extractionSource = "direct_raw_parser";
+        directDataFound = true;
+      }
+    } catch (error) {
+      console.error("Skills Tab: Error parsing raw response:", error);
     }
   }
   

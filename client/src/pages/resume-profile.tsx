@@ -635,6 +635,35 @@ export default function ResumeProfilePage() {
                         <Zap className="h-4 w-4 text-blue-600 mr-2" />
                         <h3 className="font-medium text-blue-900">Raw LLM Response</h3>
                         <TestParserBtn />
+                          <Button 
+                            variant="outline"
+                            size="sm"
+                            className="ml-2"
+                            onClick={() => {
+                              console.log("DEBUG RAW RESPONSE:", analysis?.rawResponse);
+                              if (analysis?.rawResponse) {
+                                try {
+                                  if (typeof analysis.rawResponse === 'string') {
+                                    console.log("RAW RESPONSE IS STRING, LENGTH:", analysis.rawResponse.length);
+                                    if (analysis.rawResponse.includes("Work_History") && 
+                                        analysis.rawResponse.includes("Skills") && 
+                                        analysis.rawResponse.includes("Red_Flags")) {
+                                      console.log("FOUND EXPECTED FIELDS IN RAW RESPONSE!");
+                                    }
+                                  } else {
+                                    console.log("RAW RESPONSE IS OBJECT:", Object.keys(analysis.rawResponse));
+                                    if (analysis.rawResponse.parsedJson) {
+                                      console.log("PARSED JSON KEYS:", Object.keys(analysis.rawResponse.parsedJson));
+                                    }
+                                  }
+                                } catch (e) {
+                                  console.error("Error inspecting raw response:", e);
+                                }
+                              }
+                            }}
+                          >
+                            Debug Raw Response
+                          </Button>
                       </div>
                       <AlertDescription className="mt-4">
                         <p className="text-sm text-blue-800 mb-2">

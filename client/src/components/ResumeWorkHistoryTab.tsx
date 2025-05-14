@@ -58,13 +58,80 @@ export function ResumeWorkHistoryTab({
   
   // Try to parse directly from rawResponse (best approach based on the screenshots)
   if (analysis?.rawResponse) {
-    console.log("Found rawResponse field, attempting direct parsing");
-    directData = parseRawResponse(analysis.rawResponse);
+    console.log("WorkHistory Tab: Found rawResponse field, attempting direct parsing");
+    console.log("WorkHistory Tab: Raw response type:", typeof analysis.rawResponse);
     
-    // Check if we successfully extracted work history
-    if (directData.workHistory && directData.workHistory.length > 0) {
-      console.log("SUCCESSFUL DIRECT EXTRACTION - Found Work_History array with", directData.workHistory.length, "entries");
-      directDataAvailable = true;
+    try {
+      // Debug what's in the raw response
+      if (typeof analysis.rawResponse === 'string') {
+        // Check if the raw response contains our expected fields directly
+        if (analysis.rawResponse.includes("Work_History") && analysis.rawResponse.includes("Skills")) {
+          console.log("WorkHistory Tab: Raw response contains the expected fields!");
+        }
+        
+        // If it's a raw string from the debug tab (test sample data)
+        if (analysis.rawResponse.includes('"Work_History":')) {
+          console.log("WorkHistory Tab: Found Work_History array in raw response string");
+        }
+      } else if (typeof analysis.rawResponse === 'object') {
+        console.log("WorkHistory Tab: Raw response is an object with keys:", Object.keys(analysis.rawResponse));
+        
+        // If it's a nested structure with parsedJson
+        if (analysis.rawResponse.parsedJson) {
+          console.log("WorkHistory Tab: Raw response has parsed JSON with keys:", 
+            Object.keys(analysis.rawResponse.parsedJson));
+          
+          if (analysis.rawResponse.parsedJson.Work_History && 
+              Array.isArray(analysis.rawResponse.parsedJson.Work_History)) {
+            console.log("WorkHistory Tab: Found Work_History array in parsedJson with", 
+              analysis.rawResponse.parsedJson.Work_History.length, "entries");
+            workHistory = analysis.rawResponse.parsedJson.Work_History.map(item => ({
+              title: item.Title || item.title || '',
+              company: item.Company || item.company || '',
+              location: item.location || item.Location || '',
+              startDate: item.startDate || item.StartDate || '',
+              endDate: item.endDate || item.EndDate || '',
+              description: item.description || item.Description || '',
+              durationMonths: item.durationMonths || item.DurationMonths || 0,
+              isCurrentRole: item.isCurrentRole || item.IsCurrentRole || false
+            }));
+            dataSource = "parsed_json_work_history";
+            directDataAvailable = true;
+            console.log("WorkHistory Tab: Using Work_History from parsedJson");
+            return;
+          }
+        }
+        
+        // If rawResponse directly has Work_History
+        if (analysis.rawResponse.Work_History && Array.isArray(analysis.rawResponse.Work_History)) {
+          console.log("WorkHistory Tab: Found Work_History array directly in raw response object");
+          workHistory = analysis.rawResponse.Work_History.map(item => ({
+            title: item.Title || item.title || '',
+            company: item.Company || item.company || '',
+            location: item.location || item.Location || '',
+            startDate: item.startDate || item.StartDate || '',
+            endDate: item.endDate || item.EndDate || '',
+            description: item.description || item.Description || '',
+            durationMonths: item.durationMonths || item.DurationMonths || 0,
+            isCurrentRole: item.isCurrentRole || item.IsCurrentRole || false
+          }));
+          dataSource = "direct_object_work_history";
+          directDataAvailable = true;
+          console.log("WorkHistory Tab: Using Work_History directly from object");
+          return;
+        }
+      }
+      
+      // Standard parser as last resort
+      directData = parseRawResponse(analysis.rawResponse);
+      
+      // Check if we successfully extracted work history
+      if (directData.workHistory && directData.workHistory.length > 0) {
+        console.log("SUCCESSFUL DIRECT EXTRACTION - Found Work_History array with", directData.workHistory.length, "entries");
+        directDataAvailable = true;
+      }
+    } catch (error) {
+      console.error("WorkHistory Tab: Error parsing raw response:", error);
     }
   }
   
@@ -84,8 +151,17 @@ export function ResumeWorkHistoryTab({
   // Determine which source we're using (for potential indicators in the UI)
   
   // Prioritize direct Work_History from raw response first (best match to screenshot)
-  if (directDataAvailable) {
-    workHistory = directData.workHistory;
+  if (directDataAvailable && !workHistory.length) { // Only if we haven't already set workHistory earlier
+    workHistory = directData.workHistory.map(item => ({
+      title: item.Title || item.title || '',
+      company: item.Company || item.company || '',
+      location: item.location || item.Location || '',
+      startDate: item.startDate || item.StartDate || '',
+      endDate: item.endDate || item.EndDate || '',
+      description: item.description || item.Description || '',
+      durationMonths: item.durationMonths || item.DurationMonths || 0,
+      isCurrentRole: item.isCurrentRole || item.IsCurrentRole || false
+    }));
     dataSource = "direct_raw_parser";
     console.log("Using work history directly from raw response parser (source 1) - MATCH SCREENSHOT");
   }
@@ -126,18 +202,50 @@ export function ResumeWorkHistoryTab({
   let redFlagSource = "";
   let redFlags = [];
   
-  if (analysisRedFlags && analysisRedFlags.length > 0) {
+  // Try to extract Red_Flags directly from parsedJson in raw response (highest priority)
+  if (analysis?.rawResponse && typeof analysis.rawResponse === 'object' && 
+      analysis.rawResponse.parsedJson && 
+      analysis.rawResponse.parsedJson.Red_Flags && 
+      Array.isArray(analysis.rawResponse.parsedJson.Red_Flags)) {
+    
+    redFlags = analysis.rawResponse.parsedJson.Red_Flags;
+    redFlagSource = "parsed_json_red_flags";
+    console.log("Using Red_Flags directly from parsedJson in raw response (highest priority)");
+    
+  } 
+  // Try to extract Red_Flags directly from raw response object 
+  else if (analysis?.rawResponse && typeof analysis.rawResponse === 'object' && 
+           analysis.rawResponse.Red_Flags && 
+           Array.isArray(analysis.rawResponse.Red_Flags)) {
+    
+    redFlags = analysis.rawResponse.Red_Flags;
+    redFlagSource = "direct_red_flags";
+    console.log("Using Red_Flags directly from raw response object");
+    
+  }
+  // Then try from directData (from parseRawResponse)
+  else if (directData && directData.redFlags && directData.redFlags.length > 0) {
+    redFlags = directData.redFlags;
+    redFlagSource = "direct_parser";
+    console.log("Using red flags from direct parser");
+  }
+  // Then try from standard analysis extractor
+  else if (analysisRedFlags && analysisRedFlags.length > 0) {
     redFlags = analysisRedFlags;
     redFlagSource = "main_analysis";
-    console.log("Using red flags from main analysis (source 1) for consistency");
-  } else if (rfRedFlags && rfRedFlags.length > 0) {
+    console.log("Using red flags from main analysis for consistency");
+  }
+  // Then try from red flag analysis  
+  else if (rfRedFlags && rfRedFlags.length > 0) {
     redFlags = rfRedFlags;
     redFlagSource = "red_flag_analysis";
-    console.log("Using red flags from red flag analysis (source 2)");
-  } else {
+    console.log("Using red flags from red flag analysis");
+  } 
+  // Use legacy method as last resort
+  else {
     redFlags = redFlagData?.analysis?.potentialRedFlags || [];
     redFlagSource = "legacy_method";
-    console.log("Using red flags from legacy extraction method (source 3)");
+    console.log("Using red flags from legacy extraction method (lowest priority)");
   }
   
   console.log("Final red flags source:", redFlagSource);
