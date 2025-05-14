@@ -554,9 +554,9 @@ export default function ResumeProfilePage() {
                     <FileSearch className="h-4 w-4 mr-2" />
                     Raw Text
                   </TabsTrigger>
-                  <TabsTrigger value="debug">
-                    <AlertCircle className="h-4 w-4 mr-2" />
-                    Debug Info
+                  <TabsTrigger value="debug" className="bg-blue-50 border border-blue-200">
+                    <AlertCircle className="h-4 w-4 mr-2 text-blue-600" />
+                    LLM Response & Debug
                   </TabsTrigger>
                 </TabsList>
                 
@@ -628,11 +628,34 @@ export default function ResumeProfilePage() {
                 </TabsContent>
                 
                 <TabsContent value="debug">
-                  <DebugPanel
-                    resumeId={resumeId!}
-                    analysis={analysis}
-                    redFlagData={redFlagData}
-                  />
+                  <div className="space-y-6">
+                    <Alert className="border-blue-200 bg-blue-50">
+                      <div className="flex items-center">
+                        <Zap className="h-4 w-4 text-blue-600 mr-2" />
+                        <h3 className="font-medium text-blue-900">Raw LLM Response</h3>
+                      </div>
+                      <AlertDescription className="mt-4">
+                        <p className="text-sm text-blue-800 mb-2">
+                          This is the raw response from the AI model. It contains the structured data used to populate the UI.
+                        </p>
+                        
+                        <div className="mt-2 p-4 bg-slate-900 rounded-md overflow-auto max-h-72">
+                          <pre className="text-xs whitespace-pre-wrap font-mono text-green-400">
+                            {typeof analysis?.rawResponse === 'string' 
+                              ? analysis.rawResponse 
+                              : JSON.stringify(analysis?.rawResponse, null, 2)}
+                          </pre>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                    
+                    {/* Regular Debug Panel */}
+                    <DebugPanel
+                      resumeId={resumeId!}
+                      analysis={analysis}
+                      redFlagData={redFlagData}
+                    />
+                  </div>
                 </TabsContent>
               </Tabs>
             </CardContent>

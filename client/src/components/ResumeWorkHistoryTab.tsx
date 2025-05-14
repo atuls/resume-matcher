@@ -43,10 +43,41 @@ export function ResumeWorkHistoryTab({
   // Important: 
   // We need to prioritize extracting everything from the same data source for consistency
   // Order of priority:
-  // 1. From main analysis data (preferred source for consistency with Skills tab)
-  // 2. From red flag analysis data (fallback) 
-  // 3. From legacy extractWorkHistory method (last resort)
+  // 1. Direct from Work_History in raw response (as seen in screenshot)
+  // 2. From main analysis data (for consistency with Skills tab)
+  // 3. From red flag analysis data (fallback) 
+  // 4. From legacy extractWorkHistory method (last resort)
   
+  // Check for raw LLM response with Work_History field (high priority)
+  let rawResponseWorkHistory: any[] = [];
+  let directWorkHistoryFound = false;
+  
+  // Try to extract directly from rawResponse if it exists (best source according to screenshot)
+  if (analysis?.rawResponse) {
+    try {
+      // If rawResponse is a string, parse it as JSON
+      if (typeof analysis.rawResponse === 'string') {
+        const parsedResponse = JSON.parse(analysis.rawResponse);
+        if (Array.isArray(parsedResponse.Work_History)) {
+          rawResponseWorkHistory = parsedResponse.Work_History;
+          directWorkHistoryFound = true;
+          console.log("SUCCESS: Found Work_History array directly in raw response JSON", rawResponseWorkHistory.length, "entries");
+        }
+      } 
+      // If rawResponse is already an object, check if it has Work_History
+      else if (typeof analysis.rawResponse === 'object' && analysis.rawResponse) {
+        if (Array.isArray(analysis.rawResponse.Work_History)) {
+          rawResponseWorkHistory = analysis.rawResponse.Work_History;
+          directWorkHistoryFound = true;
+          console.log("SUCCESS: Found Work_History array in raw response object", rawResponseWorkHistory.length, "entries");
+        }
+      }
+    } catch (e) {
+      console.error("Error parsing raw response:", e);
+    }
+  }
+  
+  // Get work history from regular extractors as fallback
   const analysisExtractedData = analysis ? extractResumeData(analysis) : {
     workHistory: [],
     skills: [],
@@ -57,27 +88,45 @@ export function ResumeWorkHistoryTab({
   const rfExtractedData = extractResumeData(redFlagData);
   
   // For logging and debugging
-  console.log("Source priority order: 1) main analysis, 2) red flag analysis, 3) legacy method");
-  console.log("Work history from analysis (source 1):", analysisExtractedData.workHistory);
-  console.log("Work history from red flags (source 2):", rfExtractedData.workHistory);
-  console.log("Legacy work history method result (source 3):", extractWorkHistory(redFlagData));
+  console.log("Source priority order: 1) direct Work_History, 2) main analysis, 3) red flag analysis, 4) legacy method");
+  
+  if (directWorkHistoryFound) {
+    console.log("Work history from direct Work_History (source 1):", rawResponseWorkHistory);
+  } else {
+    console.log("Work history from direct Work_History (source 1): Not found");
+  }
+  
+  console.log("Work history from analysis (source 2):", analysisExtractedData.workHistory);
+  console.log("Work history from red flags (source 3):", rfExtractedData.workHistory);
+  console.log("Legacy work history method result (source 4):", extractWorkHistory(redFlagData));
   
   // Determine which source we're using (for potential indicators in the UI)
   let dataSource = "";
   let workHistory = [];
   
-  if (analysisExtractedData.workHistory && analysisExtractedData.workHistory.length > 0) {
+  // Prioritize direct Work_History from raw response first
+  if (directWorkHistoryFound && rawResponseWorkHistory.length > 0) {
+    workHistory = rawResponseWorkHistory;
+    dataSource = "direct_work_history";
+    console.log("Using work history directly from LLM response Work_History field (source 1) - MATCH SCREENSHOT");
+  }
+  // Then use main analysis
+  else if (analysisExtractedData.workHistory && analysisExtractedData.workHistory.length > 0) {
     workHistory = analysisExtractedData.workHistory;
     dataSource = "main_analysis";
-    console.log("Using work history from main analysis (source 1) for consistency");
-  } else if (rfExtractedData.workHistory && rfExtractedData.workHistory.length > 0) {
+    console.log("Using work history from main analysis (source 2) for consistency");
+  } 
+  // Then use red flag analysis
+  else if (rfExtractedData.workHistory && rfExtractedData.workHistory.length > 0) {
     workHistory = rfExtractedData.workHistory;
     dataSource = "red_flag_analysis";
-    console.log("Using work history from red flag analysis (source 2)");
-  } else {
+    console.log("Using work history from red flag analysis (source 3)");
+  } 
+  // Finally, fall back to legacy method
+  else {
     workHistory = extractWorkHistory(redFlagData);
     dataSource = "legacy_method";
-    console.log("Using work history from legacy extraction method (source 3)");
+    console.log("Using work history from legacy extraction method (source 4)");
   }
   
   console.log("Final work history source:", dataSource);
