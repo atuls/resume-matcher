@@ -9,7 +9,8 @@ import {
   getResumeScores, 
   updateResumeContactedStatus, 
   getResumeRedFlagAnalysis,
-  downloadResume
+  downloadResume,
+  analyzeResumes
 } from "@/lib/api";
 import { 
   User, FileText, Calendar, ArrowLeft, Mail, MapPin, Phone, Award, 
@@ -71,12 +72,21 @@ export default function ResumeProfilePage() {
     enabled: !!resumeId,
   });
   
+  // Job descriptions query - needed for job analysis
+  const { data: jobDescriptions } = useQuery({
+    queryKey: ['/api/job-descriptions'],
+    queryFn: getJobDescriptions,
+  });
+
   // Job scores query
   const { data: resumeScore } = useQuery({
     queryKey: [`/api/resumes/${resumeId}/job-connections`],
     queryFn: () => getResumeScores(resumeId!),
     enabled: !!resumeId,
   });
+  
+  // State for selected job description for analysis
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
   // Function to handle contacting a candidate
   const handleContactCandidate = async () => {
@@ -177,7 +187,7 @@ export default function ResumeProfilePage() {
     setAnalysisLoading(true);
     
     try {
-      await apiRequest(`/api/resumes/${resumeId}/analysis`, { method: "POST" });
+      await apiRequest("POST", `/api/resumes/${resumeId}/analysis`);
       
       toast({
         title: "Analysis complete",
@@ -193,6 +203,41 @@ export default function ResumeProfilePage() {
       });
     } finally {
       setAnalysisLoading(false);
+    }
+  };
+  
+  // Function to run analysis against a specific job description
+  const runJobAnalysis = async () => {
+    if (!resumeId || !selectedJobId) {
+      toast({
+        title: "Cannot run analysis",
+        description: "Please select a job description first",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsRunningJobAnalysis(true);
+    
+    try {
+      await analyzeResumes(selectedJobId, [resumeId]);
+      
+      toast({
+        title: "Analysis complete",
+        description: "Resume has been analyzed against the selected job description.",
+      });
+      
+      // Refresh the job connections data
+      queryClient.invalidateQueries({ queryKey: [`/api/resumes/${resumeId}/job-connections`] });
+    } catch (error) {
+      console.error("Error running job analysis:", error);
+      toast({
+        title: "Analysis failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRunningJobAnalysis(false);
     }
   };
 
@@ -363,15 +408,55 @@ export default function ResumeProfilePage() {
               
               <Separator />
               
-              {resumeScore && resumeScore.length > 0 && (
-                <div>
-                  <h3 className="font-medium mb-2">Matched Jobs</h3>
+              {/* Job Analysis Section */}
+              <div>
+                <h3 className="font-medium mb-2">Job Analysis</h3>
+                
+                {/* Job Selection */}
+                <div className="mb-3">
+                  <select 
+                    className="w-full p-2 border rounded-md text-sm mb-2"
+                    value={selectedJobId || ""}
+                    onChange={(e) => setSelectedJobId(e.target.value || null)}
+                  >
+                    <option value="">-- Select a job description --</option>
+                    {jobDescriptions?.map((job) => (
+                      <option key={job.id} value={job.id}>
+                        {job.title}
+                      </option>
+                    ))}
+                  </select>
+                  
+                  <Button 
+                    onClick={runJobAnalysis} 
+                    size="sm" 
+                    variant="outline" 
+                    disabled={!selectedJobId || isRunningJobAnalysis}
+                    className="w-full"
+                  >
+                    {isRunningJobAnalysis ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Re-run Analysis
+                      </>
+                    )}
+                  </Button>
+                </div>
+              
+                {/* Matched Jobs List */}
+                {resumeScore && resumeScore.length > 0 && (
                   <div className="space-y-2">
+                    <h4 className="text-sm text-gray-500 mb-1">Matched Jobs</h4>
                     {resumeScore.map((score: any) => (
                       <div key={score.jobDescriptionId} className="p-3 bg-gray-50 rounded-md">
                         <div className="flex justify-between items-center">
                           <div className="font-medium">{score.jobDescription?.title || "Untitled Job"}</div>
-                          <Badge className={score.score >= 70 ? "bg-green-500" : "bg-amber-500"}>
+                          <Badge className={parseInt(score.score) >= 70 ? "bg-green-500" : "bg-amber-500"}>
                             {score.score}%
                           </Badge>
                         </div>
@@ -381,8 +466,14 @@ export default function ResumeProfilePage() {
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                )} 
+                
+                {(!resumeScore || resumeScore.length === 0) && (
+                  <div className="text-sm text-gray-500 italic">
+                    No job matches yet. Select a job and run analysis to find matches.
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
