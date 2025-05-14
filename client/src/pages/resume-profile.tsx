@@ -6,7 +6,7 @@ import { getResume, getResumeAnalysis, getJobDescriptions, getResumeScores, upda
 import { 
   User, FileText, Calendar, ArrowLeft, Mail, MapPin, Phone, Award, 
   Briefcase, Code, AlertCircle, BarChart3, CheckCircle, XCircle,
-  RefreshCw, UserCheck, Sparkles, AlertTriangle, Loader2
+  RefreshCw, UserCheck, Sparkles, AlertTriangle, Loader2, Download, FileSearch
 } from "lucide-react";
 import { DebugPanel } from "@/components/DebugPanel";
 import { ResumeSkillsTab } from "@/components/ResumeSkillsTab";
@@ -538,6 +538,27 @@ export default function ResumeProfilePage() {
                     redFlagError={redFlagError}
                     analysis={analysis}
                   />
+                </TabsContent>
+                
+                <TabsContent value="raw-text">
+                  {resume && resume.extractedText ? (
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-medium">Extracted Resume Text</h3>
+                        <div className="flex items-center text-sm text-gray-500">
+                          <FileText className="h-4 w-4 mr-1" />
+                          <span>{(resume.extractedText.length / 1000).toFixed(1)}K characters</span>
+                        </div>
+                      </div>
+                      <div className="border rounded-md p-4 bg-gray-50 overflow-auto max-h-[500px]">
+                        <pre className="text-sm whitespace-pre-wrap font-mono">{resume.extractedText}</pre>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-40 text-gray-400">
+                      <p>No extracted text found for this resume.</p>
+                    </div>
+                  )}
                 </TabsContent>
                 
                 <TabsContent value="debug">
