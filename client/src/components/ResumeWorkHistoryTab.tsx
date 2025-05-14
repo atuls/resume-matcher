@@ -69,7 +69,7 @@ export function ResumeWorkHistoryTab({
   // Priority 2: Parse raw response directly
   else {
     // This handles the exact format seen in your screenshots with Work_History field
-    let directData = { workHistory: [], skills: [], redFlags: [], summary: "", score: 0, rawData: null };
+    let directData: any = { workHistory: [], skills: [], redFlags: [], summary: "", score: 0, rawData: null };
     let directDataAvailable = false;
     
     // Try to parse directly from rawResponse
