@@ -667,6 +667,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Run analysis with custom prompt
       console.log(`Running fresh analysis for resume ${resumeId} with job ${jobDescriptionId}`);
       
+      // Add detailed debugging for resume text
+      console.log("======= RESUME TEXT DEBUG =======");
+      console.log("Resume ID:", resumeId);
+      console.log("Resume filename:", resume.fileName);
+      console.log("Resume extracted text begins with:", resume.extractedText.substring(0, 150));
+      console.log("Resume text contains 'Olivia DeSpirito'?", resume.extractedText.includes("Olivia DeSpirito"));
+      console.log("Resume text length:", resume.extractedText.length);
+      console.log("===================================");
+      
       const analysisResult = await analyzeResume(
         resume.extractedText,
         jobDescription.description,
