@@ -515,6 +515,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const currentCompany = "Tech Company";
       const isCurrentlyEmployed = true;
       
+      // Create sample recent roles data for the work history tab
+      const recentRoles = [
+        {
+          title: "Software Engineer",
+          company: "Tech Company",
+          durationMonths: 24,
+          isContract: false
+        },
+        {
+          title: "Junior Developer",
+          company: "Startup Inc",
+          durationMonths: 18,
+          isContract: false
+        }
+      ];
+      
+      // Calculate average tenure
+      const averageTenureMonths = recentRoles.reduce((sum, role) => sum + role.durationMonths, 0) / recentRoles.length;
+      
       // Extract highlights from requirements
       const highlights = allRequirements.slice(0, 3);
       
@@ -526,6 +545,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           currentJobPosition,
           currentCompany,
           isCurrentlyEmployed,
+          recentRoles,
+          averageTenureMonths,
+          hasJobHoppingHistory: false,
+          hasContractRoles: false,
           redFlags: basicRedFlags,
           highlights
         },
