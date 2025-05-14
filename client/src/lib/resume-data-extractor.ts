@@ -56,32 +56,124 @@ export function extractResumeData(analysisResult: any): ExtractedResumeData {
       result.workHistory = data.analysis.recentRoles;
     }
     
-    // Try to extract work history directly from the response (Claude's new format with Work_History field)
-    if (data.rawResponse && typeof data.rawResponse === 'string') {
-      try {
-        const parsedResponse = JSON.parse(data.rawResponse);
-        if (Array.isArray(parsedResponse.Work_History)) {
-          console.log("Found work history directly in response.Work_History");
-          result.workHistory = parsedResponse.Work_History;
+    // Try to extract directly from the response (Claude's new format with Work_History field)
+    if (data.rawResponse) {
+      // Handle both string and object formats
+      if (typeof data.rawResponse === 'string') {
+        try {
+          const parsedResponse = JSON.parse(data.rawResponse);
+          
+          // Work History
+          if (Array.isArray(parsedResponse.Work_History)) {
+            console.log("Found work history directly in parsed rawResponse.Work_History", parsedResponse.Work_History.length, "entries");
+            result.workHistory = parsedResponse.Work_History;
+          }
+          
+          // Skills
+          if (Array.isArray(parsedResponse.Skills)) {
+            console.log("Found skills directly in parsed rawResponse.Skills");
+            result.skills = parsedResponse.Skills;
+          }
+          
+          // Red Flags
+          if (Array.isArray(parsedResponse.Red_Flags)) {
+            console.log("Found red flags directly in parsed rawResponse.Red_Flags");
+            result.redFlags = parsedResponse.Red_Flags;
+          }
+          
+          // Extract summary if available
+          if (typeof parsedResponse.Summary === 'string') {
+            console.log("Found summary in parsed rawResponse.Summary");
+            result.summary = parsedResponse.Summary;
+          }
+          
+          // Score
+          if (typeof parsedResponse.matching_score === 'number') {
+            console.log("Found matching_score in parsed rawResponse");
+            result.score = parsedResponse.matching_score;
+          }
+          
+        } catch (err) {
+          console.log("Failed to parse rawResponse as JSON - might not be JSON formatted");
+          // Ignore JSON parsing errors - this is just an attempt at direct extraction
         }
-        if (Array.isArray(parsedResponse.Skills)) {
-          console.log("Found skills directly in response.Skills");
-          result.skills = parsedResponse.Skills;
+      } 
+      // Handle object format raw response 
+      else if (typeof data.rawResponse === 'object') {
+        // Try to extract from rawResponse object directly
+        
+        // Work History
+        if (Array.isArray(data.rawResponse.Work_History)) {
+          console.log("Found work history in object rawResponse.Work_History", data.rawResponse.Work_History.length, "entries");
+          result.workHistory = data.rawResponse.Work_History;
         }
-        if (Array.isArray(parsedResponse.Red_Flags)) {
-          console.log("Found red flags directly in response.Red_Flags");
-          result.redFlags = parsedResponse.Red_Flags;
+        
+        // Skills
+        if (Array.isArray(data.rawResponse.Skills)) {
+          console.log("Found skills in object rawResponse.Skills");
+          result.skills = data.rawResponse.Skills;
         }
-      } catch (err) {
-        // Ignore JSON parsing errors - this is just an attempt at direct extraction
+        
+        // Red Flags
+        if (Array.isArray(data.rawResponse.Red_Flags)) {
+          console.log("Found red flags in object rawResponse.Red_Flags");
+          result.redFlags = data.rawResponse.Red_Flags;
+        }
+        
+        // Text field
+        if (typeof data.rawResponse.text === 'string') {
+          // Try to extract JSON from text field if it looks like it might contain JSON
+          if (data.rawResponse.text.includes('{') && data.rawResponse.text.includes('}')) {
+            try {
+              // Find JSON-like pattern - anything between { and }
+              const jsonMatch = data.rawResponse.text.match(/(\{[\s\S]*\})/);
+              if (jsonMatch) {
+                const extractedJson = jsonMatch[0];
+                const parsedJson = JSON.parse(extractedJson);
+                
+                // Extract work history if available
+                if (Array.isArray(parsedJson.Work_History)) {
+                  console.log("Found work history in text field JSON.Work_History", parsedJson.Work_History.length, "entries");
+                  result.workHistory = parsedJson.Work_History;
+                }
+                
+                // Extract skills if available
+                if (Array.isArray(parsedJson.Skills)) {
+                  console.log("Found skills in text field JSON.Skills");
+                  result.skills = parsedJson.Skills; 
+                }
+                
+                // Extract red flags if available
+                if (Array.isArray(parsedJson.Red_Flags)) {
+                  console.log("Found red flags in text field JSON.Red_Flags");
+                  result.redFlags = parsedJson.Red_Flags;
+                }
+              }
+            } catch (e) {
+              // Ignore JSON parsing errors from text field
+            }
+          }
+        }
       }
     }
     
     // Check for direct array fields at top level of data or rawResponse
     // Work History - try multiple field names to handle inconsistency
+    // Based on the screenshot, "Work_History" with underscore is the primary format
     if (Array.isArray(data.Work_History)) {
-      console.log("Found work history at data.Work_History");
+      console.log("Found work history at data.Work_History", data.Work_History.length, "entries");
       result.workHistory = data.Work_History;
+    } else if (typeof data === 'string') {
+      // Try parsing JSON from string (sometimes the response is a string containing JSON)
+      try {
+        const parsedData = JSON.parse(data);
+        if (Array.isArray(parsedData.Work_History)) {
+          console.log("Found work history in parsed JSON string at Work_History", parsedData.Work_History.length, "entries");
+          result.workHistory = parsedData.Work_History;
+        }
+      } catch (e) {
+        // Ignore parsing errors - this is just an attempt to handle string responses
+      }
     } else if (Array.isArray(data.work_history)) {
       console.log("Found work history at data.work_history");
       result.workHistory = data.work_history;
@@ -94,6 +186,9 @@ export function extractResumeData(analysisResult: any): ExtractedResumeData {
     } else if (data.analysis && Array.isArray(data.analysis.workHistory)) {
       console.log("Found work history at data.analysis.workHistory");
       result.workHistory = data.analysis.workHistory;
+    } else if (data.analysis && Array.isArray(data.analysis.Work_History)) {
+      console.log("Found work history at data.analysis.Work_History");
+      result.workHistory = data.analysis.Work_History;
     }
     
     // Skills - try multiple field names
