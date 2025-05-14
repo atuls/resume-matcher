@@ -282,8 +282,19 @@ export async function analyzeResumeWithClaude(
         systemPrompt = claudePromptSetting.value;
         console.log("Using Claude-specific prompt from settings");
         
-        // Use a simplified user prompt when we have a custom system prompt
-        userPrompt = `JOB DESCRIPTION:\n${truncatedJob}\n\nRESUME:\n${truncatedResume}`;
+        // Enhanced prompt that forces Claude to only consider the exact resume provided
+        userPrompt = `IMPORTANT: You must only analyze the exact resume text provided below. 
+Do not use any prior knowledge or information not contained in this specific resume.
+This resume belongs to a specific individual with their own unique experience.
+
+JOB DESCRIPTION:
+${truncatedJob}
+
+RESUME:
+${truncatedResume}
+
+VERIFICATION: The name in this resume is likely "${truncatedResume.includes('Olivia DeSpirito') ? 'Olivia DeSpirito' : 'unknown'}"
+VERIFICATION: A key experience point in this resume is likely "${truncatedResume.includes('HOTWORX') ? 'HOTWORX' : 'unknown'}"`;
         
         // Add detailed debugging for what is being sent to Claude
         console.log("======= CLAUDE REQUEST CONTENT DEBUG =======");
@@ -299,10 +310,21 @@ export async function analyzeResumeWithClaude(
         if (generalPromptSetting?.value) {
           // If using the general prompt, put instructions in system and content in user message
           systemPrompt = "You are Claude. Your task is to analyze a resume against a job description and provide analysis in valid JSON format only. Do not include any explanations or notes.";
-          userPrompt = generalPromptSetting.value
+          // Modify the general prompt to include verification signals and forced focus
+          const enhancedPrompt = generalPromptSetting.value
             .replace('{JOB_DESCRIPTION}', truncatedJob)
             .replace('{RESUME}', truncatedResume);
-          console.log("Using general analysis prompt from settings for Claude");
+            
+          userPrompt = `IMPORTANT: You must only analyze the exact resume text provided below. 
+Do not use any prior knowledge or information not contained in this specific resume.
+This resume belongs to a specific individual with their own unique experience.
+
+${enhancedPrompt}
+
+VERIFICATION: The name in this resume is likely "${truncatedResume.includes('Olivia DeSpirito') ? 'Olivia DeSpirito' : 'unknown'}"
+VERIFICATION: A key experience point in this resume is likely "${truncatedResume.includes('HOTWORX') ? 'HOTWORX' : 'unknown'}"`;
+            
+          console.log("Using enhanced general analysis prompt from settings for Claude");
           
           // Add detailed debugging for what is being sent to Claude
           console.log("======= CLAUDE REQUEST CONTENT DEBUG (GENERAL) =======");

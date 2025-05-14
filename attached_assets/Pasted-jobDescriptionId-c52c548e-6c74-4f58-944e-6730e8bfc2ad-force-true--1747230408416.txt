@@ -1,0 +1,46 @@
+jobDescriptionId: c52c548e-6c74-4f58-944e-6730e8bfc2ad
+force: true
+================================
+======= RESUME DATA DEBUG =======
+Resume ID: 59b024e9-b079-4976-bd40-46e720602a3b
+Resume filename: Olivia_DeSpirito_resume.pdf
+Candidate name: Olivia DeSpirito
+Resume extracted text snippet: # Olivia DeSpirito 
+
+Redding, CT 06896
+(203)200-8144
+oliviadespirito123@gmail.com
+
+## Experience
+
+November 2024 - Present
+
+## HOTWORX Grand Junction, Colorado - Sales Associate
+
+- Provided exceptional...
+Resume text contains "Olivia DeSpirito"? true
+Resume text contains "HOTWORX"? true
+Resume text length: 4311
+================================
+Force re-analyzing resume 59b024e9-b079-4976-bd40-46e720602a3b with job c52c548e-6c74-4f58-944e-6730e8bfc2ad using custom prompt
+Using Claude for resume analysis
+Resume text length: 4311
+Job description text length: 8593
+Requirements count: 15
+Using general analysis prompt from settings for Claude
+======= CLAUDE RESPONSE DEBUG =======
+Raw Claude response (first 300 chars): {   "matching_score": 85,   "summary": "The candidate demonstrates strong alignment with the Head of Growth role requirements. With over 10 years of experience in digital marketing and leadership roles, they have extensive expertise in lead generation, demand creation, brand development, and data-dr
+Total response length: 6025
+Response contains extracted_text? false
+Resume name appears in response? false
+====================================
+JSON extracted using regex
+Standard fields not found, attempting to extract from nested structure
+Extracted from Claude response: score=85, skills count=25, requirements count=1
+Claude analysis completed in 22.787 seconds
+Claude score: 85
+Matched requirements: 1
+======= RESUME UPDATE DEBUG =======
+Resume candidateTitle: Sales Associate
+Analysis result candidateTitle: Growth Marketing Strategy, Demand Generation, Marketing Team Leadership, Customer Acquisition, Lead Generation, Digital Marketing, Content Strategy, SEO/SEM, Marketing Automation, Campaign Development, Analytics & Reporting, A/B Testing, CRO (Conversion Rate Optimization), Marketing Operations, Budget Management, Cross-functional Collaboration, Performance Marketing, Lead Nurturing, Brand Development, Paid Media Management, Data-driven Decision Making, Marketo, Salesforce, Google Analytics, ABM (Account-Based Marketing)
+===================================
