@@ -27,9 +27,10 @@ import { formatDistance } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import websocketService from "@/lib/websocket";
 
 export default function ResumeProfilePage() {
   const [, params] = useRoute<{ id: string }>("/resume/:id");
@@ -87,6 +88,54 @@ export default function ResumeProfilePage() {
   
   // State for selected job description for analysis
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  
+  // State for WebSocket progress tracking
+  const [analysisProgress, setAnalysisProgress] = useState({
+    inProgress: false,
+    message: '',
+    progress: 0
+  });
+  
+  // Setup WebSocket connection
+  useEffect(() => {
+    // Connect to WebSocket
+    websocketService.connect();
+    
+    // WebSocket event listener
+    const handleMessage = (event: any) => {
+      console.log('Resume profile page received event:', event.type, event);
+      
+      // Handle progress events
+      if (event.type === 'batchAnalysisProgress' && event.resumeId === resumeId) {
+        setAnalysisProgress({
+          inProgress: true,
+          message: event.message || `Processing: ${event.current}/${event.total}`,
+          progress: event.progress || 0
+        });
+      }
+      
+      // Handle completion events
+      if (event.type === 'batchAnalysisComplete' && event.resumeId === resumeId) {
+        setAnalysisProgress({
+          inProgress: false,
+          message: 'Analysis complete',
+          progress: 100
+        });
+        
+        // Refresh data
+        queryClient.invalidateQueries({ queryKey: [`/api/resumes/${resumeId}/job-connections`] });
+        queryClient.invalidateQueries({ queryKey: [`/api/resumes/${resumeId}/analysis`] });
+      }
+    };
+    
+    // Register event listener
+    websocketService.addEventListener('all', handleMessage);
+    
+    // Cleanup function
+    return () => {
+      websocketService.removeEventListener('all', handleMessage);
+    };
+  }, [resumeId, queryClient]);
 
   // Function to handle contacting a candidate
   const handleContactCandidate = async () => {

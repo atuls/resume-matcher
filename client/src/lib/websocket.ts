@@ -31,9 +31,10 @@ class WebSocketService {
     try {
       // Determine the WebSocket URL based on the current location
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      const host = window.location.host;
+      const wsUrl = `${protocol}//${host}/ws`;
       
-      console.log(`Connecting to WebSocket at ${wsUrl}`);
+      console.log(`Connecting to WebSocket at ${wsUrl} (protocol: ${protocol}, host: ${host})`);
       
       this.socket = new WebSocket(wsUrl);
       
@@ -99,11 +100,24 @@ class WebSocketService {
   private handleError(event: Event) {
     console.error('WebSocket error:', event);
     
+    // Log WebSocket state for debugging
+    if (this.socket) {
+      console.error('WebSocket state:', {
+        readyState: this.socket.readyState,
+        url: this.socket.url,
+        protocol: this.socket.protocol,
+        extensions: this.socket.extensions,
+      });
+    }
+    
     // Dispatch error event to listeners
     this.dispatchEvent({
       type: 'info',
       message: 'WebSocket error occurred'
     });
+    
+    // Attempt to reconnect after an error
+    this.attemptReconnect();
   }
   
   // Attempt to reconnect to the WebSocket server
