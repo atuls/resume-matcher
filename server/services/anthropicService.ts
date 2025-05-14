@@ -265,7 +265,12 @@ export async function extractWorkHistoryWithClaude(text: string, customPrompt?: 
  */
 export async function analyzeResumeWithClaude(
   resumeText: string,
-  jobDescription: string
+  jobDescription: string,
+  resumeData?: {
+    candidateName?: string | null;
+    extractedText?: string;
+    fileName?: string;
+  }
 ): Promise<ResumeAnalysisResult> {
   try {
     // Truncate texts if they're too long (Claude has context length limits)
@@ -381,7 +386,17 @@ VERIFICATION: A key experience point in this resume is likely "${truncatedResume
       console.log("Raw Claude response (first 300 chars):", text.substring(0, 300).replace(/\n/g, ' '));
       console.log("Total response length:", text.length);
       console.log("Response contains extracted_text?", text.includes('extractedText') || text.includes('extracted_text'));
-      console.log("Resume name appears in response?", text.includes('Olivia DeSpirito'));
+      
+      // Simple resume verification
+      if (resumeData) {
+        const candidateName = resumeData.candidateName || '';
+        console.log("Resume name appears in response?", candidateName ? text.includes(candidateName) : 'No candidate name');
+        console.log("Key experience appears in response?", text.includes('HOTWORX'));
+      } else {
+        console.log("Resume name appears in response? Unknown - no resume data provided");
+        console.log("Key experience appears in response? Unknown - no resume data provided");
+      }
+      
       console.log("====================================");
       
       // Claude sometimes wraps JSON in code blocks with ```json or ``` tags
@@ -463,6 +478,45 @@ VERIFICATION: A key experience point in this resume is likely "${truncatedResume
         rawText: text,
         parsedJson: result
       };
+      
+      // Check if Claude's response is consistent with the actual resume
+      if (resumeData) {
+        const resumeName = resumeData.candidateName || '';
+        const resumeText = resumeData.extractedText || '';
+        const keyExperienceMatch = resumeText.includes('HOTWORX');
+        
+        // Check if Claude's response references the correct resume
+        const nameMatch = text.includes(resumeName);
+        const experienceMatch = keyExperienceMatch && text.includes('HOTWORX');
+        
+        // Check for hallucinated content
+        const suspiciousTerms = ['Shoutcart', 'Viral Nation', 'digital marketing', 'Growth Marketing'];
+        const falseMatches = suspiciousTerms.filter(term => 
+          text.toLowerCase().includes(term.toLowerCase()) && 
+          !resumeText.toLowerCase().includes(term.toLowerCase())
+        );
+        
+        if (falseMatches.length > 0) {
+          console.log("WARNING: Response contains terms not in original resume:", falseMatches.join(', '));
+        }
+        
+        // Validate response integrity
+        if ((!nameMatch || !experienceMatch) && falseMatches.length > 0) {
+          console.log("CRITICAL WARNING: Claude appears to be completely ignoring the provided resume!");
+          
+          // Add the actual resume text to the result
+          console.log("FALLBACK: Adding extracted_text to result due to detected inconsistency");
+          result.extracted_text = resumeText;
+          
+          // Also add some basic info based on the actual resume
+          if (!result.candidateName && resumeName) {
+            result.candidateName = resumeName;
+          }
+          
+          // Add a warning about inconsistencies
+          result.analysis_warning = "The AI analysis may contain inconsistencies. Please verify against the raw resume text.";
+        }
+      }
       
       // First approach: Direct mapping if Claude returned the exact format we expect
       if (result.skills && result.experience && result.education && 
