@@ -445,12 +445,15 @@ I will verify your analysis against these markers to ensure you're analyzing the
         
         result = JSON.parse(normalizedText);
         
-        // Add verification checks to detect fabrication
+        // Add verification checks to detect fabrication based on resume content
         const verificationMarkers = {
           name: truncatedResume.includes('Olivia DeSpirito'),
           company: truncatedResume.includes('HOTWORX'),
           position: truncatedResume.includes('Sales Associate'),
-          education: truncatedResume.includes('Colorado Mesa University')
+          education: truncatedResume.includes('Colorado Mesa University'),
+          location: truncatedResume.includes('Grand Junction'),
+          phone: truncatedResume.includes('203-200-8144'),
+          email: truncatedResume.includes('oliviadespirito123@gmail.com')
         };
         
         // Check if Claude's response contains the verification markers

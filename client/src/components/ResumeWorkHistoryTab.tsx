@@ -10,7 +10,7 @@ interface ResumeWorkHistoryTabProps {
   redFlagLoading: boolean;
   isRedFlagLoading: boolean;
   redFlagError: any;
-  analysis?: any; // Add analysis data
+  analysis?: any; // Analysis data
 }
 
 export function ResumeWorkHistoryTab({
@@ -87,7 +87,11 @@ export function ResumeWorkHistoryTab({
               size="sm"
               className="ml-2 text-amber-800 border-amber-300 hover:bg-amber-100"
               onClick={() => {
-                document.querySelector('button[value="raw-text"]')?.click();
+                // Typescript-safe way to trigger click on an element
+                const element = document.querySelector('button[value="raw-text"]');
+                if (element) {
+                  (element as HTMLElement).click();
+                }
               }}
             >
               View Raw Resume Text

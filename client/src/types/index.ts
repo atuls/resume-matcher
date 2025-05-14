@@ -14,7 +14,9 @@ export interface EnrichedAnalysisResult extends AnalysisResult {
     candidateTitle: string | null;
     fileName: string;
     fileType: string;
-  }
+  };
+  analysis_warning?: string;
+  extracted_text?: string;
 }
 
 export interface SkillMatch {
