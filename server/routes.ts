@@ -869,6 +869,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate request data
       const { resumeIds, jobDescriptionId, force = false } = req.body;
       
+      // Start very detailed debugging
+      console.log(`======= ANALYZE API DEBUG =======`);
+      console.log(`POST /api/analyze request received`);
+      console.log(`resumeIds:`, resumeIds);
+      console.log(`jobDescriptionId:`, jobDescriptionId);
+      console.log(`force:`, force);
+      console.log(`================================`);
+      
       // Validate against schema (remove force parameter)
       analyzeResumeSchema.parse({ resumeIds, jobDescriptionId });
       
@@ -884,6 +892,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!resume) {
         return res.status(404).json({ message: "Resume not found" });
       }
+      
+      // Log resume data for debugging
+      console.log(`======= RESUME DATA DEBUG =======`);
+      console.log(`Resume ID: ${resumeId}`);
+      console.log(`Resume filename: ${resume.fileName}`);
+      console.log(`Candidate name: ${resume.candidateName}`);
+      console.log(`Resume extracted text snippet: ${resume.extractedText.substring(0, 200)}...`);
+      console.log(`Resume text contains "Olivia DeSpirito"? ${resume.extractedText.includes("Olivia DeSpirito")}`);
+      console.log(`Resume text contains "HOTWORX"? ${resume.extractedText.includes("HOTWORX")}`);
+      console.log(`Resume text length: ${resume.extractedText.length}`);
+      console.log(`================================`);
       
       // Get job description
       const jobDescription = await storage.getJobDescription(jobDescriptionId);
