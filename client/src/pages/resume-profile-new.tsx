@@ -369,7 +369,24 @@ export default function ResumeProfilePage() {
                 <div>
                   <div className="text-sm text-gray-500">File</div>
                   <div className="flex items-center gap-2">
-                    <span>{resume.fileName}</span>
+                    <a 
+                      href={`/api/resumes/${resumeId}/download`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 hover:underline"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const downloadUrl = `/api/resumes/${resumeId}/download`;
+                        window.open(downloadUrl, '_blank');
+                        
+                        toast({
+                          title: "Opening resume",
+                          description: "Resume file opened in a new tab"
+                        });
+                      }}
+                    >
+                      {resume.fileName}
+                    </a>
                     <Button 
                       size="sm" 
                       variant="outline" 
