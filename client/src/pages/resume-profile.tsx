@@ -129,7 +129,9 @@ export default function ResumeProfilePage() {
     setJobScoreLoading(true);
     
     try {
-      // Use the analyze endpoint to generate a score
+      console.log(`Running fresh job analysis for resume ${resumeId} against job ${selectedJobId} with custom prompt`);
+      
+      // Use the analyze endpoint to generate a score WITH force=true to ensure custom prompt is used
       const response = await fetch(`/api/analyze`, {
         method: "POST",
         headers: {
@@ -138,7 +140,8 @@ export default function ResumeProfilePage() {
         credentials: "include",
         body: JSON.stringify({
           jobDescriptionId: selectedJobId,
-          resumeIds: [resumeId]
+          resumeIds: [resumeId],
+          force: true // Force a fresh analysis with custom prompt
         })
       });
       
@@ -149,9 +152,13 @@ export default function ResumeProfilePage() {
       // Refetch the score
       await refetchJobScore();
       
+      // Also invalidate resume analysis data to ensure consistency
+      queryClient.invalidateQueries({ queryKey: [`/api/resumes/${resumeId}/analysis`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/resumes/${resumeId}/red-flag-analysis`] });
+      
       toast({
-        title: "Analysis complete",
-        description: "Resume has been analyzed against the selected job",
+        title: "Analysis complete with custom prompt",
+        description: "Resume has been analyzed against the selected job using the custom prompt from settings.",
       });
     } catch (error: any) {
       toast({
