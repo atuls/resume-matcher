@@ -1,0 +1,93 @@
+    "rawText": "{\n  \"matching_score\": 92,\n  \"Summary\": \"The candidate is an excellent match for the Brand Partnerships Manager position. With over 7 years of experience in sales and partnerships roles across digital media and influencer marketing, they directly meet the 5+ years experience requirement. Their current role at Captiv8 as Director of Brand Partnerships demonstrates expertise in influencer marketing platforms, sales cycle management, and developing strategic relationships with brands - all core requirements for this position. The candidate has proven success in revenue generation, exceeding targets by 150%, and a track record of closing six-figure deals. Their experience at ZEFR provides additional relevant background in content marketing and brand safety, which would be valuable for consultative selling. The candidate demonstrates strong communication skills through their presentation experience and leadership roles. Their educational background in Business Administration with a Marketing focus provides a solid foundation for the strategic aspects of the role. The candidate's experience with CRM tools (HubSpot) and background in both inbound and outbound sales strategies align perfectly with the job requirements. Overall, the candidate has the right mix of influencer marketing knowledge, consultative sales experience, and strategic thinking required for this position.\",\n  \"Work History\": [\n    {\n      \"Title\": \"Director of Brand Partnerships\",\n      \"Company\": \"Captiv8\",\n      \"location\": \"San Francisco, CA\",\n      \"startDate\": \"January 2020\",\n      \"endDate\": \"Present\",\n      \"description\": \"Lead strategic sales initiatives for influencer marketing platform targeting Fortune 500 brands. Manage full sales cycle from prospecting to closing, with a focus on enterprise clients. Exceeded revenue targets by 150% in 2022. Developed and implemented account-based marketing strategies that increased qualified leads by 40%. Conducted over 200 platform demonstrations annually, showcasing ROI potential to marketing executives. Collaborated with product teams to enhance platform features based on client feedback. Built and managed a pipeline of $3M+ in potential annual recurring revenue.\",\n      \"durationMonths\": 47,\n      \"isCurrentRole\": true\n    },\n    {\n      \"Title\": \"Senior Partnership Manager\",\n      \"Company\": \"ZEFR\",\n      \"location\": \"Los Angeles, CA\",\n      \"startDate\": \"March 2017\",\n      \"endDate\": \"December 2019\",\n      \"description\": \"Managed relationships with key brand clients utilizing ZEFR's content targeting and brand safety solutions. Negotiated and closed six-figure deals with major CPG and retail brands. Developed custom content marketing strategies aligned with brand safety requirements. Increased territory revenue by 35% through strategic account expansion. Provided consultative guidance on YouTube and social media best practices. Created detailed campaign reports and analytics presentations for clients.\",\n      \"durationMonths\": 33,\n      \"isCurrentRole\": false\n    },\n    {\n      \"Title\": \"Account Executive\",\n      \"Company\": \"AdRoll\",\n      \"location\": \"San Francisco, CA\",\n      \"startDate\": \"June 2015\",\n      \"endDate\": \"February 2017\",\n      \"description\": \"Generated new business for retargeting and programmatic advertising platform. Prospected, qualified and converted mid-market clients across various industries. Consistently achieved 110%+ of quarterly sales targets. Created tailored digital advertising strategies based on client objectives. Conducted detailed platform demonstrations and client training sessions. Managed a portfolio of 75+ active accounts with 92% retention rate.\",\n      \"durationMonths\": 20,\n      \"isCurrentRole\": false\n    }\n  ],\n  \"Skills\": [\n    \"Full Sales Cycle Management\",\n    \"Consultative Selling\",\n    \"Influencer Marketing\",\n    \"Digital Media Sales\",\n    \"Account-Based Marketing\",\n    \"CRM (HubSpot) Proficiency\",\n    \"Pipeline Development\",\n    \"Strategic Partnership Building\",\n    \"Client Relationship Management\",\n    \"Revenue Generation\",\n    \"Contract Negotiation\",\n    \"Market Research\",\n    \"Presentation Skills\",\n    \"Brand Safety Solutions\",\n    \"Social Media Strategy\",\n    \"Content Marketing\",\n    \"Analytics and Reporting\",\n    \"Team Leadership\"\n  ],\n  \"Red Flags\": [\n    \"No specific experience representing a company at industry events or conferences was explicitly mentioned, though the candidate likely has this experience given their senior roles.\",\n    \"While the candidate has experience with HubSpot, there's no explicit mention of experience with Salesforce, which was listed as an alternative CRM in the job requirements.\"\n  ]\n}",
+        "parsedJson": {
+          "matching_score": 92,
+          "Summary": "The candidate is an excellent match for the Brand Partnerships Manager position. With over 7 years of experience in sales and partnerships roles across digital media and influencer marketing, they directly meet the 5+ years experience requirement. Their current role at Captiv8 as Director of Brand Partnerships demonstrates expertise in influencer marketing platforms, sales cycle management, and developing strategic relationships with brands - all core requirements for this position. The candidate has proven success in revenue generation, exceeding targets by 150%, and a track record of closing six-figure deals. Their experience at ZEFR provides additional relevant background in content marketing and brand safety, which would be valuable for consultative selling. The candidate demonstrates strong communication skills through their presentation experience and leadership roles. Their educational background in Business Administration with a Marketing focus provides a solid foundation for the strategic aspects of the role. The candidate's experience with CRM tools (HubSpot) and background in both inbound and outbound sales strategies align perfectly with the job requirements. Overall, the candidate has the right mix of influencer marketing knowledge, consultative sales experience, and strategic thinking required for this position.",
+          "Work History": [
+            {
+              "Title": "Director of Brand Partnerships",
+              "Company": "Captiv8",
+              "location": "San Francisco, CA",
+              "startDate": "January 2020",
+              "endDate": "Present",
+              "description": "Lead strategic sales initiatives for influencer marketing platform targeting Fortune 500 brands. Manage full sales cycle from prospecting to closing, with a focus on enterprise clients. Exceeded revenue targets by 150% in 2022. Developed and implemented account-based marketing strategies that increased qualified leads by 40%. Conducted over 200 platform demonstrations annually, showcasing ROI potential to marketing executives. Collaborated with product teams to enhance platform features based on client feedback. Built and managed a pipeline of $3M+ in potential annual recurring revenue.",
+              "durationMonths": 47,
+              "isCurrentRole": "true"
+            },
+            {
+              "Title": "Senior Partnership Manager",
+              "Company": "ZEFR",
+              "location": "Los Angeles, CA",
+              "startDate": "March 2017",
+              "endDate": "December 2019",
+              "description": "Managed relationships with key brand clients utilizing ZEFR's content targeting and brand safety solutions. Negotiated and closed six-figure deals with major CPG and retail brands. Developed custom content marketing strategies aligned with brand safety requirements. Increased territory revenue by 35% through strategic account expansion. Provided consultative guidance on YouTube and social media best practices. Created detailed campaign reports and analytics presentations for clients.",
+              "durationMonths": 33,
+              "isCurrentRole": "false"
+            },
+            {
+              "Title": "Account Executive",
+              "Company": "AdRoll",
+              "location": "San Francisco, CA",
+              "startDate": "June 2015",
+              "endDate": "February 2017",
+              "description": "Generated new business for retargeting and programmatic advertising platform. Prospected, qualified and converted mid-market clients across various industries. Consistently achieved 110%+ of quarterly sales targets. Created tailored digital advertising strategies based on client objectives. Conducted detailed platform demonstrations and client training sessions. Managed a portfolio of 75+ active accounts with 92% retention rate.",
+              "durationMonths": 20,
+              "isCurrentRole": "false"
+            }
+          ],
+          "Skills": [
+            "Full Sales Cycle Management",
+            "Consultative Selling",
+            "Influencer Marketing",
+            "Digital Media Sales",
+            "Account-Based Marketing",
+            "CRM (HubSpot) Proficiency",
+            "Pipeline Development",
+            "Strategic Partnership Building",
+            "Client Relationship Management",
+            "Revenue Generation",
+            "Contract Negotiation",
+            "Market Research",
+            "Presentation Skills",
+            "Brand Safety Solutions",
+            "Social Media Strategy",
+            "Content Marketing",
+            "Analytics and Reporting",
+            "Team Leadership"
+          ],
+          "Red Flags": [
+            "No specific experience representing a company at industry events or conferences was explicitly mentioned, though the candidate likely has this experience given their senior roles.",
+            "While the candidate has experience with HubSpot, there's no explicit mention of experience with Salesforce, which was listed as an alternative CRM in the job requirements."
+          ]
+        },
+        "extractedSections": {
+          "redFlags": "",
+          "summary": "The candidate is an excellent match for the Brand Partnerships Manager position. With over 7 years of experience in sales and partnerships roles across digital media and influencer marketing, they directly meet the 5+ years experience requirement. Their current role at Captiv8 as Director of Brand Partnerships demonstrates expertise in influencer marketing platforms, sales cycle management, and developing strategic relationships with brands - all core requirements for this position. The candidate has proven success in revenue generation, exceeding targets by 150%, and a track record of closing six-figure deals. Their experience at ZEFR provides additional relevant background in content marketing and brand safety, which would be valuable for consultative selling. The candidate demonstrates strong communication skills through their presentation experience and leadership roles. Their educational background in Business Administration with a Marketing focus provides a solid foundation for the strategic aspects of the role. The candidate's experience with CRM tools (HubSpot) and background in both inbound and outbound sales strategies align perfectly with the job requirements. Overall, the candidate has the right mix of influencer marketing knowledge, consultative sales experience, and strategic thinking required for this position.",
+          "skills": [
+            "Full Sales Cycle Management",
+            "Consultative Selling",
+            "Influencer Marketing",
+            "Digital Media Sales",
+            "Account-Based Marketing",
+            "CRM (HubSpot) Proficiency",
+            "Pipeline Development",
+            "Strategic Partnership Building",
+            "Client Relationship Management",
+            "Revenue Generation",
+            "Contract Negotiation",
+            "Market Research",
+            "Presentation Skills",
+            "Brand Safety Solutions",
+            "Social Media Strategy",
+            "Content Marketing",
+            "Analytics and Reporting",
+            "Team Leadership"
+          ],
+          "workHistory": ""
+        }
+      }
+    },
+    "aiModel": "claude-3-7-sonnet-20250219",
+    "createdAt": "2025-05-13T13:44:17.669Z",
+    "updatedAt": "2025-05-13T13:44:17.669Z"
+  }
+]
