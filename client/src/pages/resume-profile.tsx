@@ -631,14 +631,14 @@ export default function ResumeProfilePage() {
                 <TabsContent value="debug">
                   <div className="space-y-6">
                     <Alert className="border-blue-200 bg-blue-50">
-                      <div className="flex items-center">
+                      <div className="flex items-center flex-wrap gap-2">
                         <Zap className="h-4 w-4 text-blue-600 mr-2" />
                         <h3 className="font-medium text-blue-900">Raw LLM Response</h3>
-                        <TestParserBtn />
+                        <div className="flex gap-2 ml-auto">
+                          <TestParserBtn />
                           <Button 
                             variant="outline"
                             size="sm"
-                            className="ml-2"
                             onClick={() => {
                               console.log("DEBUG RAW RESPONSE:", analysis?.rawResponse);
                               if (analysis?.rawResponse) {
@@ -664,6 +664,22 @@ export default function ResumeProfilePage() {
                           >
                             Debug Raw Response
                           </Button>
+                          <Button 
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-1"
+                            onClick={() => {
+                              if (resumeId) {
+                                setAnalysisLoading(true);
+                                runSkillsAnalysis().then(() => {
+                                  console.log("Analysis complete");
+                                });
+                              }
+                            }}
+                          >
+                            <RefreshCw className="h-3 w-3" /> Re-analyze Resume
+                          </Button>
+                        </div>
                       </div>
                       <AlertDescription className="mt-4">
                         <p className="text-sm text-blue-800 mb-2">
@@ -679,6 +695,9 @@ export default function ResumeProfilePage() {
                               : JSON.stringify(analysis?.rawResponse, null, 2)}
                           </pre>
                         </div>
+                        
+                        {/* Add the DebugPanel for advanced inspection */}
+                        <DebugPanel rawResponse={analysis?.rawResponse} />
                       </AlertDescription>
                     </Alert>
                     

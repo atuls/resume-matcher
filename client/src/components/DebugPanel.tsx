@@ -1,337 +1,130 @@
-import React, { useState } from 'react';
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, ExternalLink, FileText, ChevronDown, ChevronUp, Zap, FileBadge, Bug } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  examineSkillsAccessPaths,
-  examineWorkHistoryAccessPaths,
-  extractSkillsFromAnalysis,
-  categorizeSkills,
-  extractWorkHistory,
-  findFieldPath
-} from "@/lib/debug-utils";
+import { parseRawResponse } from "@/lib/raw-response-parser";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Code, AlertTriangle } from "lucide-react";
 
 interface DebugPanelProps {
-  resumeId: string;
-  analysis: any;
-  redFlagData: any;
+  rawResponse: any;
 }
 
-function formatSectionName(key: string): string {
-  // Convert camelCase or snake_case to Title Case with spaces
-  return key
-    .replace(/([A-Z])/g, ' $1') // Insert space before uppercase letters
-    .replace(/_/g, ' ') // Replace underscores with spaces
-    .replace(/^\w/, c => c.toUpperCase()) // Capitalize first letter
-    .trim();
-}
+export function DebugPanel({ rawResponse }: DebugPanelProps) {
+  const [debugInfo, setDebugInfo] = React.useState<string | null>(null);
 
-function isPrimitive(value: any): boolean {
-  return value === null || 
-    typeof value === 'string' || 
-    typeof value === 'number' || 
-    typeof value === 'boolean';
-}
+  const debugResponse = () => {
+    try {
+      console.log("Debug - Raw Response:", rawResponse);
+      let info = "";
+      
+      // Type check
+      info += `Raw response type: ${typeof rawResponse}\n\n`;
+      
+      if (typeof rawResponse === 'string') {
+        // Check if it's a string that contains our known fields
+        if (rawResponse.includes('"Skills":') || 
+            rawResponse.includes('"Work_History":') || 
+            rawResponse.includes('"Red_Flags":')) {
+          info += "✅ String contains expected fields (Skills, Work_History, Red_Flags)\n";
+        } else {
+          info += "❌ String does not contain expected fields\n";
+        }
+        
+        info += `String length: ${rawResponse.length}\n`;
+        info += `First 100 chars: ${rawResponse.substring(0, 100)}...\n\n`;
+        
+        // Try to parse it
+        try {
+          const parsed = JSON.parse(rawResponse);
+          info += "✅ Successfully parsed as JSON\n";
+          info += `JSON keys: ${Object.keys(parsed).join(', ')}\n`;
+          
+          // Check for specific fields
+          if (parsed.Skills) info += `✅ Found Skills array with ${parsed.Skills.length} items\n`;
+          if (parsed.Work_History) info += `✅ Found Work_History array with ${parsed.Work_History.length} items\n`;
+          if (parsed.Red_Flags) info += `✅ Found Red_Flags array with ${parsed.Red_Flags.length} items\n`;
+          if (parsed.Summary) info += `✅ Found Summary\n`;
+          if (parsed.matching_score) info += `✅ Found matching_score: ${parsed.matching_score}\n`;
+        } catch (e) {
+          info += `❌ Failed to parse as JSON: ${e.message}\n`;
+        }
+      } else if (typeof rawResponse === 'object' && rawResponse !== null) {
+        info += `Object keys: ${Object.keys(rawResponse).join(', ')}\n\n`;
+        
+        // Check if it has parsedJson
+        if (rawResponse.parsedJson) {
+          info += "Object has parsedJson property\n";
+          info += `parsedJson keys: ${Object.keys(rawResponse.parsedJson).join(', ')}\n\n`;
+          
+          // Check for specific fields
+          if (rawResponse.parsedJson.Skills) 
+            info += `✅ Found Skills array in parsedJson with ${rawResponse.parsedJson.Skills.length} items\n`;
+          if (rawResponse.parsedJson.Work_History) 
+            info += `✅ Found Work_History array in parsedJson with ${rawResponse.parsedJson.Work_History.length} items\n`;
+          if (rawResponse.parsedJson.Red_Flags) 
+            info += `✅ Found Red_Flags array in parsedJson with ${rawResponse.parsedJson.Red_Flags.length} items\n`;
+          if (rawResponse.parsedJson.Summary) 
+            info += `✅ Found Summary in parsedJson\n`;
+          if (rawResponse.parsedJson.matching_score) 
+            info += `✅ Found matching_score in parsedJson: ${rawResponse.parsedJson.matching_score}\n`;
+        }
+        
+        // Check for direct properties
+        if (rawResponse.Skills) 
+          info += `✅ Found Skills array directly with ${rawResponse.Skills.length} items\n`;
+        if (rawResponse.Work_History) 
+          info += `✅ Found Work_History array directly with ${rawResponse.Work_History.length} items\n`;
+        if (rawResponse.Red_Flags) 
+          info += `✅ Found Red_Flags array directly with ${rawResponse.Red_Flags.length} items\n`;
+        if (rawResponse.Summary) 
+          info += `✅ Found Summary directly\n`;
+        if (rawResponse.matching_score) 
+          info += `✅ Found matching_score directly: ${rawResponse.matching_score}\n`;
+      } else {
+        info += "Unable to analyze this response type";
+      }
+      
+      // Try to parse it with our parser
+      try {
+        const parsed = parseRawResponse(rawResponse);
+        info += "\n\nPARSER RESULTS:\n";
+        info += `Work History: ${parsed.workHistory.length} items\n`;
+        info += `Skills: ${parsed.skills.length} items\n`;
+        info += `Red Flags: ${parsed.redFlags.length} items\n`;
+        info += `Summary: ${parsed.summary ? "Found" : "Not found"}\n`;
+        info += `Score: ${parsed.score}\n`;
+      } catch (e) {
+        info += `\n\nParser error: ${e.message}\n`;
+      }
+      
+      setDebugInfo(info);
+    } catch (e) {
+      setDebugInfo(`Error analyzing raw response: ${e.message}`);
+    }
+  };
 
-// Component to display an object in a tree-like format
-// This is more readable than JSON.stringify for nested objects
-function ObjectTree({ data, level = 0 }: { data: any, level?: number }) {
-  if (data === null || data === undefined) {
-    return <span className="text-gray-400">null</span>;
-  }
-  
-  if (isPrimitive(data)) {
-    if (typeof data === 'string') {
-      return <span className="text-green-600">"{data}"</span>;
-    }
-    if (typeof data === 'number') {
-      return <span className="text-blue-600">{data}</span>;
-    }
-    if (typeof data === 'boolean') {
-      return <span className="text-purple-600">{String(data)}</span>;
-    }
-    return <span>{String(data)}</span>;
-  }
-  
-  if (Array.isArray(data)) {
-    if (data.length === 0) {
-      return <span className="text-gray-400">[]</span>;
-    }
-    
-    return (
-      <div className="ml-4">
-        [
-        {data.map((item, index) => (
-          <div key={index} className="ml-4">
-            <ObjectTree data={item} level={level + 1} />
-            {index < data.length - 1 && ','}
-          </div>
-        ))}
-        ]
-      </div>
-    );
-  }
-  
-  // Handle object
-  const keys = Object.keys(data);
-  if (keys.length === 0) {
-    return <span className="text-gray-400">{"{}"}</span>;
-  }
-  
   return (
-    <div className="ml-4">
-      {"{"}
-      {keys.map((key, index) => (
-        <div key={key} className="ml-4">
-          <span className="text-yellow-600">{key}</span>: <ObjectTree data={data[key]} level={level + 1} />
-          {index < keys.length - 1 && ','}
-        </div>
-      ))}
-      {"}"}
-    </div>
-  );
-}
-
-function DataSection({ title, data, icon: Icon }: { title: string, data: any, icon: React.ElementType }) {
-  const [isOpen, setIsOpen] = useState(false);
-  
-  return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="rounded-md border overflow-hidden">
-      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
-        <div className="flex items-center">
-          <Icon className="h-4 w-4 mr-2 text-primary" />
-          <h4 className="font-medium">{title}</h4>
-        </div>
-        <CollapsibleTrigger asChild>
-          <Button variant="ghost" size="sm" className="p-0 h-8 w-8">
-            {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </Button>
-        </CollapsibleTrigger>
+    <div className="space-y-4 mt-4 border-t pt-4">
+      <div className="flex items-center space-x-2">
+        <Code className="h-5 w-5 text-blue-500" />
+        <h3 className="text-sm font-medium">Response Debugger</h3>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={debugResponse}
+        >
+          Analyze Raw Response
+        </Button>
       </div>
-      <CollapsibleContent>
-        <div className="p-4">
-          <Tabs defaultValue="pretty">
-            <TabsList className="mb-4">
-              <TabsTrigger value="pretty">Structured View</TabsTrigger>
-              <TabsTrigger value="raw">Raw JSON</TabsTrigger>
-            </TabsList>
-            <TabsContent value="pretty">
-              <div className="overflow-auto text-xs max-h-80 p-3 rounded bg-gray-50 font-mono">
-                <ObjectTree data={data} />
-              </div>
-            </TabsContent>
-            <TabsContent value="raw">
-              <pre className="overflow-auto text-xs max-h-80 p-3 rounded bg-black text-green-400">
-                {JSON.stringify(data, null, 2) || "No data available"}
-              </pre>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
-  );
-}
-
-function ExtractedTextSection({ extractedText }: { extractedText: string }) {
-  const [isOpen, setIsOpen] = useState(false);
-  
-  return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="rounded-md border overflow-hidden">
-      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
-        <div className="flex items-center">
-          <FileText className="h-4 w-4 mr-2 text-primary" />
-          <h4 className="font-medium">Extracted Resume Text</h4>
-        </div>
-        <CollapsibleTrigger asChild>
-          <Button variant="ghost" size="sm" className="p-0 h-8 w-8">
-            {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </Button>
-        </CollapsibleTrigger>
-      </div>
-      <CollapsibleContent>
-        <div className="p-4">
-          <div className="overflow-auto max-h-80 p-3 rounded bg-gray-50">
-            <pre className="text-sm whitespace-pre-wrap font-mono text-slate-800">
-              {extractedText}
+      
+      {debugInfo && (
+        <Alert className="bg-slate-50">
+          <AlertTriangle className="h-4 w-4 text-blue-500" />
+          <AlertDescription>
+            <pre className="whitespace-pre-wrap text-xs font-mono bg-slate-100 p-2 rounded mt-2 max-h-96 overflow-auto">
+              {debugInfo}
             </pre>
-          </div>
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
-  );
-}
-
-export function DebugPanel({ resumeId, analysis, redFlagData }: DebugPanelProps) {
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="font-medium text-lg">Resume Analysis Debug Info</h3>
-        <Badge variant="secondary" className="ml-2">
-          Resume ID: {resumeId}
-        </Badge>
-      </div>
-      
-      {/* Data Structure Diagnosis Alert */}
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <div className="ml-2">
-          <p className="font-medium text-sm">Data Structure Diagnosis</p>
-          <p className="text-xs text-gray-500">
-            This panel displays the raw data from the AI analysis. Use these views to troubleshoot issues with
-            data extraction and formatting across the different tabs.
-          </p>
-        </div>
-      </Alert>
-      
-      {/* Skills Analysis */}
-      <DataSection title="Skills Analysis Data" data={analysis} icon={Zap} />
-      
-      {/* Red Flag Analysis */}
-      <DataSection title="Red Flag Analysis Data" data={redFlagData} icon={Bug} />
-      
-      {/* Raw Response Section if available */}
-      {analysis?.rawResponse && (
-        <DataSection title="Raw AI Response" data={
-          (() => {
-            if (typeof analysis.rawResponse === 'string') {
-              try {
-                return JSON.parse(analysis.rawResponse);
-              } catch (e) {
-                // If it's not valid JSON, just return the string
-                return analysis.rawResponse;
-              }
-            }
-            return analysis.rawResponse;
-          })()
-        } icon={FileBadge} />
-      )}
-      
-      {/* Data Extraction Analysis */}
-      <Collapsible className="rounded-md border overflow-hidden">
-        <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
-          <div className="flex items-center">
-            <FileText className="h-4 w-4 mr-2 text-primary" />
-            <h4 className="font-medium">Data Extraction Analysis</h4>
-          </div>
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="p-0 h-8 w-8">
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </CollapsibleTrigger>
-        </div>
-        <CollapsibleContent>
-          <div className="p-4">
-            <Tabs defaultValue="skills">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="skills">Skills</TabsTrigger>
-                <TabsTrigger value="work-history">Work History</TabsTrigger>
-                <TabsTrigger value="red-flags">Red Flags</TabsTrigger>
-              </TabsList>
-              
-              {/* Skills Tab Content */}
-              <TabsContent value="skills" className="space-y-4 pt-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h5 className="text-sm font-medium mb-2">Skills Access Paths (Main Analysis):</h5>
-                    <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
-                      {JSON.stringify(examineSkillsAccessPaths(analysis), null, 2)}
-                    </pre>
-                  </div>
-                  
-                  <div>
-                    <h5 className="text-sm font-medium mb-2">Skills Access Paths (Red Flag Analysis):</h5>
-                    <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
-                      {JSON.stringify(examineSkillsAccessPaths(redFlagData), null, 2)}
-                    </pre>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <h5 className="text-sm font-medium mb-2">Extracted Skills (via Unified Extractor):</h5>
-                    <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
-                      {JSON.stringify(extractSkillsFromAnalysis(analysis), null, 2)}
-                    </pre>
-                  </div>
-                  
-                  <div>
-                    <h5 className="text-sm font-medium mb-2">Categorized Skills:</h5>
-                    <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
-                      {JSON.stringify(categorizeSkills(extractSkillsFromAnalysis(analysis)), null, 2)}
-                    </pre>
-                  </div>
-                </div>
-              </TabsContent>
-              
-              {/* Work History Tab Content */}
-              <TabsContent value="work-history" className="space-y-4 pt-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h5 className="text-sm font-medium mb-2">Work History Access Paths (Main Analysis):</h5>
-                    <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
-                      {JSON.stringify(examineWorkHistoryAccessPaths(analysis), null, 2)}
-                    </pre>
-                  </div>
-                  
-                  <div>
-                    <h5 className="text-sm font-medium mb-2">Work History Access Paths (Red Flag Analysis):</h5>
-                    <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
-                      {JSON.stringify(examineWorkHistoryAccessPaths(redFlagData), null, 2)}
-                    </pre>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <h5 className="text-sm font-medium mb-2">Extracted Work History (Main Analysis):</h5>
-                    <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
-                      {JSON.stringify(extractWorkHistory(analysis), null, 2)}
-                    </pre>
-                  </div>
-                  
-                  <div>
-                    <h5 className="text-sm font-medium mb-2">Extracted Work History (Red Flag Analysis):</h5>
-                    <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
-                      {JSON.stringify(extractWorkHistory(redFlagData), null, 2)}
-                    </pre>
-                  </div>
-                </div>
-              </TabsContent>
-              
-              {/* Red Flags Tab Content */}
-              <TabsContent value="red-flags" className="space-y-4 pt-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h5 className="text-sm font-medium mb-2">Main Analysis Red Flag Paths:</h5>
-                    <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
-                      {JSON.stringify(findFieldPath(analysis, ['redFlags', 'Red_Flags', 'red_flags', 'Red Flags']), null, 2)}
-                    </pre>
-                  </div>
-                  
-                  <div>
-                    <h5 className="text-sm font-medium mb-2">Red Flag Analysis Structure:</h5>
-                    <pre className="overflow-auto text-xs max-h-40 p-3 rounded bg-black text-green-400">
-                      {JSON.stringify(
-                        redFlagData?.analysis?.potentialRedFlags || 
-                        redFlagData?.redFlags || 
-                        redFlagData?.Red_Flags || 
-                        []
-                      , null, 2)}
-                    </pre>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
-      
-      {/* Extracted Text Section (if available in analysis) */}
-      {analysis?.extracted_text && (
-        <ExtractedTextSection extractedText={analysis.extracted_text} />
+          </AlertDescription>
+        </Alert>
       )}
     </div>
   );

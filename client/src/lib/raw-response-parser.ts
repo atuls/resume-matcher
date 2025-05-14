@@ -27,6 +27,80 @@ export function parseRawResponse(rawResponse: string | any): ParsedRawResponse {
     rawData: null
   };
   
+  // If the rawResponse is directly an object with parsedJson property
+  if (typeof rawResponse === 'object' && rawResponse !== null && rawResponse.parsedJson) {
+    console.log("DIRECT OBJECT WITH PARSEDJSON DETECTED:", Object.keys(rawResponse.parsedJson));
+    
+    // Extract data directly from parsedJson
+    if (rawResponse.parsedJson.Skills && Array.isArray(rawResponse.parsedJson.Skills)) {
+      result.skills = rawResponse.parsedJson.Skills;
+      console.log("Direct extraction: Found Skills array with", result.skills.length, "items");
+    }
+    
+    if (rawResponse.parsedJson.Work_History && Array.isArray(rawResponse.parsedJson.Work_History)) {
+      result.workHistory = rawResponse.parsedJson.Work_History;
+      console.log("Direct extraction: Found Work_History array with", result.workHistory.length, "items");
+    }
+    
+    if (rawResponse.parsedJson.Red_Flags && Array.isArray(rawResponse.parsedJson.Red_Flags)) {
+      result.redFlags = rawResponse.parsedJson.Red_Flags;
+      console.log("Direct extraction: Found Red_Flags array with", result.redFlags.length, "items");
+    }
+    
+    if (rawResponse.parsedJson.Summary) {
+      result.summary = rawResponse.parsedJson.Summary;
+      console.log("Direct extraction: Found Summary");
+    }
+    
+    if (rawResponse.parsedJson.matching_score) {
+      result.score = parseInt(rawResponse.parsedJson.matching_score);
+      console.log("Direct extraction: Found matching_score:", result.score);
+    }
+    
+    // If we found any data, return it immediately
+    if (result.skills.length > 0 || result.workHistory.length > 0 || result.redFlags.length > 0) {
+      result.rawData = rawResponse.parsedJson;
+      return result;
+    }
+  }
+  
+  // If the rawResponse is directly an object with Skills/Work_History properties
+  if (typeof rawResponse === 'object' && rawResponse !== null) {
+    console.log("DIRECT OBJECT DETECTED:", Object.keys(rawResponse));
+    
+    // Extract data directly from object
+    if (rawResponse.Skills && Array.isArray(rawResponse.Skills)) {
+      result.skills = rawResponse.Skills;
+      console.log("Direct extraction: Found Skills array with", result.skills.length, "items");
+    }
+    
+    if (rawResponse.Work_History && Array.isArray(rawResponse.Work_History)) {
+      result.workHistory = rawResponse.Work_History;
+      console.log("Direct extraction: Found Work_History array with", result.workHistory.length, "items");
+    }
+    
+    if (rawResponse.Red_Flags && Array.isArray(rawResponse.Red_Flags)) {
+      result.redFlags = rawResponse.Red_Flags;
+      console.log("Direct extraction: Found Red_Flags array with", result.redFlags.length, "items");
+    }
+    
+    if (rawResponse.Summary) {
+      result.summary = rawResponse.Summary;
+      console.log("Direct extraction: Found Summary");
+    }
+    
+    if (rawResponse.matching_score) {
+      result.score = parseInt(rawResponse.matching_score);
+      console.log("Direct extraction: Found matching_score:", result.score);
+    }
+    
+    // If we found any data, return it immediately
+    if (result.skills.length > 0 || result.workHistory.length > 0 || result.redFlags.length > 0) {
+      result.rawData = rawResponse;
+      return result;
+    }
+  }
+  
   // Handle null/undefined case
   if (!rawResponse) {
     console.warn("Empty rawResponse provided to parser");
