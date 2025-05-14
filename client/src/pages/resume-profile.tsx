@@ -427,7 +427,7 @@ export default function ResumeProfilePage() {
                       href={`/api/resumes/${resumeId}/download`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center text-blue-600 hover:text-blue-800 hover:underline font-medium group bg-blue-50 hover:bg-blue-100 rounded-md px-2 py-1 transition-all duration-200"
+                      className="flex items-center text-blue-600 hover:text-blue-800 font-medium group bg-blue-50 hover:bg-blue-100 rounded-md px-3 py-1.5 transition-all duration-200 border border-blue-200 hover:border-blue-300"
                       onClick={(e) => {
                         e.preventDefault();
                         const downloadUrl = `/api/resumes/${resumeId}/download`;
@@ -439,15 +439,15 @@ export default function ResumeProfilePage() {
                         });
                       }}
                     >
-                      <FileText className="mr-1 h-4 w-4 text-red-500" />
-                      <span className="font-medium mr-1">View PDF:</span>
-                      <span className="border-b border-blue-400 group-hover:border-blue-600">{resume.fileName}</span>
-                      <ArrowUpRight className="ml-1 h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                      <FileText className="mr-1.5 h-5 w-5 text-red-500" />
+                      <span className="font-medium mr-1.5">View PDF</span>
+                      <span className="max-w-[150px] truncate text-blue-700">{resume.fileName}</span>
+                      <ArrowUpRight className="ml-1.5 h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                     </a>
                     <Button 
                       size="sm" 
                       variant="outline" 
-                      className="h-7 px-3 text-xs bg-green-50 hover:bg-green-100 text-green-700 hover:text-green-800 border-green-200 hover:border-green-300"
+                      className="h-9 px-3 text-sm bg-green-50 hover:bg-green-100 text-green-700 hover:text-green-800 border-green-200 hover:border-green-300 flex items-center"
                       onClick={() => {
                         const downloadUrl = `/api/resumes/${resumeId}/download`;
                         // This will trigger a file download rather than opening in a new tab
@@ -464,7 +464,7 @@ export default function ResumeProfilePage() {
                         });
                       }}
                     >
-                      <Download className="h-3 w-3 mr-1" />
+                      <Download className="h-4 w-4 mr-1.5" />
                       Download PDF
                     </Button>
                   </div>
