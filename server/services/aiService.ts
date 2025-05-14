@@ -258,7 +258,9 @@ export async function analyzeResume(
     return {
       ...result,
       rawResponse: rawResponse,
-      aiModel: model
+      aiModel: model,
+      // Pass through any analysis warning that might have been added during verification
+      analysis_warning: result.analysis_warning
     };
   } catch (error) {
     console.error('Error analyzing resume:', error);

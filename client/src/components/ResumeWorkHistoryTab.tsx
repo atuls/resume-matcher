@@ -1,5 +1,6 @@
 import React from 'react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { AlertCircle, Briefcase, AlertTriangle, CheckCircle } from "lucide-react";
 import { extractWorkHistory } from "@/lib/debug-utils";
 import { extractResumeData, extractRedFlagData } from "@/lib/resume-data-extractor";
@@ -70,9 +71,30 @@ export function ResumeWorkHistoryTab({
     ? redFlags.map(flag => ({ description: flag })) 
     : redFlagData?.analysis?.potentialRedFlags || [];
   
+  // Check if there are any warning flags in the analysis
+  const hasAnalysisWarning = analysis && analysis.analysis_warning;
+
   return (
     <div className="space-y-6">
-      {/* Work History Debug Section - Only shown in Debug tab now */}
+      {/* Warning for potentially inconsistent analysis */}
+      {hasAnalysisWarning && (
+        <Alert className="mb-4 bg-amber-50 border-amber-200">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-800 flex items-center justify-between">
+            <span>{analysis.analysis_warning}</span>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="ml-2 text-amber-800 border-amber-300 hover:bg-amber-100"
+              onClick={() => {
+                document.querySelector('button[value="raw-text"]')?.click();
+              }}
+            >
+              View Raw Resume Text
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
       
       {/* Red Flags Section */}
       <div className="rounded-md border p-4">
