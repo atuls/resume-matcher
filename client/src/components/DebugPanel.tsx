@@ -124,8 +124,20 @@ export function DebugPanel({ rawResponse, resumeId, analysis, redFlagData }: Deb
     setIsLoading(true);
     
     try {
-      // Force a fresh analysis with forceRerun parameter
-      await apiRequest(`/api/resumes/${resumeId}/analysis?forceRerun=true`, "POST");
+      console.log("Starting re-analysis for resume:", resumeId);
+      
+      // Use the fetch API directly with the correct URL and method
+      const response = await fetch(`/api/resumes/${resumeId}/analysis?forceRerun=true`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "include"
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Analysis failed with status: ${response.status} ${response.statusText}`);
+      }
       
       // Invalidate queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: [`/api/resumes/${resumeId}/analysis`] });
@@ -138,6 +150,7 @@ export function DebugPanel({ rawResponse, resumeId, analysis, redFlagData }: Deb
       
       setDebugInfo("Re-analysis triggered. The page data will refresh momentarily.");
     } catch (error: any) {
+      console.error("Re-analysis error:", error);
       toast({
         title: "Analysis failed",
         description: error.message || "An unexpected error occurred",
@@ -205,16 +218,26 @@ export function DebugPanel({ rawResponse, resumeId, analysis, redFlagData }: Deb
       )}
       
       {/* Raw Data Display */}
-      {!debugInfo && actualRawResponse && (
+      {!debugInfo && (
         <div className="mt-4">
           <div className="text-sm font-medium mb-2">Raw Response Data</div>
-          <div className="bg-slate-900 rounded-md overflow-auto max-h-96 p-3">
-            <pre className="text-xs whitespace-pre-wrap font-mono text-green-400">
-              {typeof actualRawResponse === 'string' 
-                ? actualRawResponse 
-                : JSON.stringify(actualRawResponse, null, 2)}
-            </pre>
-          </div>
+          
+          {actualRawResponse ? (
+            <div className="bg-slate-900 rounded-md overflow-auto max-h-96 p-3">
+              <pre className="text-xs whitespace-pre-wrap font-mono text-green-400">
+                {typeof actualRawResponse === 'string' 
+                  ? actualRawResponse 
+                  : JSON.stringify(actualRawResponse, null, 2)}
+              </pre>
+            </div>
+          ) : (
+            <div className="p-4 border border-yellow-300 bg-yellow-50 rounded-md">
+              <p className="text-yellow-700 text-sm">
+                No raw response data available. Use the "Re-analyze Resume" button to generate 
+                a fresh analysis with structured data.
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>

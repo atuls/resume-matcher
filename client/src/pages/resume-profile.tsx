@@ -151,6 +151,9 @@ export default function ResumeProfilePage() {
         throw new Error(`Error analyzing resume: ${response.status} ${response.statusText}`);
       }
       
+      const result = await response.json();
+      console.log("Analysis result:", result);
+      
       // Refetch the score
       await refetchJobScore();
       
@@ -163,6 +166,7 @@ export default function ResumeProfilePage() {
         description: "Resume has been analyzed against the selected job using the custom prompt from settings.",
       });
     } catch (error: any) {
+      console.error("Job analysis error:", error);
       toast({
         title: "Error analyzing resume",
         description: error.message || "An error occurred",
@@ -277,18 +281,39 @@ export default function ResumeProfilePage() {
       if (selectedJobId) {
         console.log(`Running fresh analysis for resume ${resumeId} against job ${selectedJobId} with custom prompt`);
         
-        // Use the /api/analyze endpoint with force=true to ensure custom prompt is used
-        await apiRequest(`/api/analyze`, "POST", {
-          resumeIds: [resumeId],
-          jobDescriptionId: selectedJobId,
-          force: true
+        // Use fetch directly with the analyze endpoint
+        const analyzeResponse = await fetch(`/api/analyze`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            resumeIds: [resumeId],
+            jobDescriptionId: selectedJobId,
+            force: true
+          })
         });
+        
+        if (!analyzeResponse.ok) {
+          throw new Error(`Analysis failed with status: ${analyzeResponse.status} ${analyzeResponse.statusText}`);
+        }
       } else {
         // If no job is selected, use the dedicated resume analysis endpoint
         console.log(`Running general resume analysis for ${resumeId}`);
         
         // Force a fresh analysis with forceRerun parameter
-        await apiRequest(`/api/resumes/${resumeId}/analysis?forceRerun=true`, "POST");
+        const analysisResponse = await fetch(`/api/resumes/${resumeId}/analysis?forceRerun=true`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "include"
+        });
+        
+        if (!analysisResponse.ok) {
+          throw new Error(`Analysis failed with status: ${analysisResponse.status} ${analysisResponse.statusText}`);
+        }
       }
       
       // Invalidate all related data sources to ensure consistency
@@ -311,10 +336,11 @@ export default function ResumeProfilePage() {
         title: "Analysis complete with custom prompt",
         description: "Resume data has been refreshed with updated analysis using the custom prompt from settings.",
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Analysis error:", error);
       toast({
         title: "Analysis failed",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });
     } finally {
