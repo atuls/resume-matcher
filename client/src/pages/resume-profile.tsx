@@ -7,7 +7,7 @@ import {
   User, FileText, Calendar, ArrowLeft, Mail, MapPin, Phone, Award, 
   Briefcase, Code, AlertCircle, BarChart3, CheckCircle, XCircle,
   RefreshCw, UserCheck, Sparkles, AlertTriangle, Loader2, Download, FileSearch,
-  FilePdf, ExternalLink
+  ArrowUpRight
 } from "lucide-react";
 import { DebugPanel } from "@/components/DebugPanel";
 import { ResumeSkillsTab } from "@/components/ResumeSkillsTab";
@@ -412,9 +412,9 @@ export default function ResumeProfilePage() {
                         });
                       }}
                     >
-                      <FilePdf className="mr-1 h-4 w-4 text-red-500" />
+                      <FileText className="mr-1 h-4 w-4 text-red-500" />
                       {resume.fileName}
-                      <ExternalLink className="ml-1 h-3.5 w-3.5" />
+                      <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
                     </a>
                     <Button 
                       size="sm" 
