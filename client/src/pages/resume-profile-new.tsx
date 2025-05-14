@@ -220,11 +220,12 @@ export default function ResumeProfilePage() {
     setIsRunningJobAnalysis(true);
     
     try {
-      await analyzeResumes(selectedJobId, [resumeId]);
+      // Pass force=true to ensure a fresh analysis is performed
+      await analyzeResumes(selectedJobId, [resumeId], true);
       
       toast({
         title: "Analysis complete",
-        description: "Resume has been analyzed against the selected job description.",
+        description: "Resume has been re-analyzed against the selected job description.",
       });
       
       // Refresh the job connections data
