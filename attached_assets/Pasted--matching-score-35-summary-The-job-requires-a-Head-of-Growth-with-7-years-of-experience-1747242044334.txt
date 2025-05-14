@@ -1,0 +1,34 @@
+
+  "matching_score": 35,
+  "summary": "The job requires a Head of Growth with 7+ years of experience in growth marketing, digital marketing, or demand generation, with at least 3 years in a leadership role. The candidate, Olivia DeSpirito, is a recent graduate with primarily retail and hospitality experience. She has limited marketing experience from her internship at CMU Athletics & Recreation, but no demonstrated growth marketing, digital marketing leadership, or demand generation expertise. While she has some relevant skills like communication and teamwork, she lacks the technical marketing skills, analytics experience, and leadership background required for this senior role. Her education in Media Strategies and Applications is relevant, but cannot compensate for the lack of professional marketing experience and leadership background required for this position.",
+  "work_history": [
+    {
+      "title": "Digital Media and Content Production Intern",
+      "company": "CMU Athletics & Recreation",
+      "location": "Grand Junction, Colorado",
+      "startDate": "August 2023",
+      "endDate": "December 2023",
+      "description": "Produced digital media content for Colorado Mesa Athletics including game highlights, team hype videos, and player spotlights for social media and website. Assisted in live streaming of home games, including volleyball, football, and basketball on a weekly basis for all online audiences.",
+      "durationMonths": 5,
+      "isCurrentRole": false
+    },
+    {
+      "title": "Sales Associate",
+      "company": "HOTWORX",
+      "location": "Grand Junction, Colorado",
+      "startDate": "February 2022",
+      "endDate": "May 2023",
+      "description": "Greeted and checked in members upon arrival to the gym each day. Carried out transactions for merchandise and new memberships. Maintained organization and cleanliness of the facility. Ensured customer satisfaction by resolving membership issues and inquiries. Provided comprehensive tours to potential clients, explaining the 3D workout system.",
+      "durationMonths": 15,
+      "isCurrentRole": false
+    },
+    {
+      "title": "Cashier",
+      "company": "Ross Dress for Less",
+      "location": "Grand Junction, Colorado",
+      "startDate": "November 2020",
+      "endDate": "February 2022",
+      "description": "Processed inventory shipments ensuring accuracy of merchandise count and display. Organized store for appearance and accessibility to shoppers. Practiced patience and strong customer service skills with diverse customers. Maintained speed, accuracy, and positivity at registers during high-volume periods.",
+      "durationMonths": 15,
+      "isCurrentRole": false
+    },

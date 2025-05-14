@@ -312,12 +312,18 @@ If you cannot find these details in the resume, state "I cannot find this inform
 Your response will be verified against these key details, and discrepancies will result in your analysis being rejected.`;
         
         // Add detailed debugging for what is being sent to Claude
-        console.log("======= CLAUDE REQUEST CONTENT DEBUG =======");
+        console.log("======= CLAUDE REQUEST CONTENT DEBUG (FULL) =======");
         console.log(`Resume ID debugging (if available in context): ${truncatedResume.includes('59b024e9-b079-4976-bd40-46e720602a3b') ? 'ID found in text' : 'ID not in text'}`);
         console.log(`Resume contains "Olivia DeSpirito"? ${truncatedResume.includes('Olivia DeSpirito')}`);
         console.log(`Resume contains "HOTWORX"? ${truncatedResume.includes('HOTWORX')}`);
-        console.log(`Resume first 200 chars: ${truncatedResume.substring(0, 200)}`);
-        console.log(`Resume text length: ${truncatedResume.length}`);
+        console.log("FULL RESUME TEXT:");
+        console.log(truncatedResume);
+        console.log("FULL JOB DESCRIPTION:");
+        console.log(truncatedJob);
+        console.log("FULL SYSTEM PROMPT:");
+        console.log(systemPrompt);
+        console.log("FULL USER PROMPT:");
+        console.log(userPrompt);
         console.log("===========================================");
       } else {
         // If no analysis prompt setting exists, use default minimal prompt
@@ -360,12 +366,14 @@ Your response will be verified against these key details, and discrepancies will
         console.log(`Resume ID debugging (if available in context): ${truncatedResume.includes('59b024e9-b079-4976-bd40-46e720602a3b') ? 'ID found in text' : 'ID not in text'}`);
         console.log(`Resume contains "Olivia DeSpirito"? ${truncatedResume.includes('Olivia DeSpirito')}`);
         console.log(`Resume contains "HOTWORX"? ${truncatedResume.includes('HOTWORX')}`);
-        console.log(`Resume first 200 chars: ${truncatedResume.substring(0, 200)}`);
-        console.log(`Resume text length: ${truncatedResume.length}`);
-        console.log(`Job description first 200 chars: ${truncatedJob.substring(0, 200)}`);
-        console.log(`Job description text length: ${truncatedJob.length}`);
-        console.log(`Full system prompt:\n${systemPrompt}`);
-        console.log(`\nFull user prompt:\n${userPrompt.substring(0, 500)}... (truncated)`);
+        console.log("FULL RESUME TEXT:");
+        console.log(truncatedResume);
+        console.log("FULL JOB DESCRIPTION:");
+        console.log(truncatedJob);
+        console.log("FULL SYSTEM PROMPT:");
+        console.log(systemPrompt);
+        console.log("FULL USER PROMPT:");
+        console.log(userPrompt);
         console.log("===========================================");
       }
     } catch (error) {
@@ -498,8 +506,13 @@ Your response will be verified against these key details, and discrepancies will
         console.log(`Verification score: ${verificationScore}%`);
         console.log("====================================");
         
-        // Add verification warning to result if score is below 85%
-        if (verificationScore < 85) {
+        // Log the full Claude response for debugging
+        console.log("======= CLAUDE FULL RESPONSE =======");
+        console.log(text);
+        console.log("====================================");
+        
+        // Add verification warning to result if score is below 70%
+        if (verificationScore < 70) {
           result.analysis_warning = `AI analysis may be unreliable (verification score: ${verificationScore}%). Please check raw resume text.`;
           
           // Add raw resume text as fallback data
@@ -593,7 +606,10 @@ Your response will be verified against these key details, and discrepancies will
         const experienceMatch = keyExperienceMatch && text.includes('HOTWORX');
         
         // Check for hallucinated content
-        const suspiciousTerms = ['Shoutcart', 'Viral Nation', 'digital marketing', 'Growth Marketing'];
+        const suspiciousTerms = [
+          'Shoutcart', 'Viral Nation', 'digital marketing', 'Growth Marketing',
+          'software engineer', 'tech company', 'developer', 'junior developer', 'startup inc'
+        ];
         const falseMatches = suspiciousTerms.filter(term => 
           text.toLowerCase().includes(term.toLowerCase()) && 
           !resumeText.toLowerCase().includes(term.toLowerCase())
@@ -603,9 +619,10 @@ Your response will be verified against these key details, and discrepancies will
           console.log("WARNING: Response contains terms not in original resume:", falseMatches.join(', '));
         }
         
-        // Validate response integrity
-        if ((!nameMatch || !experienceMatch) && falseMatches.length > 0) {
-          console.log("CRITICAL WARNING: Claude appears to be completely ignoring the provided resume!");
+        // Validate response integrity - now stricter check
+        if ((!nameMatch || !experienceMatch) || falseMatches.length > 0) {
+          console.log("CRITICAL WARNING: Claude appears to be ignoring or fabricating data in the provided resume!");
+          console.log(`Name match: ${nameMatch}, Experience match: ${experienceMatch}, False terms: ${falseMatches.join(', ')}`);
           
           // Add the actual resume text to the result
           console.log("FALLBACK: Adding extracted_text to result due to detected inconsistency");
@@ -617,7 +634,7 @@ Your response will be verified against these key details, and discrepancies will
           }
           
           // Add a warning about inconsistencies
-          result.analysis_warning = "The AI analysis may contain inconsistencies. Please verify against the raw resume text.";
+          result.analysis_warning = `The AI analysis contains fabricated information (detected: ${falseMatches.join(', ')}). Please verify against the raw resume text.`;
         }
       }
       
