@@ -885,7 +885,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get job requirements
       const requirements = await storage.getJobRequirements(jobDescriptionId);
       
-      // Check for existing analysis (but only use it if not forced to re-analyze)
+      // IMPORTANT: When force=true, always run a fresh analysis with the custom prompt
+      // Only check for existing analysis if not forced to re-analyze
       const existingAnalysis = await storage.getAnalysisResultForResume(resumeId, jobDescriptionId);
       if (existingAnalysis && !force) {
         // Return existing analysis instead of generating a new one
@@ -894,6 +895,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           results: [existingAnalysis], 
           message: "Using existing analysis" 
         });
+      }
+      
+      // Log that we're doing a fresh analysis
+      if (force) {
+        console.log(`Force re-analyzing resume ${resumeId} with job ${jobDescriptionId} using custom prompt`);
       }
       
       // Run job match analysis

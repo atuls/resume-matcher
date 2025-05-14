@@ -263,8 +263,24 @@ export default function ResumeProfilePage() {
     setAnalysisLoading(true);
     
     try {
-      // Force a fresh analysis with forceRerun parameter
-      await apiRequest(`/api/resumes/${resumeId}/analysis?forceRerun=true`, "POST");
+      // First, if there's a selected job, run a fresh job analysis using the /api/analyze endpoint
+      // This handles job-specific requirements and uses the custom prompt
+      if (selectedJobId) {
+        console.log(`Running fresh analysis for resume ${resumeId} against job ${selectedJobId} with custom prompt`);
+        
+        // Use the /api/analyze endpoint with force=true to ensure custom prompt is used
+        await apiRequest(`/api/analyze`, "POST", {
+          resumeIds: [resumeId],
+          jobDescriptionId: selectedJobId,
+          force: true
+        });
+      } else {
+        // If no job is selected, use the dedicated resume analysis endpoint
+        console.log(`Running general resume analysis for ${resumeId}`);
+        
+        // Force a fresh analysis with forceRerun parameter
+        await apiRequest(`/api/resumes/${resumeId}/analysis?forceRerun=true`, "POST");
+      }
       
       // Invalidate all related data sources to ensure consistency
       queryClient.invalidateQueries({ queryKey: [`/api/resumes/${resumeId}/analysis`] });
@@ -283,8 +299,8 @@ export default function ResumeProfilePage() {
       });
       
       toast({
-        title: "Analysis complete",
-        description: "Resume data has been refreshed with updated analysis.",
+        title: "Analysis complete with custom prompt",
+        description: "Resume data has been refreshed with updated analysis using the custom prompt from settings.",
       });
     } catch (error) {
       toast({
