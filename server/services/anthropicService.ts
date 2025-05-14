@@ -314,20 +314,28 @@ VERIFICATION: A key experience point in this resume is likely "${truncatedResume
         const generalPromptSetting = await storage.getSetting('analysis_prompt');
         if (generalPromptSetting?.value) {
           // If using the general prompt, put instructions in system and content in user message
-          systemPrompt = "You are Claude. Your task is to analyze a resume against a job description and provide analysis in valid JSON format only. Do not include any explanations or notes.";
+          systemPrompt = "You are Claude, a truthful AI assistant focused on accurate resume analysis. Your task is to carefully analyze a resume against a job description and provide analysis in valid JSON format only. Do not fabricate or hallucinate any information not present in the resume. Extract only what is explicitly stated in the resume text provided. Only analyze the specific resume text given to you without adding any fictional details or embellishments. Return valid JSON format only - no explanations, notes or markdown.";
           // Modify the general prompt to include verification signals and forced focus
           const enhancedPrompt = generalPromptSetting.value
             .replace('{JOB_DESCRIPTION}', truncatedJob)
             .replace('{RESUME}', truncatedResume);
             
-          userPrompt = `IMPORTANT: You must only analyze the exact resume text provided below. 
-Do not use any prior knowledge or information not contained in this specific resume.
-This resume belongs to a specific individual with their own unique experience.
+          userPrompt = `CRITICAL INSTRUCTION: You must analyze ONLY the exact resume text provided below for the job description provided.
+- Do NOT fabricate or hallucinate any work experience, skills, or education that does not appear in the resume.
+- Do NOT create fictional employment history, titles, or company names.
+- ONLY extract and analyze information that is explicitly mentioned in the resume text.
+- If the resume lacks certain information, acknowledge this gap rather than inventing details.
+- Your analysis must be based SOLELY on the exact resume content, not what you think a good resume should contain.
 
 ${enhancedPrompt}
 
-VERIFICATION: The name in this resume is likely "${truncatedResume.includes('Olivia DeSpirito') ? 'Olivia DeSpirito' : 'unknown'}"
-VERIFICATION: A key experience point in this resume is likely "${truncatedResume.includes('HOTWORX') ? 'HOTWORX' : 'unknown'}"`;
+VERIFICATION MARKERS (You must include these exact terms in your analysis if they appear in the resume):
+- Candidate name: "${truncatedResume.includes('Olivia DeSpirito') ? 'Olivia DeSpirito' : 'unknown'}"
+- Key company: "${truncatedResume.includes('HOTWORX') ? 'HOTWORX' : 'unknown'}"
+- Specific experience: "${truncatedResume.includes('Sales Associate') ? 'Sales Associate' : 'unknown'}"
+- Education: "${truncatedResume.includes('Colorado Mesa University') ? 'Colorado Mesa University' : 'unknown'}"
+
+I will verify your analysis against these markers to ensure you're analyzing the exact resume provided.`;
             
           console.log("Using enhanced general analysis prompt from settings for Claude");
           
@@ -338,6 +346,8 @@ VERIFICATION: A key experience point in this resume is likely "${truncatedResume
           console.log(`Resume contains "HOTWORX"? ${truncatedResume.includes('HOTWORX')}`);
           console.log(`Resume first 200 chars: ${truncatedResume.substring(0, 200)}`);
           console.log(`Resume text length: ${truncatedResume.length}`);
+          console.log(`Job description first 200 chars: ${truncatedJob.substring(0, 200)}`);
+          console.log(`Job description text length: ${truncatedJob.length}`);
           console.log(`Full system prompt:\n${systemPrompt}`);
           console.log(`\nFull user prompt:\n${userPrompt.substring(0, 500)}... (truncated)`);
           console.log("===========================================");
@@ -399,6 +409,9 @@ VERIFICATION: A key experience point in this resume is likely "${truncatedResume
         console.log("Key experience appears in response? Unknown - no resume data provided");
       }
       
+      // Log a more complete view of the response 
+      console.log("FULL CLAUDE RESPONSE:");
+      console.log(text);
       console.log("====================================");
       
       // Claude sometimes wraps JSON in code blocks with ```json or ``` tags
