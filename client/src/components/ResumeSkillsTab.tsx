@@ -56,12 +56,6 @@ export function ResumeSkillsTab({
   
   return (
     <div>
-      <div className="mb-4 p-4 bg-gray-50 rounded-md">
-        <h3 className="text-sm font-medium mb-2">Skills Analysis Debug:</h3>
-        <pre className="text-xs overflow-auto max-h-40 p-3 bg-gray-100 rounded-md">
-          {JSON.stringify(analysis, null, 2) || "No analysis data available"}
-        </pre>
-      </div>
     
       <div className="space-y-4">
         {/* Technical Skills Section */}

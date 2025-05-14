@@ -49,68 +49,15 @@ export function ResumeWorkHistoryTab({
     redFlags: []
   };
   
-  // Try to parse work history from the resume itself if it's passed through the analysis object
-  let parsedWorkHistory: any[] = [];
-  
-  // For unstructured data that might be in the analysis object (from the raw resume)
-  try {
-    if (analysis?.resumeData?.extractedText) {
-      // Simple parser for work experience section in the format from the screenshots
-      const extractedText = analysis.resumeData.extractedText;
-      const workExperienceIndex = extractedText.indexOf('## WORK EXPERIENCE');
-      
-      if (workExperienceIndex !== -1) {
-        // Get text starting from work experience section
-        const workText = extractedText.substring(workExperienceIndex);
-        
-        // Look for job entries that start with ## pattern
-        const jobEntries = workText.split(/^## (?!WORK EXPERIENCE)/m).filter((entry, index) => index > 0);
-        
-        if (jobEntries.length > 0) {
-          parsedWorkHistory = jobEntries.map(entry => {
-            // Try to extract title, company, date
-            const lines = entry.trim().split('\n');
-            const titleLine = lines[0] || '';
-            
-            // Look for a line with a date pattern containing a dash
-            const dateLine = lines.find(line => /\d{1,2}\/\d{4}|\d{1,2}-\d{4}|[A-Za-z]+ \d{4} [—-] |[A-Za-z]+ \d{4} to |[A-Za-z]+ \d{4}[ —-]/i.test(line)) || '';
-            
-            // Attempt to parse details from the title line
-            let title = titleLine.split('|')[0]?.trim() || titleLine;
-            let company = titleLine.includes('|') ? titleLine.split('|')[1]?.trim() : '';
-            
-            // Get description - any lines after the first date line
-            const descriptionStartIdx = lines.indexOf(dateLine) + 1;
-            const description = lines.slice(descriptionStartIdx).join('\n').trim();
-            
-            return {
-              Title: title,
-              Company: company,
-              startDate: dateLine,
-              endDate: dateLine.includes('Current') || dateLine.includes('Present') ? 'Present' : '',
-              description: description
-            };
-          });
-          
-          console.log("Successfully parsed work history from raw resume text", parsedWorkHistory);
-        }
-      }
-    }
-  } catch (error) {
-    console.error("Error parsing work history from raw text:", error);
-  }
-  
   // Use work history sources in priority order:
-  // 1. Directly parsed from resume text (most accurate)
-  // 2. From AI analysis data
-  // 3. From red flag analysis
-  const workHistory = parsedWorkHistory.length > 0
-    ? parsedWorkHistory
-    : (analysisExtractedData.workHistory.length > 0 
-      ? analysisExtractedData.workHistory 
-      : (rfExtractedData.workHistory.length > 0 
-        ? rfExtractedData.workHistory 
-        : extractWorkHistory(redFlagData))); // Last fallback to old method
+  // 1. From AI analysis data (preferred source)
+  // 2. From red flag analysis data
+  // 3. Fallback to old method if needed
+  const workHistory = analysisExtractedData.workHistory.length > 0 
+    ? analysisExtractedData.workHistory 
+    : (rfExtractedData.workHistory.length > 0 
+      ? rfExtractedData.workHistory 
+      : extractWorkHistory(redFlagData));
   
   console.log("Work history from analysis:", analysisExtractedData.workHistory);
   console.log("Work history from red flags:", rfExtractedData.workHistory);

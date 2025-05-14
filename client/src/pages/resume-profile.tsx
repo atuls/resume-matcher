@@ -263,14 +263,29 @@ export default function ResumeProfilePage() {
     setAnalysisLoading(true);
     
     try {
-      await apiRequest(`/api/resumes/${resumeId}/analysis`, "POST");
+      // Force a fresh analysis with forceRerun parameter
+      await apiRequest(`/api/resumes/${resumeId}/analysis?forceRerun=true`, "POST");
+      
+      // Invalidate all related data sources to ensure consistency
+      queryClient.invalidateQueries({ queryKey: [`/api/resumes/${resumeId}/analysis`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/resumes/${resumeId}/red-flag-analysis`] });
+      
+      // Also refresh scores if a job is selected
+      if (selectedJobId) {
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/resume/${resumeId}/job-score/${selectedJobId}`] 
+        });
+      }
+      
+      // Refresh general job connections
+      queryClient.invalidateQueries({ 
+        queryKey: [`/api/resumes/${resumeId}/job-connections`] 
+      });
       
       toast({
         title: "Analysis complete",
-        description: "Skills have been analyzed and updated.",
+        description: "Resume data has been refreshed with updated analysis.",
       });
-      
-      queryClient.invalidateQueries({ queryKey: [`/api/resumes/${resumeId}/analysis`] });
     } catch (error) {
       toast({
         title: "Analysis failed",
