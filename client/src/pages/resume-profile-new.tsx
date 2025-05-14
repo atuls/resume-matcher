@@ -277,38 +277,52 @@ export default function ResumeProfilePage() {
                       className="h-7 px-2 text-xs"
                       onClick={async () => {
                         try {
-                          // Show loading toast
                           toast({
                             title: "Downloading...",
                             description: "Preparing file for download"
                           });
                           
-                          // Get file as blob
-                          const blob = await downloadResume(resumeId!);
+                          // Try direct download link first (more reliable approach)
+                          const downloadUrl = `/api/resumes/${resumeId}/download`;
+                          window.open(downloadUrl, '_blank');
                           
-                          // Create download link
-                          const url = window.URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = resume.fileName || 'resume.pdf';
-                          document.body.appendChild(a);
-                          a.click();
-                          
-                          // Clean up
-                          window.URL.revokeObjectURL(url);
-                          document.body.removeChild(a);
-                          
+                          // Show success message
                           toast({
-                            title: "Download complete",
-                            description: "Your file has been downloaded successfully."
+                            title: "Download started",
+                            description: "Your file should begin downloading shortly."
                           });
                         } catch (error) {
-                          console.error("Error downloading file:", error);
-                          toast({
-                            title: "Download failed",
-                            description: "Unable to download the resume file.",
-                            variant: "destructive"
-                          });
+                          // If direct download fails, try blob approach as backup
+                          try {
+                            console.log("Attempting alternative download method...");
+                            
+                            // Get file as blob
+                            const blob = await downloadResume(resumeId!);
+                            
+                            // Create download link
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = resume.fileName || 'resume.pdf';
+                            document.body.appendChild(a);
+                            a.click();
+                            
+                            // Clean up
+                            window.URL.revokeObjectURL(url);
+                            document.body.removeChild(a);
+                            
+                            toast({
+                              title: "Download complete",
+                              description: "Your file has been downloaded successfully."
+                            });
+                          } catch (fallbackError) {
+                            console.error("Both download methods failed:", fallbackError);
+                            toast({
+                              title: "Download failed",
+                              description: "Unable to download the resume file. Please try again later.",
+                              variant: "destructive"
+                            });
+                          }
                         }
                       }}
                     >
