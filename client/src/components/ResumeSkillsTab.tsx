@@ -54,9 +54,31 @@ export function ResumeSkillsTab({
   
   const { technicalSkills, softSkills } = categorizeSkills(skillsList);
   
+  // Check if there are any warning flags in the analysis
+  const hasAnalysisWarning = analysis && analysis.analysis_warning;
+  
   return (
     <div>
-    
+      {/* Warning for potentially inconsistent analysis */}
+      {hasAnalysisWarning && (
+        <Alert className="mb-4 bg-amber-50 border-amber-200">
+          <AlertCircle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-800 flex items-center justify-between">
+            <span>{analysis.analysis_warning}</span>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="ml-2 text-amber-800 border-amber-300 hover:bg-amber-100"
+              onClick={() => {
+                document.querySelector('button[value="raw-text"]')?.click();
+              }}
+            >
+              View Raw Resume Text
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <div className="space-y-4">
         {/* Technical Skills Section */}
         <div className="rounded-md border p-4">

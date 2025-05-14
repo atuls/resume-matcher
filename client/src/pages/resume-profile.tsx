@@ -585,14 +585,36 @@ export default function ResumeProfilePage() {
                   {resume && resume.extractedText ? (
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-medium">Extracted Resume Text</h3>
+                        <h3 className="text-lg font-medium flex items-center">
+                          <FileSearch className="h-5 w-5 mr-2 text-primary" />
+                          Extracted Resume Text 
+                          <span className="text-xs font-normal ml-2 text-gray-500">(directly extracted from PDF)</span>
+                        </h3>
                         <div className="flex items-center text-sm text-gray-500">
                           <FileText className="h-4 w-4 mr-1" />
                           <span>{(resume.extractedText.length / 1000).toFixed(1)}K characters</span>
                         </div>
                       </div>
-                      <div className="border rounded-md p-4 bg-gray-50 overflow-auto max-h-[500px]">
-                        <pre className="text-sm whitespace-pre-wrap font-mono">{resume.extractedText}</pre>
+                      
+                      {/* Check if AI analysis might be inconsistent */}
+                      {analysis && analysis.analysis_warning && (
+                        <Alert className="bg-amber-50 border-amber-200">
+                          <AlertTriangle className="h-4 w-4 text-amber-600" />
+                          <AlertDescription className="text-amber-800">
+                            {analysis.analysis_warning} The raw text below shows the actual content of the resume.
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                      
+                      {/* Show actual resume content */}
+                      <div className="border rounded-md p-4 bg-slate-50 overflow-auto max-h-[500px]">
+                        <pre className="text-sm whitespace-pre-wrap font-mono text-slate-800">{resume.extractedText}</pre>
+                      </div>
+                      
+                      {/* Additional context about this tab */}
+                      <div className="text-xs text-gray-500 flex items-center">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        This tab shows the raw text extracted from the resume PDF, not the AI's analysis.
                       </div>
                     </div>
                   ) : (
