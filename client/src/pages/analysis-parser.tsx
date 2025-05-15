@@ -10,8 +10,15 @@ const AnalysisParserPage = () => {
   const [isProcessingAll, setIsProcessingAll] = useState(false);
   const [processingResult, setProcessingResult] = useState<any>(null);
 
+  // Define Resume type
+  interface Resume {
+    id: string;
+    candidateName: string | null;
+    fileName: string;
+  }
+
   // Get all resumes
-  const { data: resumes, isLoading: resumesLoading } = useQuery({
+  const { data: resumes, isLoading: resumesLoading } = useQuery<Resume[]>({
     queryKey: ['/api/resumes'],
     refetchOnWindowFocus: false,
   });
@@ -107,9 +114,11 @@ const AnalysisParserPage = () => {
           
           {resumesLoading ? (
             <p>Loading resumes...</p>
+          ) : !resumes || resumes.length === 0 ? (
+            <p>No resumes found.</p>
           ) : (
             <div className="grid gap-4">
-              {resumes?.map((resume: any) => (
+              {resumes.map((resume) => (
                 <div key={resume.id} className="flex justify-between items-center p-3 border rounded">
                   <div>
                     <p className="font-medium">{resume.candidateName || "Unnamed Candidate"}</p>
