@@ -163,8 +163,11 @@ function extractWorkHistory(data: any): any[] {
     'work_history',
     'workHistory',
     'Work_History',
+    'Work History',
     'work_experience',
+    'workExperience',
     'Work_Experience',
+    'Work Experience',
     'employment',
     'Employment',
     'jobs',
@@ -204,12 +207,19 @@ function extractSkills(data: any): any[] {
   const skillsKeys = [
     'skills',
     'Skills',
+    'technicalSkills',
     'technical_skills',
+    'Technical Skills',
     'Technical_Skills',
+    'softSkills',
     'soft_skills',
+    'Soft Skills',
     'Soft_Skills',
     'competencies',
-    'Competencies'
+    'Competencies',
+    'keySkills',
+    'Key Skills',
+    'Key_Skills'
   ];
   
   // Check direct fields first
@@ -281,10 +291,15 @@ function extractRedFlags(data: any): any[] {
     'red_flags',
     'redFlags',
     'Red_Flags',
+    'Red Flags',
     'warnings',
     'Warnings',
     'concerns',
-    'Concerns'
+    'Concerns',
+    'flags',
+    'Flags',
+    'issues',
+    'Issues'
   ];
   
   // Check direct fields first
@@ -525,11 +540,53 @@ export function parseRawResponse(rawResponse: string | any): ParsedRawResponse {
       // Check if the object has a rawResponse or response field
       if (rawResponse.rawResponse || rawResponse.response) {
         console.log("PARSER: Object has rawResponse/response field, attempting to parse");
-        return parseRawResponse(rawResponse.rawResponse || rawResponse.response);
+        
+        // Nested rawResponse handling
+        const nestedResponse = rawResponse.rawResponse || rawResponse.response;
+        
+        // Check if the nested response has parsedJson
+        if (nestedResponse && typeof nestedResponse === 'object' && nestedResponse.parsedJson) {
+          console.log("PARSER: Found parsedJson in nested rawResponse, using it directly");
+          console.log("PARSER DEBUG: parsedJson keys:", Object.keys(nestedResponse.parsedJson));
+          
+          // Add more debugging to see the structure of parsedJson
+          if (nestedResponse.parsedJson.work_history || nestedResponse.parsedJson.workHistory || 
+              nestedResponse.parsedJson["Work History"] || nestedResponse.parsedJson.Work_History) {
+            console.log("PARSER: Work history found in parsedJson!");
+            const wh = nestedResponse.parsedJson.work_history || nestedResponse.parsedJson.workHistory || 
+              nestedResponse.parsedJson["Work History"] || nestedResponse.parsedJson.Work_History;
+            console.log("PARSER: Work history length:", Array.isArray(wh) ? wh.length : "not an array");
+          }
+          
+          if (nestedResponse.parsedJson.red_flags || nestedResponse.parsedJson.redFlags || 
+              nestedResponse.parsedJson["Red Flags"] || nestedResponse.parsedJson.Red_Flags) {
+            console.log("PARSER: Red flags found in parsedJson!");
+            const rf = nestedResponse.parsedJson.red_flags || nestedResponse.parsedJson.redFlags || 
+              nestedResponse.parsedJson["Red Flags"] || nestedResponse.parsedJson.Red_Flags;
+            console.log("PARSER: Red flags length:", Array.isArray(rf) ? rf.length : "not an array");
+          }
+          
+          return parseRawResponse(nestedResponse.parsedJson);
+        }
+        
+        return parseRawResponse(nestedResponse);
       }
       
       // If we found the expected format, use the object directly
       if (hasExpectedFormat) {
+        console.log("PARSER: Using direct format with expected fields");
+        
+        // Debugging what's actually available
+        console.log("PARSER DEBUG: Work History field:", 
+          rawResponse.Work_History ? "Work_History found with " + rawResponse.Work_History.length + " items" : 
+          rawResponse["Work History"] ? "Work History found with " + rawResponse["Work History"].length + " items" : 
+          "Not found");
+          
+        console.log("PARSER DEBUG: Red Flags field:", 
+          rawResponse.Red_Flags ? "Red_Flags found with " + rawResponse.Red_Flags.length + " items" : 
+          rawResponse["Red Flags"] ? "Red Flags found with " + rawResponse["Red Flags"].length + " items" : 
+          "Not found");
+        
         return {
           workHistory: rawResponse.Work_History || rawResponse["Work History"] || [],
           skills: rawResponse.Skills || rawResponse["Skills"] || [],
