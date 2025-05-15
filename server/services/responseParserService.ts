@@ -74,10 +74,18 @@ export class ResponseParserService {
       return rawResponse.rawResponse.parsedJson;
     }
     
+    // Check for deeply nested rawResponse.rawResponse.parsedJson
+    if (rawResponse.rawResponse && 
+        rawResponse.rawResponse.rawResponse && 
+        rawResponse.rawResponse.rawResponse.parsedJson) {
+      console.log("extractRawResponseContent: Found parsedJson in deeply nested rawResponse.rawResponse");
+      return rawResponse.rawResponse.rawResponse.parsedJson;
+    }
+    
     // If we can't find a parsedJson object, look for specific fields we need
     // in the current object or nested objects
     
-    // Check current object for expected fields
+    // Check current object for expected fields - also check the parsedJson field name specifically
     const hasExpectedFields = 
       rawResponse.matching_score !== undefined || 
       rawResponse.skills !== undefined ||
@@ -94,6 +102,13 @@ export class ResponseParserService {
     if (rawResponse.rawResponse) {
       console.log("extractRawResponseContent: Checking nested rawResponse object");
       
+      // Look for parsedJson in the nested rawResponse.extractedSections - from screenshot
+      if (rawResponse.rawResponse.extractedSections && 
+          rawResponse.rawResponse.extractedSections.parsedJson) {
+        console.log("extractRawResponseContent: Found parsedJson in rawResponse.extractedSections");
+        return rawResponse.rawResponse.extractedSections.parsedJson;
+      }
+      
       const nestedHasExpectedFields = 
         rawResponse.rawResponse.matching_score !== undefined || 
         rawResponse.rawResponse.skills !== undefined ||
@@ -103,6 +118,15 @@ export class ResponseParserService {
         
       if (nestedHasExpectedFields) {
         console.log("extractRawResponseContent: Found expected fields in nested rawResponse");
+        return rawResponse.rawResponse;
+      }
+      
+      // Check if the nested structure has these fields directly
+      // I see from screenshot it has a skills array
+      if (Array.isArray(rawResponse.rawResponse.skills) ||
+          Array.isArray(rawResponse.rawResponse.red_flags) ||
+          rawResponse.rawResponse.score !== undefined) {
+        console.log("extractRawResponseContent: Found expected field arrays directly in rawResponse.rawResponse");
         return rawResponse.rawResponse;
       }
     }

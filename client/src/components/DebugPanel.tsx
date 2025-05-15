@@ -104,7 +104,19 @@ export function DebugPanel({ rawResponse, resumeId, analysis, redFlagData }: Deb
       let info = "";
       
       // Type check
-      info += `Raw response type: ${typeof actualRawResponse}\n\n`;
+      info += `Raw response type: ${typeof actualRawResponse}\n`;
+      
+      // Special handling for array responses - very important based on the screenshot
+      if (Array.isArray(actualRawResponse)) {
+        info += `Raw response is an array with ${actualRawResponse.length} items\n`;
+        
+        // If it's an array with at least one item, examine the first item
+        if (actualRawResponse.length > 0) {
+          info += `Examining first array item with keys: ${Object.keys(actualRawResponse[0]).join(', ')}\n\n`;
+        }
+      } else {
+        info += "\n";
+      }
       
       // Handle case where actualRawResponse is undefined or null
       if (!actualRawResponse) {
@@ -205,6 +217,21 @@ export function DebugPanel({ rawResponse, resumeId, analysis, redFlagData }: Deb
         else if (actualRawResponse.rawResponse && actualRawResponse.rawResponse.parsedJson) {
           info += "✅ Found parsedJson in nested rawResponse object\n";
           parsedJson = actualRawResponse.rawResponse.parsedJson;
+        }
+        // Check if it has a deeply nested rawResponse.rawResponse.parsedJson
+        // (based on the structure seen in screenshots)
+        else if (actualRawResponse.rawResponse && 
+                 actualRawResponse.rawResponse.rawResponse && 
+                 actualRawResponse.rawResponse.rawResponse.parsedJson) {
+          info += "✅ Found parsedJson in deeply nested rawResponse.rawResponse object\n";
+          parsedJson = actualRawResponse.rawResponse.rawResponse.parsedJson;
+        }
+        // Handle extracted sections pattern seen in screenshot
+        else if (actualRawResponse.rawResponse && 
+                 actualRawResponse.rawResponse.extractedSections && 
+                 actualRawResponse.rawResponse.extractedSections.parsedJson) {
+          info += "✅ Found parsedJson in rawResponse.extractedSections\n";
+          parsedJson = actualRawResponse.rawResponse.extractedSections.parsedJson;
         }
         
         // If we found parsedJson, extract all the fields we need using the exact keys
