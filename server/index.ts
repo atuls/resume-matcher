@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { addParsedFieldsToAnalysisResults } from "./migrations/add-parsed-fields";
 
 const app = express();
 app.use(express.json());
@@ -37,6 +38,15 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Run database migration to add parsed fields
+  try {
+    console.log("Running database migration to add parsed fields...");
+    await addParsedFieldsToAnalysisResults();
+    console.log("Database migration completed successfully");
+  } catch (error) {
+    console.error("Database migration failed:", error);
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

@@ -19,6 +19,8 @@ import {
   analyzeRedFlags,
   RedFlagAnalysis
 } from "./services/skillsExtractor";
+import { ResponseParserService } from "./services/responseParserService";
+import { addParsedFieldsToAnalysisResults } from "./migrations/add-parsed-fields";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { isAnthropicApiKeyAvailable } from "./services/anthropicService";
@@ -1707,6 +1709,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(setting);
     } catch (error) {
       res.status(500).json({ message: "Failed to save setting" });
+    }
+  });
+
+  // ----------------------------------------
+  // Analysis Results Parser Endpoints
+  // ----------------------------------------
+
+  // Run database migration to add parsed fields
+  app.post("/api/admin/run-migration", async (_req: Request, res: Response) => {
+    try {
+      console.log("Running database migration to add parsed fields to analysis_results table");
+      await addParsedFieldsToAnalysisResults();
+      res.json({ message: "Migration successful" });
+    } catch (error) {
+      console.error("Migration failed:", error);
+      res.status(500).json({ message: "Migration failed", error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
+  // Process a specific analysis result
+  app.post("/api/analysis-results/:id/process", async (req: Request, res: Response) => {
+    try {
+      const id = req.params.id;
+      console.log(`Processing analysis result: ${id}`);
+      
+      const success = await ResponseParserService.processAnalysisResult(id);
+      
+      if (success) {
+        res.json({ message: "Analysis result processed successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to process analysis result" });
+      }
+    } catch (error) {
+      console.error("Error processing analysis result:", error);
+      res.status(500).json({ message: "Error processing analysis result", error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
+  // Process all analysis results for a resume
+  app.post("/api/resumes/:id/process-analysis", async (req: Request, res: Response) => {
+    try {
+      const resumeId = req.params.id;
+      console.log(`Processing all analysis results for resume: ${resumeId}`);
+      
+      const result = await ResponseParserService.processAnalysisResultsForResume(resumeId);
+      
+      res.json({
+        message: `Processed ${result.total} analysis results for resume ${resumeId}`,
+        ...result
+      });
+    } catch (error) {
+      console.error("Error processing resume analysis results:", error);
+      res.status(500).json({ message: "Error processing resume analysis results", error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
+  // Process all analysis results
+  app.post("/api/admin/process-all-analysis", async (_req: Request, res: Response) => {
+    try {
+      console.log("Processing all analysis results");
+      
+      const result = await ResponseParserService.processAllAnalysisResults();
+      
+      res.json({
+        message: `Processed ${result.total} analysis results`,
+        ...result
+      });
+    } catch (error) {
+      console.error("Error processing all analysis results:", error);
+      res.status(500).json({ message: "Error processing all analysis results", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
