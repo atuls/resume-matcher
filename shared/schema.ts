@@ -94,6 +94,12 @@ export const analysisResults = pgTable("analysis_results", {
   skillMatches: jsonb("skill_matches").notNull(),
   rawResponse: jsonb("raw_response"),
   aiModel: text("ai_model"),
+  // New parsed fields
+  parsedSkills: jsonb("parsed_skills"),
+  parsedWorkHistory: jsonb("parsed_work_history"),
+  parsedRedFlags: jsonb("parsed_red_flags"),
+  parsedSummary: text("parsed_summary"),
+  parsingStatus: text("parsing_status").default("pending"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

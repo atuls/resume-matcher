@@ -1,0 +1,122 @@
+======= CLAUDE FULL RESPONSE =======
+{
+  "matching_score": 68,
+  "Summary": "The candidate shows experience in marketing strategy, CRM, customer lifecycle management, and loyalty programs which aligns with some aspects of the Head of Growth role. Their work with Ideal Image and Coach demonstrates skills in customer retention, program optimization, and data-driven marketing decisions. However, the candidate lacks specific experience in several key areas required for the Head of Growth position: lead generation/demand generation at scale, paid media campaign management across multiple platforms, SEO expertise, and significant leadership experience in growth marketing. While they have experience with customer retention, they haven't demonstrated the broad acquisition expertise needed. The job requires 7+ years in growth marketing with 3+ years in leadership, but the candidate's leadership experience appears limited to team/project management rather than departmental leadership. Their analytical capabilities and experience with customer journey optimization are strengths, but they lack proven experience in many of the core responsibilities like multi-channel lead generation, brand visibility initiatives, and cross-functional leadership in a growth context.",
+  "Work_History": [
+    {
+      "Title": "Strategy & Marketing Consultant",
+      "Company": "Self Employed",
+      "location": "New York, NY",
+      "startDate": "2024",
+      "endDate": "Present",
+      "description": "Consulted for a local art gallery on marketing strategy, developed membership programs, and implemented email/SMS campaigns resulting in increased sales and customer acquisition.",
+      "durationMonths": 3,
+      "isCurrentRole": true
+    },
+    {
+      "Title": "Director - CRM & Membership",
+      "Company": "Ideal Image",
+      "location": "New York, NY",
+      "startDate": "2022",
+      "endDate": "2023",
+      "description": "Developed CRM and lifecycle marketing strategies, relaunched and optimized membership program, created customer journey maps, and implemented lifecycle-based CRM programs driving incremental sales and improved retention.",
+      "durationMonths": 24,
+      "isCurrentRole": false
+    },
+    {
+      "Title": "Manager - Global Customer Insights and Experience",
+      "Company": "Coach",
+      "location": "New York, NY",
+      "startDate": "2020",
+      "endDate": "2022",
+      "description": "Led global customer feedback program, generated sales through improved customer satisfaction, designed surveys for loyalty members, and improved NPS scores through cross-functional collaboration.",
+      "durationMonths": 24,
+      "isCurrentRole": false
+    },
+    {
+      "Title": "Manager - Omnichannel Client Development",
+      "Company": "Coach",
+      "location": "New York, NY",
+      "startDate": "2018",
+      "endDate": "2020",
+      "description": "Drove omnichannel sales growth, led VIP retention programs, developed marketing toolkits, and expanded customer engagement initiatives across regions.",
+      "durationMonths": 24,
+      "isCurrentRole": false
+    },
+    {
+      "Title": "Senior Analyst, Marketing Consultant - Merchant Services",
+      "Company": "American Express",
+      "location": "New York, NY",
+      "startDate": "2016",
+      "endDate": "2018",
+      "description": "Managed marketing campaigns for merchants, strengthened relationships through strategic integrations, collaborated on Shop Small initiative, and analyzed campaign performance.",
+      "durationMonths": 24,
+      "isCurrentRole": false
+    },
+    {
+      "Title": "Senior Analyst - Global Commercial Services",
+      "Company": "American Express",
+      "location": "New York, NY",
+      "startDate": "2014",
+      "endDate": "2016",
+      "description": "Served as Chief of Staff for Global Sales Enablement, managed investment budget, and collaborated across global units to track KPIs.",
+      "durationMonths": 24,
+      "isCurrentRole": false
+    },
+    {
+      "Title": "Sales Analyst - Citi Treasury and Trade",
+      "Company": "Citi",
+      "location": "Chicago, IL",
+      "startDate": "2013",
+      "endDate": "2014",
+      "description": "Analyzed financial treasury operations, supported sales managers, and participated in finance projects to analyze client relationships.",
+      "durationMonths": 12,
+      "isCurrentRole": false
+    },
+    {
+      "Title": "Operations Analyst - Citi Private Bank",
+      "Company": "Citi",
+      "location": "Chicago, IL",
+      "startDate": "2012",
+      "endDate": "2013",
+      "description": "Designed performance dashboards, created KPI reports, and developed user-friendly survey solutions.",
+      "durationMonths": 12,
+      "isCurrentRole": false
+    }
+  ],
+  "Skills": [
+    "CRM & Lifecycle Marketing",
+    "Customer Retention Strategies",
+    "Loyalty & Subscription Programs",
+    "Marketing Automation & Personalization",
+    "Customer Journey Mapping",
+    "Data-driven Decision Making",
+    "Customer Segmentation",
+    "Customer Insights & Analytics",
+    "Email & SMS Marketing",
+    "Omnichannel Marketing",
+    "VIP Retention Programs",
+    "Cross-functional Collaboration",
+    "Campaign Management",
+    "Performance Analysis",
+    "Budget Management",
+    "KPI Tracking & Reporting"
+  ],
+  "Red_Flags": [
+    "Limited lead generation experience - The role requires expertise in multi-channel lead generation strategies, but the candidate's experience is heavily weighted toward retention and loyalty rather than acquisition",
+    "Insufficient leadership experience - The job requires 7+ years in growth marketing with 3+ years in leadership, but the candidate's leadership roles appear limited to project/team management rather than departmental leadership",
+    "Missing paid media expertise - The role requires implementing and optimizing paid media campaigns across multiple platforms, which is not evident in the candidate's experience",
+    "Current consulting role is very recent (2024) and may not provide sufficient hands-on team leadership experience required for this position",
+    "Lack of demonstrated SEO and content marketing expertise, which are key requirements for the role",
+    "No clear experience with brand visibility initiatives, PR, or thought leadership development as required in the job description"
+  ]
+}
+====================================
+Standard fields not found, attempting to extract from nested structure
+Extracted from Claude response: score=68, skills count=0, requirements count=1
+Claude analysis completed in 24.412 seconds
+Claude score: 68
+Matched requirements: 1
+======= RESUME UPDATE DEBUG =======
+Resume candidateTitle: Strategy & Marketing Consultant
+Analysis result candidateTitle: 
