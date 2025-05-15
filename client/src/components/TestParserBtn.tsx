@@ -97,30 +97,75 @@ const SAMPLE_DATA = `{
 export function TestParserBtn() {
   const runTest = () => {
     console.log("=== RUNNING DIRECT PARSER TEST ===");
+    
+    // Test with the sample data as a string (original format)
+    console.log("TEST 1: Testing with JSON string");
     try {
-      // Test with the sample data
       const result = parseRawResponse(SAMPLE_DATA);
-      
-      console.log("PARSER TEST RESULT:", {
+      console.log("TEST 1 RESULT:", {
         workHistoryCount: result.workHistory.length,
         skillsCount: result.skills.length,
         redFlagsCount: result.redFlags.length,
-        workHistory: result.workHistory,
-        skills: result.skills,
-        redFlags: result.redFlags
+        summary: result.summary?.substring(0, 50) + "..."
       });
-      
-      // Verify if it found the data correctly
-      if (result.workHistory.length > 0 && result.skills.length > 0 && result.redFlags.length > 0) {
-        console.log("✅ PARSER TEST SUCCESSFUL - All data found correctly!");
-      } else {
-        console.log("❌ PARSER TEST FAILED - Missing data:");
-        if (result.workHistory.length === 0) console.log("- Work history missing");
-        if (result.skills.length === 0) console.log("- Skills missing");
-        if (result.redFlags.length === 0) console.log("- Red flags missing");
-      }
     } catch (e) {
-      console.error("PARSER TEST ERROR:", e);
+      console.error("TEST 1 ERROR:", e);
+    }
+    
+    // Test with parsed JSON object 
+    console.log("TEST 2: Testing with parsed JSON object");
+    try {
+      const jsonObj = JSON.parse(SAMPLE_DATA);
+      console.log("TEST 2: Object keys:", Object.keys(jsonObj));
+      const result = parseRawResponse(jsonObj);
+      console.log("TEST 2 RESULT:", {
+        workHistoryCount: result.workHistory.length,
+        skillsCount: result.skills.length,
+        redFlagsCount: result.redFlags.length,
+        summary: result.summary?.substring(0, 50) + "..."
+      });
+    } catch (e) {
+      console.error("TEST 2 ERROR:", e);
+    }
+    
+    // Test with array wrapping a JSON string
+    console.log("TEST 3: Testing with array wrapping a JSON string");
+    try {
+      const arrayWrapped = [SAMPLE_DATA];
+      const result = parseRawResponse(arrayWrapped);
+      console.log("TEST 3 RESULT:", {
+        workHistoryCount: result.workHistory.length,
+        skillsCount: result.skills.length,
+        redFlagsCount: result.redFlags.length,
+        summary: result.summary?.substring(0, 50) + "..."
+      });
+    } catch (e) {
+      console.error("TEST 3 ERROR:", e);
+    }
+    
+    // Test with array containing an object with rawResponse field
+    console.log("TEST 4: Testing with array containing object with rawResponse");
+    try {
+      // This resembles what might be happening with our API response
+      const wrappedObject = [{
+        id: "12345",
+        createdAt: new Date().toISOString(),
+        rawResponse: SAMPLE_DATA
+      }];
+      console.log("TEST 4: Structure:", JSON.stringify({
+        isArray: Array.isArray(wrappedObject),
+        length: wrappedObject.length,
+        firstItemKeys: Object.keys(wrappedObject[0])
+      }));
+      const result = parseRawResponse(wrappedObject);
+      console.log("TEST 4 RESULT:", {
+        workHistoryCount: result.workHistory.length,
+        skillsCount: result.skills.length,
+        redFlagsCount: result.redFlags.length,
+        summary: result.summary?.substring(0, 50) + "..."
+      });
+    } catch (e) {
+      console.error("TEST 4 ERROR:", e);
     }
   };
   

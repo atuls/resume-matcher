@@ -248,10 +248,10 @@ export function ResumeWorkHistoryTab({
   console.log("Final red flags:", redFlags);
   
   // Format for UI display - ensure consistent structure regardless of source
-  const potentialRedFlags = redFlags.map((flag) => {
+  const potentialRedFlags = redFlags.map((flag: any) => {
     if (typeof flag === 'string') {
       return { description: flag };
-    } else if (typeof flag === 'object') {
+    } else if (typeof flag === 'object' && flag !== null) {
       return {
         title: flag.title || flag.category || "Potential Issue",
         description: flag.description || flag.issue || flag.text || JSON.stringify(flag)

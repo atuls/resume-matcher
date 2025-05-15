@@ -444,9 +444,41 @@ export function parseRawResponse(rawResponse: string | any): ParsedRawResponse {
     
     // If it's already an object (not a string), try to use it directly
     if (typeof rawResponse === 'object' && rawResponse !== null) {
-      console.log("PARSER: Raw response is already an object, checking for expected fields");
+      console.log("PARSER: Raw response is already an object, checking expected fields");
       
-      // Look directly for our expected fields
+      // Special handling for arrays - this matches the API response format we're seeing
+      if (Array.isArray(rawResponse)) {
+        console.log("PARSER: Raw response is an array with", rawResponse.length, "items");
+        
+        // If it's an array with at least one item, try to use the first item
+        if (rawResponse.length > 0) {
+          console.log("PARSER: Examining first array item with keys:", Object.keys(rawResponse[0]));
+          
+          // Check if the array has an item with rawResponse or response field
+          if (rawResponse[0].rawResponse || rawResponse[0].response) {
+            console.log("PARSER: Found rawResponse/response in first array item, using it");
+            return parseRawResponse(rawResponse[0].rawResponse || rawResponse[0].response);
+          }
+          
+          // If the first item is a string (possibly a JSON string)
+          if (typeof rawResponse[0] === 'string') {
+            console.log("PARSER: First array item is a string, attempting to parse");
+            return parseRawResponse(rawResponse[0]);
+          }
+          
+          // If the first item has our expected fields directly
+          const firstItem = rawResponse[0];
+          if (firstItem.matching_score !== undefined || 
+              Array.isArray(firstItem.Work_History) ||
+              Array.isArray(firstItem.Skills) ||
+              Array.isArray(firstItem.Red_Flags)) {
+            console.log("PARSER: First array item has expected fields, using it directly");
+            return parseRawResponse(firstItem);
+          }
+        }
+      }
+      
+      // Look directly for our expected fields in the object
       let hasExpectedFormat = false;
       if (rawResponse.matching_score !== undefined) {
         console.log("PARSER: Found direct matching_score field:", rawResponse.matching_score);
@@ -466,6 +498,12 @@ export function parseRawResponse(rawResponse: string | any): ParsedRawResponse {
       if (Array.isArray(rawResponse.Red_Flags)) {
         console.log("PARSER: Found direct Red_Flags array with", rawResponse.Red_Flags.length, "items");
         hasExpectedFormat = true;
+      }
+      
+      // Check if the object has a rawResponse or response field
+      if (rawResponse.rawResponse || rawResponse.response) {
+        console.log("PARSER: Object has rawResponse/response field, attempting to parse");
+        return parseRawResponse(rawResponse.rawResponse || rawResponse.response);
       }
       
       // If we found the expected format, use the object directly

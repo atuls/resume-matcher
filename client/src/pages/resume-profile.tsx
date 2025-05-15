@@ -47,10 +47,78 @@ export default function ResumeProfilePage() {
   const parseAnalysisData = (analysisData: any, redFlagData: any) => {
     console.log("CENTRALIZED PARSER: Starting unified parsing process");
     
-    // Enhanced logging to identify the raw response structure
+    // More detailed logging of the entire data structure
+    console.log("CENTRALIZED PARSER: Analysis data is array?", Array.isArray(analysisData));
     console.log("CENTRALIZED PARSER: Analysis data structure:", 
       analysisData ? Object.keys(analysisData) : "undefined");
     
+    // If it's an array, log the first item's structure
+    if (Array.isArray(analysisData) && analysisData.length > 0) {
+      console.log("CENTRALIZED PARSER: First item keys:", Object.keys(analysisData[0]));
+      
+      // Check if the raw response is in this item
+      if (analysisData[0].rawResponse) {
+        console.log("CENTRALIZED PARSER: Found rawResponse in first array item");
+        analysisData = analysisData[0];  // Use the first item as our analysisData
+      }
+    }
+    
+    // Log full structure with all nested paths
+    console.log("CENTRALIZED PARSER: Full structure paths:");
+    const logPaths = (obj: any, path: string = '') => {
+      if (!obj || typeof obj !== 'object') return;
+      
+      Object.keys(obj).forEach(key => {
+        const newPath = path ? `${path}.${key}` : key;
+        console.log(`- ${newPath}: ${typeof obj[key]}`);
+        
+        // For special keys we're interested in, log more details
+        if (key === 'rawResponse' || key === 'response') {
+          if (typeof obj[key] === 'string') {
+            console.log(`  VALUE PREVIEW: ${obj[key].substring(0, 50)}...`);
+            
+            // Try to detect if it's JSON
+            if (obj[key].trim().startsWith('{') || obj[key].trim().startsWith('[')) {
+              console.log(`  APPEARS TO BE JSON STRING`);
+            }
+          } 
+          else if (typeof obj[key] === 'object') {
+            console.log(`  KEYS: ${Object.keys(obj[key])}`);
+          }
+        }
+        
+        // Recursively log paths for nested objects, but avoid circular refs
+        if (obj[key] && typeof obj[key] === 'object' && key !== 'parent' && key !== '__proto__') {
+          logPaths(obj[key], newPath);
+        }
+      });
+    };
+    logPaths(analysisData);
+    
+    // For array formats (which appears to be what the API returns), handle specially
+    if (Array.isArray(analysisData)) {
+      console.log("CENTRALIZED PARSER: Analysis data is array with", analysisData.length, "items");
+      if (analysisData.length > 0) {
+        console.log("CENTRALIZED PARSER: First array item keys:", Object.keys(analysisData[0]));
+        
+        // Try to parse using the first array item directly
+        try {
+          const parseResult = parseRawResponse(analysisData);
+          if (parseResult && 
+              ((parseResult.skills && parseResult.skills.length > 0) || 
+               (parseResult.workHistory && parseResult.workHistory.length > 0) ||
+               (parseResult.redFlags && parseResult.redFlags.length > 0))) {
+            console.log("CENTRALIZED PARSER: Successfully parsed the array directly");
+            setParsedAnalysisData(parseResult);
+            setParsingSource("analysisData array direct");
+            return parseResult;
+          }
+        } catch (error) {
+          console.error("CENTRALIZED PARSER: Error parsing entire array:", error);
+        }
+      }
+    }
+  
     // Step 1: Try to parse from analysis.rawResponse first (highest priority)
     if (analysisData?.rawResponse) {
       try {

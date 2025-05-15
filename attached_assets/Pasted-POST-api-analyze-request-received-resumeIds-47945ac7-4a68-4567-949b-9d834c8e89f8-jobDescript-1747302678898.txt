@@ -1,0 +1,635 @@
+POST /api/analyze request received
+resumeIds: [ '47945ac7-4a68-4567-949b-9d834c8e89f8' ]
+jobDescriptionId: c52c548e-6c74-4f58-944e-6730e8bfc2ad
+force: true
+================================
+======= RESUME DATA DEBUG =======
+Resume ID: 47945ac7-4a68-4567-949b-9d834c8e89f8
+Resume filename: Mark_Gunnion_resume.pdf
+Candidate name: null
+Resume extracted text snippet: I am an experienced and affordable Namer and Naming Consultant.
+I am seeking both consulting and freelance work, and partnership roles.
+
+- I have been a full-time namer, verbal brander, and tagline wr...
+Resume text contains "Olivia DeSpirito"? false
+Resume text contains "HOTWORX"? false
+Resume text length: 3091
+================================
+Force re-analyzing resume 47945ac7-4a68-4567-949b-9d834c8e89f8 with job c52c548e-6c74-4f58-944e-6730e8bfc2ad using custom prompt
+Using Claude for resume analysis
+Resume text length: 3091
+Job description text length: 8593
+Requirements count: 15
+Using custom analysis prompt from settings
+======= CLAUDE REQUEST CONTENT DEBUG (FULL) =======
+Resume ID debugging (if available in context): ID not in text
+Resume contains "Olivia DeSpirito"? false
+Resume contains "HOTWORX"? false
+FULL RESUME TEXT:
+I am an experienced and affordable Namer and Naming Consultant.
+I am seeking both consulting and freelance work, and partnership roles.
+
+- I have been a full-time namer, verbal brander, and tagline writer since 1996.
+- I create exciting, disruptive, market-smart names and taglines for my clients.
+- I work with my clients to develop strategic and creative approaches to naming.
+- I can do a pre-legal availability screening on the client's favorite names.
+- I have extensive experience in tech, pharma, B2B, and consumer goods.
+- I've worked on nearly a thousand naming projects, in every business category.
+- I have scores of happy customers around the world, with many repeaters.
+- I've also created taglines, box copy, web copy, lyrics, and screenplays.
+- I have a Bachelor of Science in Speech from Northwestern University.
+
+I would like to create and contribute names, taglines, and other types of verbal branding to help your company deliver value most effectively to your clients.
+
+I have daily, monthly, and per-project rates. Services Menu available on request.
+Please get in touch the next time you need a bunch of great name ideas!
+Mark
+
+Links to writing samples, my "Greatest Hits", and references on page 2, below.
+
+Mark Gunnion: Freelance Writer, Blogger, Name Consultant \& Freelance Namer Phone: (US) 1-541-824-1506
+email: markgunnion@gmail.com
+
+I write articles, interviews, email, social media posts and blog-posts on topics like branding, naming, slogans, small business, corporate identity, and changes in the business landscape.
+
+I am also a screenwriter, and besides writing Action, Comedy, Romance, and Dramatic Screenplays, I also write blog posts about writing, querying, movies, music and screenplays.
+
+Some names l've created:
+http://www.pinterest.com/markgunnion/names-i-created/
+My contact information page: www.Gunnion.com - explore the "Gallery" link!
+My LinkedIn page: https://www.linkedin.com/in/markgunnion
+Two online interviews (the answers to which comprise samples of my writing): http://www.artofmanliness.com/2009/10/07/so-you-want-my-job-name-consultant/ http://tinyurl.com/GunnionTheWordyNamer
+
+An older interview, from when I had more hair:
+https://tinyurl.com/AskTheNamer
+
+Other relevant experience from my background would include:
+
+- I was the Senior Namer at US Web / CKS
+- I was the Naming Manager at marchFIRST
+- I have freelanced for Landor, Metaphor, Lexicon, NameLab, and many, many others
+- I was a songwriter and lyricist in San Francisco for a few years, back in the day.
+- I have written nine feature screenplays, which have won awards at various film festivals.
+
+
+# RECENT CLIENT REFERENCES: 
+
+Michael Barr, NameLab
+barr@namelab.com
+https://www.namelab.com/
+David Gaz, The Bureau of Small Projects
+Gaz@smallprojectsbureau.com
+https://www.smallprojectsbureau.com/
+SHOW BIZ TRIVIA:
+
+- My screenplay THE FIRST GENTLEMAN won the Grand Prize at the 23rd Fade-In Action Screenplay Awards. My screenplay PLAY THE FOOL won three "Best Comedy" awards.
+
+Mark Gunnion / Freelance Namer \& Name Consultant / markgunnion@gmail.com / 541-824-1506
+
+
+FULL JOB DESCRIPTION:
+# Head of Growth 
+
+## About Us
+
+We are a fast-growing influencer marketing agency specializing in data-driven campaigns. Our strategies leverage industry insights, social listening, and analytics to guide creative decisions. Then, we let the results take it from there-each strategic move is influenced by top-performing influencers and content.
+
+Everyone claims to be data-backed, but we prove it using our Optimization Flywheel, driving brands to exponentially higher ROI. Some of our recent achievements include:
+
+- Outperforming paid lower-funnel agencies by 5 x in conversions.
+- Achieving 500x above TikTok's ad benchmarks in watch time.
+- Ranking \#2 globally on TikTok's leaderboard for an entire month.
+
+
+## Role Overview
+
+As the Head of Growth, you will be responsible for increasing the volume and quality of inbound leads while enhancing brand visibility across key channels. This role requires a balance of data-driven strategy, creative marketing execution, and cross-functional collaboration. You will oversee demand generation, content strategy, partnerships, and paid media to drive sustainable growth.
+
+You will own the strategy for our acquisition efforts, ensuring that our brand presence scales and translates into meaningful business opportunities. This includes identifying new channels for growth, optimizing existing ones, and ensuring a continuous feedback loop to improve performance over time.
+
+## Key Responsibilities
+
+## Lead Generation \& Demand Generation
+
+- Develop and execute multi-channel strategies (organic, paid, partnerships) to consistently increase the number of high-quality inbound leads.
+- Implement and optimize paid media campaigns (Google, Meta, TikTok, LinkedIn) for lead acquisition and brand awareness.
+- Leverage SEO, content marketing, and CRO techniques to drive traffic and improve conversion rates.
+- Build and optimize lead nurturing workflows to ensure effective lead qualification
+- Develop and improve our lead lifecycle (clearly define MQLs, SQLs, etc.) so we can track demand gen performance objectively and accurately
+- Improve our current ROAS and ensure clear attribution to channels and spend
+- Test and iterate via landing page and website optimizations to improve website and form conversion
+
+
+## Brand Visibility \& Awareness
+
+- Own and enhance the company's brand positioning through thought leadership, PR, and strategic partnerships.
+- Work with content and creative teams to develop high-performing campaigns across digital and social media.
+- Develop influencer and industry relationships to amplify brand credibility and reach.
+- Experiment with emerging marketing channels and strategies to stay ahead of industry trends.
+- Gain industry recognition via award submissions, securing wins, and getting invited to keynote at major conferences.
+- Be an expert at gaining earned media (i.e. maximizing reach and awareness via creative strategies vs. relying solely on pay-to-play opportunities)
+
+
+## Customer Retention \& Expansion
+
+- Work closely with Account Management to develop strategies for increasing retention and customer lifetime value (LTV).
+- Implement automated lead nurturing programs that drive upsells and cross-sells.
+- Analyze customer behavior post-sale to optimize onboarding and engagement strategies.
+
+
+## Growth Analytics \& Optimization
+
+- Implement data-driven approaches to measure, analyze, and improve marketing performance.
+- Establish KPIs and build dashboards to track performance across all acquisition channels.
+- Continuously test and iterate growth strategies based on data insights.
+- Conduct competitive analysis to identify new growth opportunities.
+- Gain a detailed understanding of where our leads are finding us and what their path to purchase looks like.
+- Analyze drop-off rates on the demo signup page and identify ways to improve these KPIs.
+- Report on these KPIs in our weekly meetings.
+
+
+## Product-Led Growth \& Experimentation
+
+- Identify and remove friction points in the customer journey to drive conversions.
+- Run A/B tests on acquisition and retention strategies to determine the most effective approaches.
+- Leverage referral programs and viral loops to drive organic growth.
+
+
+## Website \& Social Media Optimization
+
+- Update and maintain our social profiles to ensure our core differentiation is properly shared.
+- Keep web pages updated to reflect our value proposition and offerings.
+- Create new landing pages tailored to different services to optimize conversions and engagement.
+- Leverage AI-driven personalization to tailor content and experiences to different audience segments.
+
+
+## Partnerships \& Community Building
+
+- Identify and develop partnerships that can expand our reach and drive lead acquisition.
+- Engage with industry communities and networks to establish the brand as a go-to authority in influencer marketing.
+- Develop co-marketing initiatives with complementary brands to reach new audiences.
+- Collaborate with sales and account management teams to ensure alignment between marketing efforts and business goals.
+
+# Cross-Department Collaboration \& Leadership 
+
+- Lead as a player-coach, getting your own hands in the weeds and leading projects from start-to-finish (we're a lean team and our leaders are biased towards actions and minimize delegation where possible)
+- Work closely with Sales, Customer Success, and Product teams to ensure alignment between growth initiatives and business goals.
+- Ensure acquisition efforts translate into high-quality conversions by optimizing the entire customer journey.
+- Collaborate with Finance and Operations to ensure growth initiatives are cost-effective and scalable, in addition to owning our Marketing team's P\&L and annual budget
+
+
+## Biggest Challenges in This Role
+
+- Balancing short-term lead generation goals with long-term brand-building initiatives.
+- Continuously optimizing campaigns while managing multiple acquisition channels.
+- Ensuring a steady flow of high-quality leads in an ever-changing digital landscape.
+- Keeping up with rapidly evolving platform algorithms and industry trends.
+
+
+## Key Performance Indicators (KPIs)
+
+- Lead Volume \& Quality: \% increase in inbound qualified leads.
+- Brand Awareness \& Engagement: Growth in website traffic, social engagement, and brand mentions.
+- Conversion Rates: \% improvement in lead-to-client conversion.
+- ROI on Growth Initiatives: CAC-to-LTV ratio and paid campaign efficiency.
+- Customer Retention \& Expansion: Increase in LTV and decrease in churn rate.
+- Website \& Social Performance: Improvements in engagement and conversions from updated pages and social profiles.
+- Demo Signup Optimization: Reduction in drop-off rates and improved signup conversions.
+- Industry Recognition: Number of awards won, keynote invitations, and media mentions.
+
+
+## Requirements
+
+- 7+ years of experience in growth marketing, digital marketing, or demand generation, with at least 3 years in a leadership role.
+- Proven track record of scaling lead generation efforts and driving significant business growth.
+- Expertise in digital advertising, SEO, content marketing, and conversion rate optimization.
+- Strong analytical skills with experience in A/B testing and data-driven decision-making.
+- Deep understanding of influencer marketing, social media, and emerging marketing channels.
+- Experience working in a fast-paced, high-growth environment.
+- Ability to collaborate cross-functionally with sales, product, and creative teams.
+- Proven ability to gain industry recognition via award submissions, keynote speaking engagements, and thought leadership.
+
+
+## Personality \& Attitude for Success
+
+- Must be highly collaborative and open to feedback, adapting to cross-functional input without frustration.
+- Needs to be flexible in a fast-paced and evolving role, comfortable with shifting priorities.
+- Should take ownership of workload management without overcommitting and then placing blame.
+- Must be easy to work with, fostering strong partnerships rather than alienating colleagues.
+- Should embrace a problem-solving mindset, proactively addressing client challenges rather than resisting pushback.
+- Needs to be strategic in selling the value of our services into larger clients and proving its worth even when direct adoption is initially low.
+- Should be proactive in advocating for experiments and iteration to drive better marketing outcomes.
+
+This is an exciting opportunity to take our company to the next level. If you're a growth-driven leader ready to make a significant impact, we'd love to hear from you!
+FULL SYSTEM PROMPT:
+You are Claude, a truthful AI assistant focused on accurate resume analysis. Only analyze the specific text provided. Never fabricate information. Return analysis in valid JSON format.
+FULL USER PROMPT:
+CRITICAL INSTRUCTION: You must ONLY analyze the exact resume text provided below.
+DO NOT invent, fabricate, or hallucinate ANY information that is not explicitly stated in this resume.
+Your response MUST contain ONLY information that appears verbatim in the resume text.
+
+EXTRACTION FORMAT: Extract information EXACTLY as follows, copying dates and titles WORD FOR WORD:
+- For work experience: Use EXACT company names, EXACT job titles, EXACT start/end dates AS SHOWN in the resume 
+- For education: Use EXACT school names, EXACT degrees, EXACT dates AS SHOWN in the resume
+- For skills: List ONLY skills EXPLICITLY mentioned in the resume text
+
+You are a skilled HR professional with expertise in reviewing resumes and evaluating them again against job requirements to build a sophisticated analysis. You will be provided with a job description and a candidate resume. Your goal is to analyze the job requirements, candidate's resume, and provide a comprehensive analysis of how well the candidate's resume match the requirements of the job.
+First, carefully read the job description:
+<job_description>
+{# Head of Growth 
+
+## About Us
+
+We are a fast-growing influencer marketing agency specializing in data-driven campaigns. Our strategies leverage industry insights, social listening, and analytics to guide creative decisions. Then, we let the results take it from there-each strategic move is influenced by top-performing influencers and content.
+
+Everyone claims to be data-backed, but we prove it using our Optimization Flywheel, driving brands to exponentially higher ROI. Some of our recent achievements include:
+
+- Outperforming paid lower-funnel agencies by 5 x in conversions.
+- Achieving 500x above TikTok's ad benchmarks in watch time.
+- Ranking \#2 globally on TikTok's leaderboard for an entire month.
+
+
+## Role Overview
+
+As the Head of Growth, you will be responsible for increasing the volume and quality of inbound leads while enhancing brand visibility across key channels. This role requires a balance of data-driven strategy, creative marketing execution, and cross-functional collaboration. You will oversee demand generation, content strategy, partnerships, and paid media to drive sustainable growth.
+
+You will own the strategy for our acquisition efforts, ensuring that our brand presence scales and translates into meaningful business opportunities. This includes identifying new channels for growth, optimizing existing ones, and ensuring a continuous feedback loop to improve performance over time.
+
+## Key Responsibilities
+
+## Lead Generation \& Demand Generation
+
+- Develop and execute multi-channel strategies (organic, paid, partnerships) to consistently increase the number of high-quality inbound leads.
+- Implement and optimize paid media campaigns (Google, Meta, TikTok, LinkedIn) for lead acquisition and brand awareness.
+- Leverage SEO, content marketing, and CRO techniques to drive traffic and improve conversion rates.
+- Build and optimize lead nurturing workflows to ensure effective lead qualification
+- Develop and improve our lead lifecycle (clearly define MQLs, SQLs, etc.) so we can track demand gen performance objectively and accurately
+- Improve our current ROAS and ensure clear attribution to channels and spend
+- Test and iterate via landing page and website optimizations to improve website and form conversion
+
+
+## Brand Visibility \& Awareness
+
+- Own and enhance the company's brand positioning through thought leadership, PR, and strategic partnerships.
+- Work with content and creative teams to develop high-performing campaigns across digital and social media.
+- Develop influencer and industry relationships to amplify brand credibility and reach.
+- Experiment with emerging marketing channels and strategies to stay ahead of industry trends.
+- Gain industry recognition via award submissions, securing wins, and getting invited to keynote at major conferences.
+- Be an expert at gaining earned media (i.e. maximizing reach and awareness via creative strategies vs. relying solely on pay-to-play opportunities)
+
+
+## Customer Retention \& Expansion
+
+- Work closely with Account Management to develop strategies for increasing retention and customer lifetime value (LTV).
+- Implement automated lead nurturing programs that drive upsells and cross-sells.
+- Analyze customer behavior post-sale to optimize onboarding and engagement strategies.
+
+
+## Growth Analytics \& Optimization
+
+- Implement data-driven approaches to measure, analyze, and improve marketing performance.
+- Establish KPIs and build dashboards to track performance across all acquisition channels.
+- Continuously test and iterate growth strategies based on data insights.
+- Conduct competitive analysis to identify new growth opportunities.
+- Gain a detailed understanding of where our leads are finding us and what their path to purchase looks like.
+- Analyze drop-off rates on the demo signup page and identify ways to improve these KPIs.
+- Report on these KPIs in our weekly meetings.
+
+
+## Product-Led Growth \& Experimentation
+
+- Identify and remove friction points in the customer journey to drive conversions.
+- Run A/B tests on acquisition and retention strategies to determine the most effective approaches.
+- Leverage referral programs and viral loops to drive organic growth.
+
+
+## Website \& Social Media Optimization
+
+- Update and maintain our social profiles to ensure our core differentiation is properly shared.
+- Keep web pages updated to reflect our value proposition and offerings.
+- Create new landing pages tailored to different services to optimize conversions and engagement.
+- Leverage AI-driven personalization to tailor content and experiences to different audience segments.
+
+
+## Partnerships \& Community Building
+
+- Identify and develop partnerships that can expand our reach and drive lead acquisition.
+- Engage with industry communities and networks to establish the brand as a go-to authority in influencer marketing.
+- Develop co-marketing initiatives with complementary brands to reach new audiences.
+- Collaborate with sales and account management teams to ensure alignment between marketing efforts and business goals.
+
+# Cross-Department Collaboration \& Leadership 
+
+- Lead as a player-coach, getting your own hands in the weeds and leading projects from start-to-finish (we're a lean team and our leaders are biased towards actions and minimize delegation where possible)
+- Work closely with Sales, Customer Success, and Product teams to ensure alignment between growth initiatives and business goals.
+- Ensure acquisition efforts translate into high-quality conversions by optimizing the entire customer journey.
+- Collaborate with Finance and Operations to ensure growth initiatives are cost-effective and scalable, in addition to owning our Marketing team's P\&L and annual budget
+
+
+## Biggest Challenges in This Role
+
+- Balancing short-term lead generation goals with long-term brand-building initiatives.
+- Continuously optimizing campaigns while managing multiple acquisition channels.
+- Ensuring a steady flow of high-quality leads in an ever-changing digital landscape.
+- Keeping up with rapidly evolving platform algorithms and industry trends.
+
+
+## Key Performance Indicators (KPIs)
+
+- Lead Volume \& Quality: \% increase in inbound qualified leads.
+- Brand Awareness \& Engagement: Growth in website traffic, social engagement, and brand mentions.
+- Conversion Rates: \% improvement in lead-to-client conversion.
+- ROI on Growth Initiatives: CAC-to-LTV ratio and paid campaign efficiency.
+- Customer Retention \& Expansion: Increase in LTV and decrease in churn rate.
+- Website \& Social Performance: Improvements in engagement and conversions from updated pages and social profiles.
+- Demo Signup Optimization: Reduction in drop-off rates and improved signup conversions.
+- Industry Recognition: Number of awards won, keynote invitations, and media mentions.
+
+
+## Requirements
+
+- 7+ years of experience in growth marketing, digital marketing, or demand generation, with at least 3 years in a leadership role.
+- Proven track record of scaling lead generation efforts and driving significant business growth.
+- Expertise in digital advertising, SEO, content marketing, and conversion rate optimization.
+- Strong analytical skills with experience in A/B testing and data-driven decision-making.
+- Deep understanding of influencer marketing, social media, and emerging marketing channels.
+- Experience working in a fast-paced, high-growth environment.
+- Ability to collaborate cross-functionally with sales, product, and creative teams.
+- Proven ability to gain industry recognition via award submissions, keynote speaking engagements, and thought leadership.
+
+
+## Personality \& Attitude for Success
+
+- Must be highly collaborative and open to feedback, adapting to cross-functional input without frustration.
+- Needs to be flexible in a fast-paced and evolving role, comfortable with shifting priorities.
+- Should take ownership of workload management without overcommitting and then placing blame.
+- Must be easy to work with, fostering strong partnerships rather than alienating colleagues.
+- Should embrace a problem-solving mindset, proactively addressing client challenges rather than resisting pushback.
+- Needs to be strategic in selling the value of our services into larger clients and proving its worth even when direct adoption is initially low.
+- Should be proactive in advocating for experiments and iteration to drive better marketing outcomes.
+
+This is an exciting opportunity to take our company to the next level. If you're a growth-driven leader ready to make a significant impact, we'd love to hear from you!}
+</job_description>
+Next, review the candidate resume:
+<candidate_resume>
+I am an experienced and affordable Namer and Naming Consultant.
+I am seeking both consulting and freelance work, and partnership roles.
+
+- I have been a full-time namer, verbal brander, and tagline writer since 1996.
+- I create exciting, disruptive, market-smart names and taglines for my clients.
+- I work with my clients to develop strategic and creative approaches to naming.
+- I can do a pre-legal availability screening on the client's favorite names.
+- I have extensive experience in tech, pharma, B2B, and consumer goods.
+- I've worked on nearly a thousand naming projects, in every business category.
+- I have scores of happy customers around the world, with many repeaters.
+- I've also created taglines, box copy, web copy, lyrics, and screenplays.
+- I have a Bachelor of Science in Speech from Northwestern University.
+
+I would like to create and contribute names, taglines, and other types of verbal branding to help your company deliver value most effectively to your clients.
+
+I have daily, monthly, and per-project rates. Services Menu available on request.
+Please get in touch the next time you need a bunch of great name ideas!
+Mark
+
+Links to writing samples, my "Greatest Hits", and references on page 2, below.
+
+Mark Gunnion: Freelance Writer, Blogger, Name Consultant \& Freelance Namer Phone: (US) 1-541-824-1506
+email: markgunnion@gmail.com
+
+I write articles, interviews, email, social media posts and blog-posts on topics like branding, naming, slogans, small business, corporate identity, and changes in the business landscape.
+
+I am also a screenwriter, and besides writing Action, Comedy, Romance, and Dramatic Screenplays, I also write blog posts about writing, querying, movies, music and screenplays.
+
+Some names l've created:
+http://www.pinterest.com/markgunnion/names-i-created/
+My contact information page: www.Gunnion.com - explore the "Gallery" link!
+My LinkedIn page: https://www.linkedin.com/in/markgunnion
+Two online interviews (the answers to which comprise samples of my writing): http://www.artofmanliness.com/2009/10/07/so-you-want-my-job-name-consultant/ http://tinyurl.com/GunnionTheWordyNamer
+
+An older interview, from when I had more hair:
+https://tinyurl.com/AskTheNamer
+
+Other relevant experience from my background would include:
+
+- I was the Senior Namer at US Web / CKS
+- I was the Naming Manager at marchFIRST
+- I have freelanced for Landor, Metaphor, Lexicon, NameLab, and many, many others
+- I was a songwriter and lyricist in San Francisco for a few years, back in the day.
+- I have written nine feature screenplays, which have won awards at various film festivals.
+
+
+# RECENT CLIENT REFERENCES: 
+
+Michael Barr, NameLab
+barr@namelab.com
+https://www.namelab.com/
+David Gaz, The Bureau of Small Projects
+Gaz@smallprojectsbureau.com
+https://www.smallprojectsbureau.com/
+SHOW BIZ TRIVIA:
+
+- My screenplay THE FIRST GENTLEMAN won the Grand Prize at the 23rd Fade-In Action Screenplay Awards. My screenplay PLAY THE FOOL won three "Best Comedy" awards.
+
+Mark Gunnion / Freelance Namer \& Name Consultant / markgunnion@gmail.com / 541-824-1506
+
+
+</candidate_resume>
+Now, follow these steps:
+1. Analyze the job description:
+   - Identify key skills, qualifications, and experience required for the position.
+   - Note any specific educational requirements or certifications.
+   - Determine essential and preferred qualifications.
+2. Evaluate the candidate resume:
+   a) build a matching_score that uses these parameters:
+   - Compare the candidate's skills, qualifications, and experience to the job requirements 
+   - Assess the relevance of their work history to the job requirements
+   - Consider their educational background and any relevant certifications
+  b) build their work history consisting of their past jobs from the resume
+  c) builds their skills from the resume
+3. Identify red flags for potential issues such as (not limited to these):
+     a. Short stints at multiple jobs (job hopping)
+     b. Gaps in employment history
+     c. Predominantly contract work instead of full-time positions
+     d. Lack of career progression
+     e. Mismatched or irrelevant experience
+Present your analysis in the following format, each with a separate key in the JSON output:
+<analysis>
+matching_score: a numerical value between 0 and 100
+Summary: Your detailed analysis of the job requirements and evaluation of the candidate's resume. 
+Work History: a single array of jobs containing Title, Company, location, startDate, endDate, description, durationMonths, isCurrentRole
+Skills: a single array containing string items for each skill
+Red Flags: a single array containing string items for each red flag and the reason
+</analysis>
+Remember to be objective in your evaluation and base your matchings solely on the information provided in the job description and candidate resumes. 
+
+IMPORTANT JSON FORMATTING REQUIREMENTS:
+- Use ONLY double quotes (") for all string values and keys
+- If a string contains quotes, escape them properly with backslash (\")
+- NEVER use single quotes (') anywhere in the JSON
+- Ensure all arrays and objects have properly closed brackets
+- Verify your JSON is valid with no formatting errors before submitting
+- Do NOT include any text, markdown formatting, explanations, or notes outside the JSON object
+- TRIPLE-CHECK for escaped quotes, newlines, and special characters within strings
+
+YOUR ENTIRE RESPONSE MUST CONSIST OF NOTHING BUT A SINGLE VALID JSON OBJECT.
+
+IMPORTANT VERIFICATION MARKERS (These exact terms MUST appear in your analysis if they appear in the resume):
+- Candidate Name: "unknown"
+- Company: "unknown" 
+- Position: "unknown"
+- Location: "unknown"
+- Education: "unknown"
+- Contact: "unknown"
+
+If you cannot find these details in the resume, state "I cannot find this information in the resume text provided" rather than inventing information.
+
+Your response will be verified against these key details, and discrepancies will result in your analysis being rejected.
+===========================================
+======= CLAUDE RESPONSE DEBUG =======
+Raw Claude response (first 300 chars): {   "matching_score": 15,   "Summary": "The job description is for a Head of Growth position requiring expertise in lead generation, demand generation, brand visibility, customer retention, growth analytics, and cross-department collaboration. The candidate's resume indicates they are a Naming Consu
+Total response length: 3213
+Response contains extracted_text? false
+Resume name appears in response? Unknown - no resume data provided
+Key experience appears in response? Unknown - no resume data provided
+FULL CLAUDE RESPONSE:
+{
+  "matching_score": 15,
+  "Summary": "The job description is for a Head of Growth position requiring expertise in lead generation, demand generation, brand visibility, customer retention, growth analytics, and cross-department collaboration. The candidate's resume indicates they are a Naming Consultant with extensive experience in naming, verbal branding, and tagline writing since 1996. There is a significant mismatch between the required skills for the Head of Growth position and the candidate's experience in naming and verbal branding. The job requires 7+ years of experience in growth marketing with at least 3 years in a leadership role, expertise in digital advertising, SEO, content marketing, and conversion rate optimization. The candidate does not demonstrate these specific skills in their resume. While the candidate has worked with many clients and has some leadership experience as a Senior Namer and Naming Manager, their focus has been entirely in naming and verbal branding rather than comprehensive growth marketing strategies required for this position.",
+  "Work_History": [
+    {
+      "Title": "Senior Namer",
+      "Company": "US Web / CKS",
+      "location": "unknown",
+      "startDate": "unknown",
+      "endDate": "unknown",
+      "description": "",
+      "durationMonths": "unknown",
+      "isCurrentRole": false
+    },
+    {
+      "Title": "Naming Manager",
+      "Company": "marchFIRST",
+      "location": "unknown",
+      "startDate": "unknown",
+      "endDate": "unknown",
+      "description": "",
+      "durationMonths": "unknown",
+      "isCurrentRole": false
+    },
+    {
+      "Title": "Freelance Writer, Blogger, Name Consultant & Freelance Namer",
+      "Company": "Self-employed",
+      "location": "unknown",
+      "startDate": "1996",
+      "endDate": "present",
+      "description": "Full-time namer, verbal brander, and tagline writer since 1996. Creates names and taglines for clients, develops strategic and creative approaches to naming, and performs pre-legal availability screening.",
+      "durationMonths": "unknown",
+      "isCurrentRole": true
+    }
+  ],
+  "Skills": [
+    "Naming",
+    "Verbal branding",
+    "Tagline writing",
+    "Pre-legal availability screening",
+    "Copywriting",
+    "Blog writing",
+    "Screenwriting",
+    "Article writing",
+    "Social media posts",
+    "Email writing",
+    "Songwriting",
+    "Lyric writing"
+  ],
+  "Red_Flags": [
+    "The candidate's core expertise is in naming and verbal branding, which does not align with the growth marketing and demand generation focus of the Head of Growth position",
+    "The resume lacks specific metrics or results from previous work that could demonstrate capabilities in growth strategies",
+    "No evidence of experience with digital advertising, SEO, content marketing, or conversion rate optimization as required by the job description",
+    "No demonstrated experience in managing paid media campaigns across platforms like Google, Meta, TikTok, LinkedIn",
+    "No indication of experience with growth analytics, A/B testing, or data-driven marketing decisions",
+    "Limited information about leadership experience, which is essential for this Head of Growth position"
+  ]
+}
+====================================
+JSON extracted using regex
+======= VERIFICATION RESULTS =======
+Name verification: PASSED
+Company verification: PASSED
+Position verification: PASSED
+Education verification: PASSED
+Location verification: PASSED
+Phone verification: PASSED
+Email verification: PASSED
+Verification score: 100%
+====================================
+======= CLAUDE FULL RESPONSE =======
+{
+  "matching_score": 15,
+  "Summary": "The job description is for a Head of Growth position requiring expertise in lead generation, demand generation, brand visibility, customer retention, growth analytics, and cross-department collaboration. The candidate's resume indicates they are a Naming Consultant with extensive experience in naming, verbal branding, and tagline writing since 1996. There is a significant mismatch between the required skills for the Head of Growth position and the candidate's experience in naming and verbal branding. The job requires 7+ years of experience in growth marketing with at least 3 years in a leadership role, expertise in digital advertising, SEO, content marketing, and conversion rate optimization. The candidate does not demonstrate these specific skills in their resume. While the candidate has worked with many clients and has some leadership experience as a Senior Namer and Naming Manager, their focus has been entirely in naming and verbal branding rather than comprehensive growth marketing strategies required for this position.",
+  "Work_History": [
+    {
+      "Title": "Senior Namer",
+      "Company": "US Web / CKS",
+      "location": "unknown",
+      "startDate": "unknown",
+      "endDate": "unknown",
+      "description": "",
+      "durationMonths": "unknown",
+      "isCurrentRole": false
+    },
+    {
+      "Title": "Naming Manager",
+      "Company": "marchFIRST",
+      "location": "unknown",
+      "startDate": "unknown",
+      "endDate": "unknown",
+      "description": "",
+      "durationMonths": "unknown",
+      "isCurrentRole": false
+    },
+    {
+      "Title": "Freelance Writer, Blogger, Name Consultant & Freelance Namer",
+      "Company": "Self-employed",
+      "location": "unknown",
+      "startDate": "1996",
+      "endDate": "present",
+      "description": "Full-time namer, verbal brander, and tagline writer since 1996. Creates names and taglines for clients, develops strategic and creative approaches to naming, and performs pre-legal availability screening.",
+      "durationMonths": "unknown",
+      "isCurrentRole": true
+    }
+  ],
+  "Skills": [
+    "Naming",
+    "Verbal branding",
+    "Tagline writing",
+    "Pre-legal availability screening",
+    "Copywriting",
+    "Blog writing",
+    "Screenwriting",
+    "Article writing",
+    "Social media posts",
+    "Email writing",
+    "Songwriting",
+    "Lyric writing"
+  ],
+  "Red_Flags": [
+    "The candidate's core expertise is in naming and verbal branding, which does not align with the growth marketing and demand generation focus of the Head of Growth position",
+    "The resume lacks specific metrics or results from previous work that could demonstrate capabilities in growth strategies",
+    "No evidence of experience with digital advertising, SEO, content marketing, or conversion rate optimization as required by the job description",
+    "No demonstrated experience in managing paid media campaigns across platforms like Google, Meta, TikTok, LinkedIn",
+    "No indication of experience with growth analytics, A/B testing, or data-driven marketing decisions",
+    "Limited information about leadership experience, which is essential for this Head of Growth position"
+  ]
+}
+====================================
+Standard fields not found, attempting to extract from nested structure
+Extracted from Claude response: score=15, skills count=0, requirements count=1
+Claude analysis completed in 14.852 seconds
+Claude score: 15
+Matched requirements: 1
+======= RESUME UPDATE DEBUG =======
+Resume candidateTitle: Naming, Verbal Branding, Tagline Writing, Creative Writing, Copywriting, Pre-legal Availability Screening, Marketing, Branding
+Analysis result candidateTitle: 
+===================================
+9:49:14 AM [express] POST /api/analyze 200 in 15272ms :: {"results":[{"id":"f1fb7cd6-a471-4931-9821-…
+GET scores request for job c52c548e-6c74-4f58-944e-6730e8bfc2ad with 1 resumes
