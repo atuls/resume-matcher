@@ -610,13 +610,14 @@ export default function CandidatesPage() {
       // Ensure WebSocket is connected
       websocketService.connect();
       
-      // Call batch analysis API endpoint with the correct URL
+      // Call batch analysis API endpoint with the correct URL and explicitly set startProcessing=true
       const response = await fetch(`/api/job-descriptions/${selectedJobId}/resume-scores`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           resumeIds,
-          limit
+          limit,
+          startProcessing: true // Explicitly request batch processing to start
         })
       });
       

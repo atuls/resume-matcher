@@ -384,7 +384,7 @@ export async function getResumeScores(resumeIds: string | string[], jobDescripti
     }
     
     // For larger batches, use POST to avoid URL length limitations
-    console.log("Using POST for large batch of resumeIds");
+    console.log("Using POST for large batch of resumeIds (data loading only, not starting batch analysis)");
     
     const response = await fetch(url, {
       method: "POST",
@@ -392,7 +392,10 @@ export async function getResumeScores(resumeIds: string | string[], jobDescripti
         "Content-Type": "application/json",
       },
       credentials: "include",
-      body: JSON.stringify({ resumeIds: resumeIdsArray }),
+      body: JSON.stringify({ 
+        resumeIds: resumeIdsArray,
+        startProcessing: false // Explicitly prevent batch processing when just loading data
+      }),
     });
     
     if (!response.ok) {

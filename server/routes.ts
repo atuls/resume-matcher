@@ -1047,7 +1047,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/job-descriptions/:id/resume-scores", async (req: Request, res: Response) => {
     try {
       const jobDescriptionId = req.params.id;
-      const { resumeIds, limit } = req.body;
+      const { resumeIds, limit, startProcessing = false } = req.body;
       
       // Validate input
       if (!Array.isArray(resumeIds) || resumeIds.length === 0) {
@@ -1109,13 +1109,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send initial response immediately with both scores and results
       res.json(scoreMap);
       
-      // Only process if there are new resumes to analyze
-      if (resumesToProcess.length > 0) {
+      // Only process if startProcessing is true and there are new resumes to analyze
+      if (startProcessing && resumesToProcess.length > 0) {
+        console.log(`Starting batch analysis for ${resumesToProcess.length} resumes as requested`);
         // Process in background after sending initial response
         processBatchAnalysis(resumesToProcess, jobDescriptionId, jobDescription, requirements)
           .catch(error => {
             console.error("Fatal error in batch analysis:", error);
           });
+      } else if (!startProcessing) {
+        console.log("Batch analysis not requested (startProcessing=false), skipping batch analysis");
       } else {
         console.log("No new resumes to process, skipping batch analysis");
       }
