@@ -4,6 +4,26 @@ All notable changes to the Resume Analyzer project will be documented in this fi
 
 ## [Unreleased]
 
+## [1.7.0] - 2024-05-15
+
+### Added
+- Overall score display in Debug Panel for easier reference
+- Enhanced response parser with support for multiple field naming formats
+- Database persistence for parsed analysis fields (skills, work history, red flags)
+- Improved extraction from nested JSON structures with fallback mechanisms
+- Detailed console logging for tracing data extraction sources
+
+### Changed
+- All UI tabs (Skills, Work History, Red Flags) now consistently use the same data source
+- Enhanced JSON structure detection with better field name handling
+- Improved error handling in analysis processing
+
+### Fixed
+- Fixed data inconsistency issues between different tabs showing different content
+- Resolved field extraction failures from deeply nested structures
+- Fixed database update process for saving parsed analysis data
+- Enhanced parser reliability with support for various field naming conventions
+
 ## [1.6.0] - 2024-05-13
 
 ### Added

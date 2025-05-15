@@ -129,11 +129,11 @@ export function DebugPanel({ rawResponse, resumeId, analysis, redFlagData }: Deb
         info += "Score: 0\n";
         
         setDebugInfo(info);
-        return;
+        return null;
       }
       
       // If this is an analysis result with an ID, add a button to process and save it
-      let analysisId = '';
+      let analysisId: string | null = null;
       if (typeof actualRawResponse === 'object' && actualRawResponse !== null) {
         if (Array.isArray(actualRawResponse) && actualRawResponse.length > 0 && actualRawResponse[0].id) {
           analysisId = actualRawResponse[0].id;
@@ -528,7 +528,9 @@ export function DebugPanel({ rawResponse, resumeId, analysis, redFlagData }: Deb
               size="sm"
               onClick={async () => {
                 const analysisId = await debugResponse();
-                setFoundAnalysisId(analysisId);
+                if (analysisId) {
+                  setFoundAnalysisId(analysisId);
+                }
               }}
               className="flex items-center"
             >

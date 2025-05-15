@@ -14,15 +14,17 @@ An AI-powered resume analysis platform that efficiently matches candidate resume
 - **Sortable Results**: Sort candidates by match score to prioritize best matches
 - **Multi-model AI Support**: Choose between OpenAI GPT or Anthropic Claude for analysis
 - **Customizable Analysis Prompts**: Configure how AI models analyze resumes via settings
-- **Advanced Debugging**: Debug Info tab shows raw AI responses for troubleshooting
+- **Advanced Debugging**: Debug Info tab shows raw AI responses for troubleshooting with overall score display
 - **On-demand Resume Analysis**: Analyze resumes only when needed to reduce API usage
 - **Performance Optimization**: Efficient handling of large candidate pools with optimized API usage
 - **Flexible AI Response Parsing**: Robust extraction of data from various LLM response formats
 - **Single-Prompt Analysis**: Unified prompt system for comprehensive resume evaluation
 - **Score Normalization**: Automatic conversion of different scoring scales (0-1, 0-10, 0-100)
-- **Versatile Data Extraction**: Extract work history from multiple response structures with fallbacks
+- **Versatile Data Extraction**: Extract work history, skills, and red flags from multiple response structures
+- **Consistent Data Display**: All UI tabs show data from the same parsed source for consistency
 - **Job Matching Interface**: Interactive job selection with score display in candidate profiles
 - **Re-run Analysis**: Ability to re-analyze candidates against specific jobs on demand
+- **Database Persistence**: Parsed analysis fields are stored in the database for reliable access
 
 ## Tech Stack
 

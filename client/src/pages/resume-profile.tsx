@@ -679,7 +679,7 @@ export default function ResumeProfilePage() {
                       <Badge variant="outline" className="text-xs">
                         Source: {
                           (analysis as any)?.parsedRedFlags ? "Parsed from LLM response" :
-                          (redFlagData?.analysis?.redFlags || redFlagData?.analysis?.red_flags) ? "Red Flag API" : 
+                          (redFlagData?.analysis?.redFlags) ? "Red Flag API" : 
                           "No data available"
                         }
                       </Badge>
