@@ -572,9 +572,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Contacted field must be a boolean" });
       }
       
+      // Update to use contactedInRippling field which is defined in the schema
       const resume = await storage.updateResume(resumeId, { 
-        contacted, 
-        contactedAt: contacted ? new Date() : null 
+        contactedInRippling: contacted 
       });
       
       if (!resume) {
