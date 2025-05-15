@@ -88,10 +88,12 @@ export class ResponseParserService {
     // Check current object for expected fields - also check the parsedJson field name specifically
     const hasExpectedFields = 
       rawResponse.matching_score !== undefined || 
-      rawResponse.skills !== undefined ||
-      rawResponse.work_history !== undefined ||
-      rawResponse.red_flags !== undefined ||
-      rawResponse.summary !== undefined;
+      rawResponse.skills !== undefined || rawResponse.Skills !== undefined || rawResponse["Skills"] !== undefined ||
+      rawResponse.work_history !== undefined || rawResponse.Work_History !== undefined || 
+      rawResponse["Work History"] !== undefined || rawResponse.workHistory !== undefined ||
+      rawResponse.red_flags !== undefined || rawResponse.Red_Flags !== undefined || 
+      rawResponse["Red Flags"] !== undefined || rawResponse.redFlags !== undefined ||
+      rawResponse.summary !== undefined || rawResponse.Summary !== undefined;
       
     if (hasExpectedFields) {
       console.log("extractRawResponseContent: Found expected fields at top level");
@@ -111,10 +113,13 @@ export class ResponseParserService {
       
       const nestedHasExpectedFields = 
         rawResponse.rawResponse.matching_score !== undefined || 
-        rawResponse.rawResponse.skills !== undefined ||
-        rawResponse.rawResponse.work_history !== undefined ||
-        rawResponse.rawResponse.red_flags !== undefined ||
-        rawResponse.rawResponse.summary !== undefined;
+        rawResponse.rawResponse.skills !== undefined || rawResponse.rawResponse.Skills !== undefined || 
+        rawResponse.rawResponse["Skills"] !== undefined ||
+        rawResponse.rawResponse.work_history !== undefined || rawResponse.rawResponse.Work_History !== undefined || 
+        rawResponse.rawResponse["Work History"] !== undefined || rawResponse.rawResponse.workHistory !== undefined ||
+        rawResponse.rawResponse.red_flags !== undefined || rawResponse.rawResponse.Red_Flags !== undefined || 
+        rawResponse.rawResponse["Red Flags"] !== undefined || rawResponse.rawResponse.redFlags !== undefined ||
+        rawResponse.rawResponse.summary !== undefined || rawResponse.rawResponse.Summary !== undefined;
         
       if (nestedHasExpectedFields) {
         console.log("extractRawResponseContent: Found expected fields in nested rawResponse");
@@ -190,9 +195,27 @@ export class ResponseParserService {
       
       // Extract the structured data using the specific field names
       // Use case-insensitive field matching to be more robust
-      const skills = content.skills || content.Skills || [];
-      const workHistory = content.work_history || content.Work_History || content.workHistory || [];
-      const redFlags = content.red_flags || content.Red_Flags || content.redFlags || [];
+      let skills = content.skills || content.Skills || content["Skills"] || [];
+      let workHistory = content.work_history || content.Work_History || content["Work History"] || content.workHistory || [];
+      let redFlags = content.red_flags || content.Red_Flags || content["Red Flags"] || content.redFlags || [];
+      
+      // Debug logging to see what fields are actually available
+      console.log("Field extraction - skills found in:", 
+        content.skills ? "skills" : 
+        content.Skills ? "Skills" : 
+        content["Skills"] ? "Skills (bracket notation)" : "none");
+        
+      console.log("Field extraction - work history found in:", 
+        content.work_history ? "work_history" : 
+        content.Work_History ? "Work_History" : 
+        content["Work History"] ? "Work History (bracket notation)" : 
+        content.workHistory ? "workHistory" : "none");
+        
+      console.log("Field extraction - red flags found in:", 
+        content.red_flags ? "red_flags" : 
+        content.Red_Flags ? "Red_Flags" : 
+        content["Red Flags"] ? "Red Flags (bracket notation)" : 
+        content.redFlags ? "redFlags" : "none");
       const summary = content.summary || content.Summary || '';
       const score = content.matching_score !== undefined ? content.matching_score : 
                    (content.score !== undefined ? content.score : result.overallScore);
@@ -207,9 +230,9 @@ export class ResponseParserService {
       
       // Log the raw content structure to help with debugging
       console.log("Content structure:", {
-        hasSkills: !!content.skills || !!content.Skills,
-        hasWorkHistory: !!content.work_history || !!content.Work_History || !!content.workHistory,
-        hasRedFlags: !!content.red_flags || !!content.Red_Flags || !!content.redFlags,
+        hasSkills: !!content.skills || !!content.Skills || !!content["Skills"],
+        hasWorkHistory: !!content.work_history || !!content.Work_History || !!content["Work History"] || !!content.workHistory,
+        hasRedFlags: !!content.red_flags || !!content.Red_Flags || !!content["Red Flags"] || !!content.redFlags,
         hasSummary: !!content.summary || !!content.Summary,
         hasScore: content.matching_score !== undefined || content.score !== undefined,
         contentKeys: Object.keys(content)
