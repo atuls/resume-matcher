@@ -67,6 +67,8 @@ export function ResumeWorkHistoryTab({
     console.log("WorkHistory Tab: Using centralized parsed data. Found", parsedData.workHistory.length, "work history entries");
     workHistory = parsedData.workHistory;
     workHistorySource = dataSource || "centralized_parser";
+    // Set flag to skip all further extraction attempts since we have authoritative data
+    directDataAvailable = true; // This ensures we don't run the legacy extractors
   }
   // Priority 2: Parse raw response directly
   else {
@@ -146,38 +148,46 @@ export function ResumeWorkHistoryTab({
   
   // Determine which source we're using (for potential indicators in the UI)
   
-  // Prioritize direct Work_History from raw response first (best match to screenshot)
-  if (directDataAvailable && !workHistory.length) { // Only if we haven't already set workHistory earlier
-    workHistory = directData.workHistory.map((item: any) => ({
-      title: item.Title || item.title || '',
-      company: item.Company || item.company || '',
-      location: item.location || item.Location || '',
-      startDate: item.startDate || item.StartDate || '',
-      endDate: item.endDate || item.EndDate || '',
-      description: item.description || item.Description || '',
-      durationMonths: item.durationMonths || item.DurationMonths || 0,
-      isCurrentRole: item.isCurrentRole || item.IsCurrentRole || false
-    }));
-    workHistorySource = "direct_raw_parser";
-    console.log("Using work history directly from raw response parser (source 1) - MATCH SCREENSHOT");
+  // Skip all other extraction methods if we already have centralized parsed data
+  if (parsedData && parsedData.workHistory && parsedData.workHistory.length > 0) {
+    // Do nothing - we already set workHistory and workHistorySource above
+    console.log("Using centralized parsed data from database as the definitive source");
   }
-  // Then try the regular extractor
-  else if (analysisExtractedData.workHistory && analysisExtractedData.workHistory.length > 0) {
-    workHistory = analysisExtractedData.workHistory;
-    workHistorySource = "main_analysis";
-    console.log("Using work history from main analysis (source 2)");
-  } 
-  // Then use red flag analysis
-  else if (rfExtractedData.workHistory && rfExtractedData.workHistory.length > 0) {
-    workHistory = rfExtractedData.workHistory;
-    workHistorySource = "red_flag_analysis";
-    console.log("Using work history from red flag analysis (source 3)");
-  } 
-  // Finally, fall back to legacy method
+  // Otherwise, use the fallback extraction methods in order of priority
   else {
-    workHistory = extractWorkHistory(redFlagData);
-    workHistorySource = "legacy_method";
-    console.log("Using work history from legacy extraction method (source 4)");
+    // Prioritize direct Work_History from raw response first (best match to screenshot)
+    if (directDataAvailable && !workHistory.length) { // Only if we haven't already set workHistory earlier
+      workHistory = directData.workHistory.map((item: any) => ({
+        title: item.Title || item.title || '',
+        company: item.Company || item.company || '',
+        location: item.location || item.Location || '',
+        startDate: item.startDate || item.StartDate || '',
+        endDate: item.endDate || item.EndDate || '',
+        description: item.description || item.Description || '',
+        durationMonths: item.durationMonths || item.DurationMonths || 0,
+        isCurrentRole: item.isCurrentRole || item.IsCurrentRole || false
+      }));
+      workHistorySource = "direct_raw_parser";
+      console.log("Using work history directly from raw response parser (source 1) - MATCH SCREENSHOT");
+    }
+    // Then try the regular extractor
+    else if (analysisExtractedData.workHistory && analysisExtractedData.workHistory.length > 0) {
+      workHistory = analysisExtractedData.workHistory;
+      workHistorySource = "main_analysis";
+      console.log("Using work history from main analysis (source 2)");
+    } 
+    // Then use red flag analysis
+    else if (rfExtractedData.workHistory && rfExtractedData.workHistory.length > 0) {
+      workHistory = rfExtractedData.workHistory;
+      workHistorySource = "red_flag_analysis";
+      console.log("Using work history from red flag analysis (source 3)");
+    } 
+    // Finally, fall back to legacy method
+    else {
+      workHistory = extractWorkHistory(redFlagData);
+      workHistorySource = "legacy_method";
+      console.log("Using work history from legacy extraction method (source 4)");
+    }
   }
   
   console.log("Final work history source:", workHistorySource);
@@ -198,50 +208,59 @@ export function ResumeWorkHistoryTab({
   let redFlagSource = "";
   let redFlags = [];
   
-  // Try to extract Red_Flags directly from parsedJson in raw response (highest priority)
-  if (analysis?.rawResponse && typeof analysis.rawResponse === 'object' && 
-      analysis.rawResponse.parsedJson && 
-      analysis.rawResponse.parsedJson.Red_Flags && 
-      Array.isArray(analysis.rawResponse.parsedJson.Red_Flags)) {
-    
-    redFlags = analysis.rawResponse.parsedJson.Red_Flags;
-    redFlagSource = "parsed_json_red_flags";
-    console.log("Using Red_Flags directly from parsedJson in raw response (highest priority)");
-    
-  } 
-  // Try to extract Red_Flags directly from raw response object 
-  else if (analysis?.rawResponse && typeof analysis.rawResponse === 'object' && 
-           analysis.rawResponse.Red_Flags && 
-           Array.isArray(analysis.rawResponse.Red_Flags)) {
-    
-    redFlags = analysis.rawResponse.Red_Flags;
-    redFlagSource = "direct_red_flags";
-    console.log("Using Red_Flags directly from raw response object");
-    
+  // Priority 1: Use centralized parsed data if available
+  if (parsedData && parsedData.redFlags && parsedData.redFlags.length > 0) {
+    redFlags = parsedData.redFlags;
+    redFlagSource = dataSource || "database_parsed_fields";
+    console.log("Using red flags from centralized parsed data (highest priority)");
   }
-  // Then try from directData (from parseRawResponse)
-  else if (directData && directData.redFlags && directData.redFlags.length > 0) {
-    redFlags = directData.redFlags;
-    redFlagSource = "direct_parser";
-    console.log("Using red flags from direct parser");
-  }
-  // Then try from standard analysis extractor
-  else if (analysisRedFlags && analysisRedFlags.length > 0) {
-    redFlags = analysisRedFlags;
-    redFlagSource = "main_analysis";
-    console.log("Using red flags from main analysis for consistency");
-  }
-  // Then try from red flag analysis  
-  else if (rfRedFlags && rfRedFlags.length > 0) {
-    redFlags = rfRedFlags;
-    redFlagSource = "red_flag_analysis";
-    console.log("Using red flags from red flag analysis");
-  } 
-  // Use legacy method as last resort
+  // Otherwise, use fallback methods in priority order
   else {
-    redFlags = redFlagData?.analysis?.potentialRedFlags || [];
-    redFlagSource = "legacy_method";
-    console.log("Using red flags from legacy extraction method (lowest priority)");
+    // Try to extract Red_Flags directly from parsedJson in raw response
+    if (analysis?.rawResponse && typeof analysis.rawResponse === 'object' && 
+        analysis.rawResponse.parsedJson && 
+        analysis.rawResponse.parsedJson.Red_Flags && 
+        Array.isArray(analysis.rawResponse.parsedJson.Red_Flags)) {
+      
+      redFlags = analysis.rawResponse.parsedJson.Red_Flags;
+      redFlagSource = "parsed_json_red_flags";
+      console.log("Using Red_Flags directly from parsedJson in raw response");
+      
+    } 
+    // Try to extract Red_Flags directly from raw response object 
+    else if (analysis?.rawResponse && typeof analysis.rawResponse === 'object' && 
+             analysis.rawResponse.Red_Flags && 
+             Array.isArray(analysis.rawResponse.Red_Flags)) {
+      
+      redFlags = analysis.rawResponse.Red_Flags;
+      redFlagSource = "direct_red_flags";
+      console.log("Using Red_Flags directly from raw response object");
+      
+    }
+    // Then try from directData (from parseRawResponse)
+    else if (directData && directData.redFlags && directData.redFlags.length > 0) {
+      redFlags = directData.redFlags;
+      redFlagSource = "direct_parser";
+      console.log("Using red flags from direct parser");
+    }
+    // Then try from standard analysis extractor
+    else if (analysisRedFlags && analysisRedFlags.length > 0) {
+      redFlags = analysisRedFlags;
+      redFlagSource = "main_analysis";
+      console.log("Using red flags from main analysis for consistency");
+    }
+    // Then try from red flag analysis  
+    else if (rfRedFlags && rfRedFlags.length > 0) {
+      redFlags = rfRedFlags;
+      redFlagSource = "red_flag_analysis";
+      console.log("Using red flags from red flag analysis");
+    } 
+    // Use legacy method as last resort
+    else {
+      redFlags = redFlagData?.analysis?.potentialRedFlags || [];
+      redFlagSource = "legacy_method";
+      console.log("Using red flags from legacy extraction method (lowest priority)");
+    }
   }
   
   console.log("Final red flags source:", redFlagSource);
