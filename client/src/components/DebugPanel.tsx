@@ -20,8 +20,44 @@ export function DebugPanel({ rawResponse, resumeId, analysis, redFlagData }: Deb
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Use the rawResponse prop, or extract it from analysis if not provided directly
-  const actualRawResponse = rawResponse || (analysis?.rawResponse);
+  // Safely extract raw response from various possible locations and formats
+  const getRawResponse = () => {
+    // Check if rawResponse is directly provided
+    if (rawResponse) {
+      console.log("Using directly provided rawResponse");
+      return rawResponse;
+    }
+    
+    // Check if analysis has a rawResponse field
+    if (analysis?.rawResponse) {
+      console.log("Using analysis.rawResponse");
+      return analysis.rawResponse;
+    }
+    
+    // Check alternative fields that might contain the raw response
+    if (analysis?.raw_response) {
+      console.log("Using analysis.raw_response");
+      return analysis.raw_response;
+    }
+    
+    // If analysis contains a direct response field
+    if (analysis?.response) {
+      console.log("Using analysis.response");
+      return analysis.response;
+    }
+    
+    // Fall back to using the entire analysis object as a last resort
+    if (analysis) {
+      console.log("Using entire analysis object as fallback");
+      return analysis;
+    }
+    
+    // Nothing found
+    console.log("No raw response found in any location");
+    return null;
+  };
+  
+  const actualRawResponse = getRawResponse();
 
   const debugResponse = () => {
     try {
@@ -31,12 +67,27 @@ export function DebugPanel({ rawResponse, resumeId, analysis, redFlagData }: Deb
       // Type check
       info += `Raw response type: ${typeof actualRawResponse}\n\n`;
       
+      // Handle case where actualRawResponse is undefined or null
+      if (!actualRawResponse) {
+        info += `No raw response data available\n\n`;
+        info += "PARSER RESULTS:\n";
+        info += "Work History: 0 items\n";
+        info += "Skills: 0 items\n";
+        info += "Red Flags: 0 items\n";
+        info += "Summary: Not found\n";
+        info += "Score: 0\n";
+        
+        setDebugInfo(info);
+        return;
+      }
+      
       if (typeof actualRawResponse === 'string') {
-        // Check if it's a string that contains our known fields
-        if (actualRawResponse.includes('"Skills":') || 
-            actualRawResponse.includes('"Work_History":') || 
-            actualRawResponse.includes('"Red_Flags":')) {
-          info += "✅ String contains expected fields (Skills, Work_History, Red_Flags)\n";
+        // Check if it's a string that contains our known fields (case insensitive)
+        const lowerCaseStr = actualRawResponse.toLowerCase();
+        if (lowerCaseStr.includes('"skills":') || 
+            lowerCaseStr.includes('"work_history":') || 
+            lowerCaseStr.includes('"red_flags":')) {
+          info += "✅ String contains expected fields (skills, work_history, red_flags)\n";
         } else {
           info += "❌ String does not contain expected fields\n";
         }
@@ -46,66 +97,152 @@ export function DebugPanel({ rawResponse, resumeId, analysis, redFlagData }: Deb
         
         // Try to parse it
         try {
-          const parsed = JSON.parse(actualRawResponse);
+          // Normalize the string to handle common JSON issues
+          const cleanJson = actualRawResponse.replace(/```json\s*|\s*```/g, '');
+          
+          const parsed = JSON.parse(cleanJson);
           info += "✅ Successfully parsed as JSON\n";
           info += `JSON keys: ${Object.keys(parsed).join(', ')}\n`;
           
-          // Check for specific fields
-          if (parsed.Skills) info += `✅ Found Skills array with ${parsed.Skills.length} items\n`;
-          if (parsed.Work_History) info += `✅ Found Work_History array with ${parsed.Work_History.length} items\n`;
-          if (parsed.Red_Flags) info += `✅ Found Red_Flags array with ${parsed.Red_Flags.length} items\n`;
-          if (parsed.Summary) info += `✅ Found Summary\n`;
-          if (parsed.matching_score) info += `✅ Found matching_score: ${parsed.matching_score}\n`;
+          // Check for specific fields (case insensitive)
+          const skills = parsed.Skills || parsed.skills || [];
+          const workHistory = parsed.Work_History || parsed.work_history || parsed.workHistory || [];
+          const redFlags = parsed.Red_Flags || parsed.red_flags || parsed.redFlags || [];
+          const summary = parsed.Summary || parsed.summary || '';
+          const score = parsed.matching_score || parsed.matchingScore || parsed.score || 0;
+          
+          if (skills.length) info += `✅ Found Skills array with ${skills.length} items\n`;
+          if (workHistory.length) info += `✅ Found Work History array with ${workHistory.length} items\n`;
+          if (redFlags.length) info += `✅ Found Red Flags array with ${redFlags.length} items\n`;
+          if (summary) info += `✅ Found Summary\n`;
+          if (score) info += `✅ Found score: ${score}\n`;
+          
+          info += "\nPARSER RESULTS:\n";
+          info += `Work History: ${workHistory.length} items\n`;
+          info += `Skills: ${skills.length} items\n`;
+          info += `Red Flags: ${redFlags.length} items\n`;
+          info += `Summary: ${summary ? 'Found' : 'Not found'}\n`;
+          info += `Score: ${score}\n`;
         } catch (e: any) {
           info += `❌ Failed to parse as JSON: ${e.message}\n`;
+          info += "\nPARSER RESULTS:\n";
+          info += "Work History: 0 items\n";
+          info += "Skills: 0 items\n";
+          info += "Red Flags: 0 items\n";
+          info += "Summary: Not found\n";
+          info += "Score: 0\n";
         }
       } else if (typeof actualRawResponse === 'object' && actualRawResponse !== null) {
         info += `Object keys: ${Object.keys(actualRawResponse).join(', ')}\n\n`;
+        
+        // Extract fields using multiple possible property names
+        let skills = [];
+        let workHistory = [];
+        let redFlags = [];
+        let summary = '';
+        let score = 0;
         
         // Check if it has parsedJson
         if (actualRawResponse.parsedJson) {
           info += "Object has parsedJson property\n";
           info += `parsedJson keys: ${Object.keys(actualRawResponse.parsedJson).join(', ')}\n\n`;
           
+          const parsedJson = actualRawResponse.parsedJson;
+          
           // Check for specific fields
-          if (actualRawResponse.parsedJson.Skills) 
-            info += `✅ Found Skills array in parsedJson with ${actualRawResponse.parsedJson.Skills.length} items\n`;
-          if (actualRawResponse.parsedJson.Work_History) 
-            info += `✅ Found Work_History array in parsedJson with ${actualRawResponse.parsedJson.Work_History.length} items\n`;
-          if (actualRawResponse.parsedJson.Red_Flags) 
-            info += `✅ Found Red_Flags array in parsedJson with ${actualRawResponse.parsedJson.Red_Flags.length} items\n`;
-          if (actualRawResponse.parsedJson.Summary) 
+          if (parsedJson.Skills || parsedJson.skills) {
+            skills = parsedJson.Skills || parsedJson.skills;
+            info += `✅ Found Skills array in parsedJson with ${skills.length} items\n`;
+          }
+          
+          if (parsedJson.Work_History || parsedJson.work_history || parsedJson.workHistory) {
+            workHistory = parsedJson.Work_History || parsedJson.work_history || parsedJson.workHistory;
+            info += `✅ Found Work History array in parsedJson with ${workHistory.length} items\n`;
+          }
+          
+          if (parsedJson.Red_Flags || parsedJson.red_flags || parsedJson.redFlags) {
+            redFlags = parsedJson.Red_Flags || parsedJson.red_flags || parsedJson.redFlags;
+            info += `✅ Found Red Flags array in parsedJson with ${redFlags.length} items\n`;
+          }
+          
+          if (parsedJson.Summary || parsedJson.summary) {
+            summary = parsedJson.Summary || parsedJson.summary;
             info += `✅ Found Summary in parsedJson\n`;
-          if (actualRawResponse.parsedJson.matching_score) 
-            info += `✅ Found matching_score in parsedJson: ${actualRawResponse.parsedJson.matching_score}\n`;
+          }
+          
+          if (parsedJson.matching_score || parsedJson.matchingScore || parsedJson.score) {
+            score = parsedJson.matching_score || parsedJson.matchingScore || parsedJson.score;
+            info += `✅ Found score in parsedJson: ${score}\n`;
+          }
         }
         
-        // Check for direct properties
-        if (actualRawResponse.Skills) 
-          info += `✅ Found Skills array directly with ${actualRawResponse.Skills.length} items\n`;
-        if (actualRawResponse.Work_History) 
-          info += `✅ Found Work_History array directly with ${actualRawResponse.Work_History.length} items\n`;
-        if (actualRawResponse.Red_Flags) 
-          info += `✅ Found Red_Flags array directly with ${actualRawResponse.Red_Flags.length} items\n`;
-        if (actualRawResponse.Summary) 
+        // Check for direct properties with case-insensitive handling
+        if (actualRawResponse.Skills || actualRawResponse.skills) {
+          const skillsArray = actualRawResponse.Skills || actualRawResponse.skills;
+          skills = skillsArray;
+          info += `✅ Found Skills array directly with ${skillsArray.length} items\n`;
+        }
+        
+        if (actualRawResponse.Work_History || actualRawResponse.work_history || actualRawResponse.workHistory) {
+          const workHistoryArray = actualRawResponse.Work_History || actualRawResponse.work_history || actualRawResponse.workHistory;
+          workHistory = workHistoryArray;
+          info += `✅ Found Work History array directly with ${workHistoryArray.length} items\n`;
+        }
+        
+        if (actualRawResponse.Red_Flags || actualRawResponse.red_flags || actualRawResponse.redFlags) {
+          const redFlagsArray = actualRawResponse.Red_Flags || actualRawResponse.red_flags || actualRawResponse.redFlags;
+          redFlags = redFlagsArray;
+          info += `✅ Found Red Flags array directly with ${redFlagsArray.length} items\n`;
+        }
+        
+        if (actualRawResponse.Summary || actualRawResponse.summary) {
+          summary = actualRawResponse.Summary || actualRawResponse.summary;
           info += `✅ Found Summary directly\n`;
-        if (actualRawResponse.matching_score) 
-          info += `✅ Found matching_score directly: ${actualRawResponse.matching_score}\n`;
+        }
+        
+        if (actualRawResponse.matching_score || actualRawResponse.matchingScore || actualRawResponse.score) {
+          score = actualRawResponse.matching_score || actualRawResponse.matchingScore || actualRawResponse.score;
+          info += `✅ Found score directly: ${score}\n`;
+        }
+        
+        // Check if any results were found
+        if (skills.length || workHistory.length || redFlags.length || summary || score) {
+          info += "\nPARSER RESULTS:\n";
+          info += `Work History: ${Array.isArray(workHistory) ? workHistory.length : 0} items\n`;
+          info += `Skills: ${Array.isArray(skills) ? skills.length : 0} items\n`;
+          info += `Red Flags: ${Array.isArray(redFlags) ? redFlags.length : 0} items\n`;
+          info += `Summary: ${summary ? "Found" : "Not found"}\n`;
+          info += `Score: ${score || 0}\n`;
+        } else {
+          info += "\nNo data found in any expected location\n";
+          
+          // Try the general parser as a fallback
+          try {
+            const parsed = parseRawResponse(actualRawResponse);
+            info += "\nPARSER RESULTS (via fallback parser):\n";
+            info += `Work History: ${parsed.workHistory.length} items\n`;
+            info += `Skills: ${parsed.skills.length} items\n`;
+            info += `Red Flags: ${parsed.redFlags.length} items\n`;
+            info += `Summary: ${parsed.summary ? "Found" : "Not found"}\n`;
+            info += `Score: ${parsed.score}\n`;
+          } catch (e: any) {
+            info += `\nFallback parser error: ${e.message}\n`;
+            info += "\nPARSER RESULTS:\n";
+            info += "Work History: 0 items\n";
+            info += "Skills: 0 items\n";
+            info += "Red Flags: 0 items\n";
+            info += "Summary: Not found\n";
+            info += "Score: 0\n";
+          }
+        }
       } else {
-        info += "Unable to analyze this response type";
-      }
-      
-      // Try to parse it with our parser
-      try {
-        const parsed = parseRawResponse(actualRawResponse);
-        info += "\n\nPARSER RESULTS:\n";
-        info += `Work History: ${parsed.workHistory.length} items\n`;
-        info += `Skills: ${parsed.skills.length} items\n`;
-        info += `Red Flags: ${parsed.redFlags.length} items\n`;
-        info += `Summary: ${parsed.summary ? "Found" : "Not found"}\n`;
-        info += `Score: ${parsed.score}\n`;
-      } catch (e: any) {
-        info += `\n\nParser error: ${e.message}\n`;
+        info += "Unable to analyze this response type\n";
+        info += "\nPARSER RESULTS:\n";
+        info += "Work History: 0 items\n";
+        info += "Skills: 0 items\n";
+        info += "Red Flags: 0 items\n";
+        info += "Summary: Not found\n";
+        info += "Score: 0\n";
       }
       
       setDebugInfo(info);

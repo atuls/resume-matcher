@@ -639,11 +639,19 @@ export default function ResumeProfilePage() {
                 <TabsContent value="red-flags">
                   {/* Red flags component */}
                   <ResumeRedFlagsTab 
-                    redFlags={analysis?.parsedRedFlags || 
-                             (redFlagData?.analysis?.red_flags || 
-                              redFlagData?.analysis?.redFlags || [])}
+                    redFlags={
+                      // Try multiple possible locations for red flags data
+                      ((analysis as any)?.parsedRedFlags as any[] | undefined) || 
+                      (redFlagData?.analysis?.redFlags as any[] | undefined) ||
+                      ((redFlagData?.analysis as any)?.red_flags as any[] | undefined) || 
+                      []
+                    }
                     isLoading={analysisLoading || isAnalysisLoading || isRedFlagLoading}
-                    dataSource={analysis?.parsedRedFlags ? "Parsed LLM Response" : "Red Flag Analysis API"}
+                    dataSource={
+                      (analysis as any)?.parsedRedFlags ? "Parsed LLM Response" : 
+                      (redFlagData?.analysis?.redFlags || (redFlagData?.analysis as any)?.red_flags) ? 
+                      "Red Flag Analysis API" : "No data available"
+                    }
                   />
                   
                   {/* Debug data info */}
@@ -651,7 +659,11 @@ export default function ResumeProfilePage() {
                     <div className="flex justify-between items-center mb-2">
                       <h3 className="text-sm font-medium">Red Flag Data:</h3>
                       <Badge variant="outline" className="text-xs">
-                        Source: {redFlagData?.analysis ? "Red Flag API" : "Parsed from LLM response"}
+                        Source: {
+                          (analysis as any)?.parsedRedFlags ? "Parsed from LLM response" :
+                          (redFlagData?.analysis?.redFlags || redFlagData?.analysis?.red_flags) ? "Red Flag API" : 
+                          "No data available"
+                        }
                       </Badge>
                     </div>
                     <pre className="text-xs overflow-auto max-h-40 p-3 bg-gray-100 rounded-md">
