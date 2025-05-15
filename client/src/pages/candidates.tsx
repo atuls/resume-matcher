@@ -445,71 +445,12 @@ export default function CandidatesPage() {
             setResumeScores(initialScores);
           }
           
-          // Get analysis data for all candidates to ensure every row displays data
-          Promise.all(
-            resumes.map(resume => 
-              getResumeRedFlagAnalysis(resume.id, selectedJobId)
-                .then(data => ({
-                  resumeId: resume.id,
-                  analysis: data.analysis
-                }))
-                .catch(err => {
-                  console.error(`Error analyzing resume ${resume.id}:`, err);
-                  return { resumeId: resume.id, analysis: null };
-                })
-            )
-          ).then(analysisResults => {
-            const newAnalysisData = {...resumeAnalysis};
-            
-            analysisResults.forEach(result => {
-              if (result.analysis) {
-                newAnalysisData[result.resumeId] = result.analysis;
-                console.log(`Analysis for resume ${result.resumeId}:`, 
-                  `Current Position: ${result.analysis.currentJobPosition || 'N/A'}`,
-                  `Company: ${result.analysis.currentCompany || 'N/A'}`
-                );
-              }
-            });
-            
-            setResumeAnalysis(newAnalysisData);
-            
-            // Update scores based on analysis
-            const updatedScores = {...initialScores};
-            let scoresUpdated = false;
-            
-            for (const resumeId in newAnalysisData) {
-              // If we have analysis for this resume but no score data or score data was auto-generated
-              if (resumesNeedingAnalysis.has(resumeId) && newAnalysisData[resumeId]) {
-                console.log(`Resume ${resumeId} has analysis data. Updating score.`);
-                
-                // Use different scores based on the resume to create variety
-                // Calculate a score based on the resume ID (deterministic but different for each resume)
-                const idSum = resumeId.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-                
-                // Add some weight based on the number of highlights vs red flags
-                const highlights = newAnalysisData[resumeId].highlights?.length || 0;
-                const redFlags = newAnalysisData[resumeId].redFlags?.length || 0;
-                const bonus = Math.min(15, Math.max(-15, (highlights - redFlags) * 3)); 
-                
-                // Adjusted score with more context-aware info from analysis
-                const adjustedScore = Math.min(95, Math.max(55, 60 + (idSum % 31) + bonus));
-                
-                updatedScores[resumeId] = {
-                  score: adjustedScore,
-                  matchedAt: new Date()
-                };
-                scoresUpdated = true;
-              }
-            }
-            
-            // Only update scores state if we actually added any new entries
-            if (scoresUpdated) {
-              console.log("Updated scores with context-aware entries:", updatedScores);
-              setResumeScores(updatedScores);
-            }
-            
-            setLoadingAnalysis(false);
-          });
+          // Skip loading red flag analysis data for all candidates on page load
+          // This is a performance optimization - we'll only load analysis when user clicks "Analyze"
+          console.log("Skipping automatic red flag analysis loading for performance reasons");
+          
+          // Set loading state to false since we're done
+          setLoadingAnalysis(false);
         })
         .catch(err => {
           console.error("Error fetching resume data:", err);
