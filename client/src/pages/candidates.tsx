@@ -35,7 +35,8 @@ import {
   getResumes,
   getResumeScores,
   getResumeRedFlagAnalysis,
-  deleteResume
+  deleteResume,
+  analyzeUnanalyzedResumes
 } from '@/lib/api';
 import { formatDate, formatFileSize } from '@/lib/utils';
 import websocketService, { BatchAnalysisEvent } from '@/lib/websocket';
@@ -502,6 +503,49 @@ export default function CandidatesPage() {
         title: "Resume uploaded",
         description: "The resume has been successfully added."
       });
+    }
+  };
+  
+  // Process a batch of unanalyzed resumes (up to 50)
+  const handleAnalyzeUnanalyzedResumes = async (batchSize: number = 50) => {
+    if (!selectedJobId) return;
+    
+    try {
+      // Set loading state
+      setLoadingAnalysis(true);
+      
+      // Show toast notification that batch processing is starting
+      toast({
+        title: "Starting batch analysis",
+        description: `Processing up to ${batchSize} unanalyzed resumes...`,
+        duration: 5000,
+      });
+      
+      // Call the API to process unanalyzed resumes
+      const result = await analyzeUnanalyzedResumes(selectedJobId, batchSize);
+      
+      // Update batch status to indicate it's in progress
+      setBatchAnalysisStatus({
+        inProgress: true,
+        totalResumes: result.pendingCount,
+        processedResumes: 0,
+        message: `Starting analysis of ${result.processingCount} resumes...`,
+        lastUpdated: Date.now()
+      });
+      
+      toast({
+        title: "Batch processing started",
+        description: `Processing ${result.processingCount} of ${result.pendingCount} unanalyzed resumes.`,
+      });
+      
+    } catch (error) {
+      console.error("Error starting batch processing:", error);
+      toast({
+        title: "Batch processing failed",
+        description: "There was an error starting the batch processing. Please try again.",
+        variant: "destructive"
+      });
+      setLoadingAnalysis(false);
     }
   };
   
