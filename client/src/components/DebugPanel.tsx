@@ -478,6 +478,21 @@ export function DebugPanel({ rawResponse, resumeId, analysis, redFlagData }: Deb
 
   return (
     <div className="space-y-4 mt-4 border-t pt-4">
+      {/* Overall Score from Database */}
+      {analysis && analysis.overallScore !== undefined && (
+        <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-blue-900">Overall Score (Database)</h3>
+            <div className="bg-blue-100 text-blue-800 font-semibold px-3 py-1 rounded-full text-sm">
+              {analysis.overallScore}
+            </div>
+          </div>
+          <p className="text-xs text-blue-700 mt-1">
+            This score is stored in the database and used for candidate matching.
+          </p>
+        </div>
+      )}
+      
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Code className="h-5 w-5 text-blue-500" />
