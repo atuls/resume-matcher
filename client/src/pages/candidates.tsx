@@ -776,6 +776,16 @@ export default function CandidatesPage() {
                       <RotateCcw className={`h-4 w-4 ${loadingAnalysis ? 'animate-spin' : ''}`} />
                       {loadingAnalysis ? 'Analyzing...' : 'Analyze Next 10 Unanalyzed'}
                     </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      className="flex items-center gap-2 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                      onClick={() => handleAnalyzeUnanalyzedResumes()}
+                      disabled={loadingAnalysis}
+                    >
+                      <RotateCcw className={`h-4 w-4 ${loadingAnalysis ? 'animate-spin' : ''}`} />
+                      {loadingAnalysis ? 'Processing...' : 'Analyze Next 50 Unanalyzed'}
+                    </Button>
                   </div>
                 )}
               </div>

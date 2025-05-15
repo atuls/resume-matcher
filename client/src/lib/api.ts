@@ -303,6 +303,34 @@ export async function analyzeResumes(
     jobDescriptionId,
     resumeIds,
     force,
+    startProcessing: true  // Explicitly start batch processing
+  });
+  
+  return response.json();
+}
+
+/**
+ * Analyze a batch of unanalyzed resumes for a job
+ * This will process up to the specified batch size (default 50) of resumes that
+ * don't have existing analysis results for the specified job
+ * 
+ * @param jobDescriptionId The job description ID to analyze against
+ * @param batchSize The maximum number of unanalyzed resumes to process (default: 50)
+ * @returns The API response with batch processing details
+ */
+export async function analyzeUnanalyzedResumes(
+  jobDescriptionId: string, 
+  batchSize: number = 50
+): Promise<{
+  message: string;
+  pendingCount: number;
+  processingCount: number;
+  resumeIds: string[];
+}> {
+  const response = await apiRequest("POST", "/api/admin/batch-process-unprocessed", {
+    jobDescriptionId,
+    batchSize,
+    startProcessing: true  // Explicitly start batch processing
   });
   
   return response.json();
