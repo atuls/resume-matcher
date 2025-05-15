@@ -891,14 +891,45 @@ export default function ResumeProfilePage() {
                       )}
                       
                       {/* Show actual resume content */}
-                      <div className="border rounded-md p-4 bg-slate-50 overflow-auto max-h-[500px]">
-                        <pre className="text-sm whitespace-pre-wrap font-mono text-slate-800">{resume.extractedText}</pre>
+                      <div className="flex-col space-y-4">
+                        <div className="flex justify-end">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => {
+                              // Copy text to clipboard
+                              navigator.clipboard.writeText(resume.extractedText || '');
+                              toast({
+                                title: "Text copied",
+                                description: "Resume text has been copied to clipboard",
+                              });
+                            }}
+                          >
+                            Copy text
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs ml-2"
+                            onClick={() => {
+                              // Open PDF in new window
+                              window.open(`/api/resumes/${resumeId}/download`, '_blank');
+                            }}
+                          >
+                            View PDF
+                          </Button>
+                        </div>
+                        
+                        <div className="border rounded-md p-4 bg-slate-50 overflow-auto max-h-[500px]">
+                          <pre className="text-sm whitespace-pre-wrap font-mono text-slate-800">{resume.extractedText}</pre>
+                        </div>
                       </div>
                       
                       {/* Additional context about this tab */}
                       <div className="text-xs text-gray-500 flex items-center">
                         <AlertCircle className="h-3 w-3 mr-1" />
-                        This tab shows the raw text extracted from the resume PDF, not the AI's analysis.
+                        This tab shows the raw text extracted from the resume PDF, not the AI's analysis. Use this to debug if the AI seems to be missing information or fabricating details.
                       </div>
                     </div>
                   ) : (
@@ -962,8 +993,55 @@ export default function ResumeProfilePage() {
                         </div>
                       </div>
                       <AlertDescription className="mt-4">
+                        <div className="flex justify-between items-center mb-4">
+                          <p className="text-sm text-blue-800">
+                            Data source: <span className="font-semibold">{parsingSource || "not available"}</span>
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={analysis?.parsedSkills ? "default" : "outline"} className="text-xs">
+                              {analysis?.parsedSkills ? "Using parsed fields" : "Using raw response"}
+                            </Badge>
+                          </div>
+                        </div>
+                        
+                        {/* Parsed Fields Info */}
+                        {(analysis?.parsedSkills || analysis?.parsedWorkHistory || analysis?.parsedRedFlags) && (
+                          <div className="mb-4 p-4 border rounded-md bg-blue-50">
+                            <h4 className="text-sm font-medium mb-2 text-blue-900">Parsed Fields Available:</h4>
+                            <div className="grid grid-cols-4 gap-2 text-xs">
+                              <div className="p-2 bg-white rounded border">
+                                <div className="font-semibold">Skills</div>
+                                <div className="text-gray-600">{analysis?.parsedSkills ? 
+                                  `${Array.isArray(analysis.parsedSkills) ? analysis.parsedSkills.length : 0} items` : 
+                                  "Not available"}
+                                </div>
+                              </div>
+                              <div className="p-2 bg-white rounded border">
+                                <div className="font-semibold">Work History</div>
+                                <div className="text-gray-600">{analysis?.parsedWorkHistory ? 
+                                  `${Array.isArray(analysis.parsedWorkHistory) ? analysis.parsedWorkHistory.length : 0} items` : 
+                                  "Not available"}
+                                </div>
+                              </div>
+                              <div className="p-2 bg-white rounded border">
+                                <div className="font-semibold">Red Flags</div>
+                                <div className="text-gray-600">{analysis?.parsedRedFlags ? 
+                                  `${Array.isArray(analysis.parsedRedFlags) ? analysis.parsedRedFlags.length : 0} items` : 
+                                  "Not available"}
+                                </div>
+                              </div>
+                              <div className="p-2 bg-white rounded border">
+                                <div className="font-semibold">Summary</div>
+                                <div className="text-gray-600">{analysis?.parsedSummary ? 
+                                  "Available" : "Not available"}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
                         <p className="text-sm text-blue-800 mb-2">
-                          This is the raw response from the AI model. It contains the structured data used to populate the UI.
+                          Raw response from the AI model. Contains the structured data used to populate the UI.
                         </p>
                         
                         <div className="mt-2 p-4 bg-slate-900 rounded-md overflow-auto max-h-96">
