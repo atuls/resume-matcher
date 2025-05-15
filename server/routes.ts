@@ -1765,20 +1765,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Process all analysis results
-  app.post("/api/admin/process-all-analysis", async (_req: Request, res: Response) => {
+  // Process all analysis results (with pagination support)
+  app.post("/api/admin/process-all-analysis", async (req: Request, res: Response) => {
     try {
-      console.log("Processing all analysis results");
+      console.log("Processing analysis results with pagination");
       
-      const result = await ResponseParserService.processAllAnalysisResults();
+      // Get limit and offset from request body (default to 10 items)
+      const limit = req.body.limit || 10;
+      const offset = req.body.offset || 0;
+      
+      const result = await ResponseParserService.processAllAnalysisResults(limit, offset);
       
       res.json({
-        message: `Processed ${result.total} analysis results`,
-        ...result
+        message: `Processed ${result.successful} of ${result.total} analysis results (${result.totalPending} total pending)`,
+        ...result,
+        nextOffset: offset + result.successful
       });
     } catch (error) {
       console.error("Error processing all analysis results:", error);
       res.status(500).json({ message: "Error processing all analysis results", error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
+  // Process a batch of unprocessed analysis results (records with raw response but no parsed fields)
+  app.post("/api/admin/batch-process-unprocessed", async (req: Request, res: Response) => {
+    try {
+      console.log("Processing batch of unprocessed analysis results");
+      
+      // Get batch size from request body (default to 10)
+      const limit = req.body.limit || 10;
+      
+      const result = await ResponseParserService.processBatchUnprocessed(limit);
+      
+      res.json({
+        message: `Processed ${result.successful} of ${result.total} unprocessed analysis results (${result.totalUnprocessed} total unprocessed)`,
+        ...result
+      });
+    } catch (error) {
+      console.error("Error processing batch of unprocessed analysis results:", error);
+      res.status(500).json({ message: "Error processing batch of unprocessed analysis results", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
