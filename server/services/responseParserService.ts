@@ -49,39 +49,76 @@ export class ResponseParserService {
   
   /**
    * Extract raw response content from a potentially nested structure
+   * This function will specifically focus on finding and extracting the parsedJson object
    */
   private static extractRawResponseContent(rawResponse: any): any {
-    if (!rawResponse) return null;
-    
-    // If it's a string, try to parse it
-    if (typeof rawResponse === 'string') {
-      return this.parseJsonSafely(rawResponse);
+    if (!rawResponse) {
+      console.log("extractRawResponseContent: rawResponse is null or undefined");
+      return null;
     }
     
-    // If it has a rawText property and it's a string, parse that
-    if (rawResponse.rawText && typeof rawResponse.rawText === 'string') {
-      return this.parseJsonSafely(rawResponse.rawText);
+    console.log("extractRawResponseContent: Raw response type:", typeof rawResponse);
+    if (typeof rawResponse === 'object') {
+      console.log("extractRawResponseContent: Raw response keys:", Object.keys(rawResponse));
     }
     
-    // If it has a parsedJson property, use that directly
+    // Direct access to parsedJson if available
     if (rawResponse.parsedJson) {
+      console.log("extractRawResponseContent: Found parsedJson at top level");
       return rawResponse.parsedJson;
     }
     
-    // If it's already an object with the expected fields, use it directly
-    if (rawResponse.matching_score !== undefined || 
-        rawResponse.Summary || 
-        rawResponse.Work_History || 
-        rawResponse.Skills || 
-        rawResponse.Red_Flags) {
+    // Check for nested rawResponse.parsedJson
+    if (rawResponse.rawResponse && rawResponse.rawResponse.parsedJson) {
+      console.log("extractRawResponseContent: Found parsedJson in nested rawResponse");
+      return rawResponse.rawResponse.parsedJson;
+    }
+    
+    // If we can't find a parsedJson object, look for specific fields we need
+    // in the current object or nested objects
+    
+    // Check current object for expected fields
+    const hasExpectedFields = 
+      rawResponse.matching_score !== undefined || 
+      rawResponse.skills !== undefined ||
+      rawResponse.work_history !== undefined ||
+      rawResponse.red_flags !== undefined ||
+      rawResponse.summary !== undefined;
+      
+    if (hasExpectedFields) {
+      console.log("extractRawResponseContent: Found expected fields at top level");
       return rawResponse;
     }
     
-    // If it's an object but doesn't have the expected fields, check for nested rawResponse
+    // Check if there's a nested rawResponse object
     if (rawResponse.rawResponse) {
-      return this.extractRawResponseContent(rawResponse.rawResponse);
+      console.log("extractRawResponseContent: Checking nested rawResponse object");
+      
+      const nestedHasExpectedFields = 
+        rawResponse.rawResponse.matching_score !== undefined || 
+        rawResponse.rawResponse.skills !== undefined ||
+        rawResponse.rawResponse.work_history !== undefined ||
+        rawResponse.rawResponse.red_flags !== undefined ||
+        rawResponse.rawResponse.summary !== undefined;
+        
+      if (nestedHasExpectedFields) {
+        console.log("extractRawResponseContent: Found expected fields in nested rawResponse");
+        return rawResponse.rawResponse;
+      }
     }
     
+    // As a last resort, try to parse rawText if it exists
+    if (rawResponse.rawText && typeof rawResponse.rawText === 'string') {
+      console.log("extractRawResponseContent: Attempting to parse rawText");
+      return this.parseJsonSafely(rawResponse.rawText);
+    }
+    
+    if (rawResponse.rawResponse && rawResponse.rawResponse.rawText && typeof rawResponse.rawResponse.rawText === 'string') {
+      console.log("extractRawResponseContent: Attempting to parse nested rawText");
+      return this.parseJsonSafely(rawResponse.rawResponse.rawText);
+    }
+    
+    console.log("extractRawResponseContent: Could not find parsedJson or expected fields");
     return null;
   }
   
@@ -127,19 +164,31 @@ export class ResponseParserService {
         return false;
       }
       
-      // Extract the structured data
-      const skills = content.Skills || [];
-      const workHistory = content.Work_History || [];
-      const redFlags = content.Red_Flags || [];
-      const summary = content.Summary || '';
-      const score = content.matching_score !== undefined ? content.matching_score : result.overallScore;
+      // Extract the structured data using the specific field names
+      // Use case-insensitive field matching to be more robust
+      const skills = content.skills || content.Skills || [];
+      const workHistory = content.work_history || content.Work_History || content.workHistory || [];
+      const redFlags = content.red_flags || content.Red_Flags || content.redFlags || [];
+      const summary = content.summary || content.Summary || '';
+      const score = content.matching_score !== undefined ? content.matching_score : 
+                   (content.score !== undefined ? content.score : result.overallScore);
       
       console.log(`Extracted from analysis ${analysisResultId}:`, {
         skillsCount: skills.length,
-        workHistoryCount: workHistory.length,
+        workHistoryCount: workHistory.length, 
         redFlagsCount: redFlags.length,
         hasSummary: !!summary,
         score
+      });
+      
+      // Log the raw content structure to help with debugging
+      console.log("Content structure:", {
+        hasSkills: !!content.skills || !!content.Skills,
+        hasWorkHistory: !!content.work_history || !!content.Work_History || !!content.workHistory,
+        hasRedFlags: !!content.red_flags || !!content.Red_Flags || !!content.redFlags,
+        hasSummary: !!content.summary || !!content.Summary,
+        hasScore: content.matching_score !== undefined || content.score !== undefined,
+        contentKeys: Object.keys(content)
       });
       
       // Update the analysis result with the extracted data
