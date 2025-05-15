@@ -602,6 +602,12 @@ export default function ResumeProfilePage() {
                     resumeId={resumeId!}
                     runSkillsAnalysis={runSkillsAnalysis}
                     setAnalysisLoading={setAnalysisLoading}
+                    parsedData={
+                      analysis && Array.isArray(analysis) && analysis[0] && analysis[0].parsingStatus === 'success' ? {
+                        skills: analysis[0].parsedSkills || []
+                      } : undefined
+                    }
+                    dataSource={analysis && Array.isArray(analysis) && analysis[0] && analysis[0].parsingStatus === 'success' ? 'database_parsed_fields' : undefined}
                   />
                 </TabsContent>
                 
@@ -612,6 +618,13 @@ export default function ResumeProfilePage() {
                     isRedFlagLoading={isRedFlagLoading}
                     redFlagError={redFlagError}
                     analysis={analysis}
+                    parsedData={
+                      analysis && Array.isArray(analysis) && analysis[0] && analysis[0].parsingStatus === 'success' ? {
+                        workHistory: analysis[0].parsedWorkHistory || [],
+                        redFlags: analysis[0].parsedRedFlags || []
+                      } : undefined
+                    }
+                    dataSource={analysis && Array.isArray(analysis) && analysis[0] && analysis[0].parsingStatus === 'success' ? 'database_parsed_fields' : undefined}
                   />
                 </TabsContent>
                 
@@ -640,7 +653,9 @@ export default function ResumeProfilePage() {
                   {/* Red flags component */}
                   <ResumeRedFlagsTab 
                     redFlags={
-                      // Try multiple possible locations for red flags data
+                      // Try multiple possible locations for red flags data, prioritizing parsed fields
+                      (analysis && Array.isArray(analysis) && analysis[0]?.parsedRedFlags) ? 
+                        analysis[0].parsedRedFlags : 
                       ((analysis as any)?.parsedRedFlags as any[] | undefined) || 
                       (redFlagData?.analysis?.redFlags as any[] | undefined) ||
                       ((redFlagData?.analysis as any)?.red_flags as any[] | undefined) || 
@@ -648,9 +663,12 @@ export default function ResumeProfilePage() {
                     }
                     isLoading={analysisLoading || isAnalysisLoading || isRedFlagLoading}
                     dataSource={
-                      (analysis as any)?.parsedRedFlags ? "Parsed LLM Response" : 
+                      (analysis && Array.isArray(analysis) && analysis[0]?.parsedRedFlags) ?
+                        "Database Parsed Fields" :
+                      (analysis as any)?.parsedRedFlags ? 
+                        "Parsed LLM Response" : 
                       (redFlagData?.analysis?.redFlags || (redFlagData?.analysis as any)?.red_flags) ? 
-                      "Red Flag Analysis API" : "No data available"
+                        "Red Flag Analysis API" : "No data available"
                     }
                   />
                   
