@@ -1818,7 +1818,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const requirements = await storage.getJobRequirements(jobDescriptionId);
       
       // Get all resumes
-      const allResumes = await storage.getResumes();
+      const allResumes = await storage.getAllResumes();
       if (!allResumes || allResumes.length === 0) {
         return res.status(400).json({ message: "No resumes found" });
       }
