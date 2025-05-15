@@ -447,6 +447,45 @@ function extractScore(data: any): number {
 }
 
 /**
+ * Special parser for extracting data from the nested structure we're seeing
+ * with rawResponse.parsedJson patterns
+ * @param data The raw response data that might contain nested structures
+ * @returns Structured parsed data
+ */
+function parseNestedStructure(data: any): ParsedRawResponse | null {
+  if (!data || typeof data !== 'object') return null;
+  
+  console.log("PARSER: Trying deep nested structure parser");
+  
+  // Look for analysis with rawResponse.parsedJson structure
+  let parsedJson = null;
+  
+  if (data.rawResponse && data.rawResponse.parsedJson) {
+    console.log("PARSER: Found first-level nested parsedJson");
+    parsedJson = data.rawResponse.parsedJson;
+  } else if (Array.isArray(data) && data[0]?.rawResponse?.parsedJson) {
+    console.log("PARSER: Found array with nested parsedJson");
+    parsedJson = data[0].rawResponse.parsedJson;
+  }
+  
+  if (parsedJson) {
+    console.log("PARSER DEBUG: parsedJson keys:", Object.keys(parsedJson));
+    
+    // Try direct field extraction from parsedJson
+    return {
+      workHistory: extractWorkHistory(parsedJson),
+      skills: extractSkills(parsedJson),
+      redFlags: extractRedFlags(parsedJson),
+      summary: extractSummary(parsedJson),
+      score: extractScore(parsedJson),
+      rawData: parsedJson
+    };
+  }
+  
+  return null;
+}
+
+/**
  * Parses raw LLM response text into structured data
  * This is the main entry point for the parser
  * @param rawResponse The raw text response from the LLM
@@ -456,6 +495,13 @@ export function parseRawResponse(rawResponse: string | any): ParsedRawResponse {
   try {
     // Enhanced debugging for raw response type
     console.log("PARSER: Raw response type:", typeof rawResponse);
+    
+    // First, try our specialized parser for the nested structure
+    const nestedResult = parseNestedStructure(rawResponse);
+    if (nestedResult) {
+      console.log("PARSER: Successfully parsed nested structure");
+      return nestedResult;
+    }
     
     // If it's already an object (not a string), try to use it directly
     if (typeof rawResponse === 'object' && rawResponse !== null) {
