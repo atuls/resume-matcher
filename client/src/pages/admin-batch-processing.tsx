@@ -35,13 +35,19 @@ export default function AdminBatchProcessing() {
   const processPendingBatch = async () => {
     setIsPendingProcessing(true);
     try {
-      const result = await apiRequest<BatchProcessingResult>('/api/admin/process-all-analysis', {
+      const response = await fetch('/api/admin/process-all-analysis', {
         method: 'POST',
         body: JSON.stringify({ limit: batchSize, offset }),
         headers: {
           'Content-Type': 'application/json'
         }
       });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to process batch: ${response.status} ${response.statusText}`);
+      }
+      
+      const result = await response.json();
       
       setPendingResult(result);
       // Update offset for next batch
@@ -59,13 +65,19 @@ export default function AdminBatchProcessing() {
   const processUnprocessedBatch = async () => {
     setIsUnprocessedProcessing(true);
     try {
-      const result = await apiRequest<BatchProcessingResult>('/api/admin/batch-process-unprocessed', {
+      const response = await fetch('/api/admin/batch-process-unprocessed', {
         method: 'POST',
         body: JSON.stringify({ limit: batchSize }),
         headers: {
           'Content-Type': 'application/json'
         }
       });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to process batch: ${response.status} ${response.statusText}`);
+      }
+      
+      const result = await response.json();
       
       setUnprocessedResult(result);
     } catch (error) {
