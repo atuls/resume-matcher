@@ -56,7 +56,28 @@ export default function ResumeProfilePage() {
     if (Array.isArray(analysisData) && analysisData.length > 0) {
       console.log("CENTRALIZED PARSER: First item keys:", Object.keys(analysisData[0]));
       
-      // Check if the raw response is in this item
+      // Check if the analysis result has parsed fields
+      if (analysisData[0].parsedSkills || analysisData[0].parsedWorkHistory || analysisData[0].parsedRedFlags) {
+        console.log("CENTRALIZED PARSER: Found parsed fields in first array item - using structured data");
+        
+        // Initialize result using the parsed fields directly
+        const parsedResult: ParsedRawResponse = {
+          workHistory: analysisData[0].parsedWorkHistory || [],
+          skills: analysisData[0].parsedSkills || [],
+          redFlags: analysisData[0].parsedRedFlags || [],
+          summary: analysisData[0].parsedSummary || "",
+          score: analysisData[0].overallScore || 0,
+          rawData: analysisData[0].rawResponse || null
+        };
+        
+        setParsedAnalysisData(parsedResult);
+        setParsingSource("database_parsed_fields");
+        console.log("CENTRALIZED PARSER: Using parsed fields from database");
+        
+        return parsedResult;
+      }
+      
+      // Check if the raw response is in this item (fallback for unparsed data)
       if (analysisData[0].rawResponse) {
         console.log("CENTRALIZED PARSER: Found rawResponse in first array item");
         analysisData = analysisData[0];  // Use the first item as our analysisData
