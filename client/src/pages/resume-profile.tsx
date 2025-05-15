@@ -826,6 +826,10 @@ export default function ResumeProfilePage() {
                     <Briefcase className="h-4 w-4 mr-2" />
                     Work History
                   </TabsTrigger>
+                  <TabsTrigger value="red-flags">
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    Red Flags
+                  </TabsTrigger>
                   <TabsTrigger value="raw-text">
                     <FileSearch className="h-4 w-4 mr-2" />
                     Raw Text
@@ -862,6 +866,20 @@ export default function ResumeProfilePage() {
                     runSkillsAnalysis={runSkillsAnalysis} // Add ability to re-analyze from work history tab
                     parsedData={parsedAnalysisData}
                     dataSource={parsingSource}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="red-flags">
+                  <ResumeRedFlagsTab 
+                    redFlags={
+                      (analysis && Array.isArray(analysis.parsedRedFlags)) 
+                        ? analysis.parsedRedFlags 
+                        : (redFlagData && redFlagData.red_flags && Array.isArray(redFlagData.red_flags)) 
+                          ? redFlagData.red_flags 
+                          : []
+                    }
+                    isLoading={isLoadingAnalysis || isLoadingRedFlags}
+                    dataSource={analysis?.parsedRedFlags ? "database_parsed_fields" : (redFlagData ? "red_flag_analysis" : "not_available")}
                   />
                 </TabsContent>
                 
