@@ -1,0 +1,110 @@
+======= CLAUDE RESPONSE DEBUG =======
+Raw Claude response (first 300 chars): {   "matching_score": 85,   "Summary": "The candidate, Ann Marie Franzen, has extensive experience in sales, marketing, and client relationship management that aligns well with the Brand Partnerships Manager role. With over 10 years of experience in consultative sales and business development, she e
+Total response length: 5353
+Response contains extracted_text? false
+Resume name appears in response? Unknown - no resume data provided
+Key experience appears in response? Unknown - no resume data provided
+FULL CLAUDE RESPONSE:
+{
+  "matching_score": 85,
+  "Summary": "The candidate, Ann Marie Franzen, has extensive experience in sales, marketing, and client relationship management that aligns well with the Brand Partnerships Manager role. With over 10 years of experience in consultative sales and business development, she exceeds the 5+ year minimum requirement. Her background includes selling integrated media solutions, developing strategic partnerships, and managing the full sales cycle from prospecting to closing deals. Her experience with Fortune 500 clients and various media formats (digital, traditional, social) demonstrates her versatility and adaptability in a rapidly evolving industry. While her experience isn't specifically in influencer marketing, her work with digital media, social media marketing, and custom marketing solutions provides transferable skills. Her consultative approach to sales, expertise in negotiation, and history of generating significant new business revenue align with the job's emphasis on strategic selling and relationship building. Her educational background in Communications with a focus on Advertising/PR further strengthens her qualifications.",
+  "Work_History": [
+    {
+      "Title": "Account Executive",
+      "Company": "MAN Marketing",
+      "location": "unknown",
+      "startDate": "2023",
+      "endDate": "Present",
+      "description": "Consulted on custom marketing solutions for a variety of businesses, including Fortune 500 clients. Negotiated sales of traditional and digital advertising, including CTV, social media, and email marketing programs. Partnered with major media outlets in Chicago to enhance client exposure and engagement. Clients included Prairie State Gaming, Mangia Beve Restaurant Group, Cefalu Italian Restaurant, and DeSitter Flooring.",
+      "durationMonths": 12,
+      "isCurrentRole": true
+    },
+    {
+      "Title": "Sales & Marketing Consultant",
+      "Company": "Hot Stuff Marketing/Proforma Business Builders",
+      "location": "unknown",
+      "startDate": "2013",
+      "endDate": "2023",
+      "description": "Delivered over $1.5M in new business through sales of promotional products, branded merchandise, and creative marketing services. Worked with CEO and CMO-level clients to develop and implement branding strategies. Clients included Allstate Arena, Arlington International Racecourse, LA Tan, and Ergo Tools.",
+      "durationMonths": 120,
+      "isCurrentRole": false
+    },
+    {
+      "Title": "Business Development Manager",
+      "Company": "BolderImage Web Media",
+      "location": "unknown",
+      "startDate": "2011",
+      "endDate": "2013",
+      "description": "Developed white-label partnerships and sold custom digital solutions including website/app development, e-commerce, and SEO. Generated over $1.3M in new business through digital marketing strategies. Clients included Mediavine Marketing, Blue Sky Creative, and Fortytwoeightynine.",
+      "durationMonths": 24,
+      "isCurrentRole": false
+    },
+    {
+      "Title": "Distributor Sales Consultant",
+      "Company": "Hair's The Bling Professional Beauty Product Distributor",
+      "location": "unknown",
+      "startDate": "2008",
+      "endDate": "2011",
+      "description": "Sold new professional hair color and beauty product lines to salons and spas. Represented top national beauty brands at trade shows. Delivered over $1M in new business.",
+      "durationMonths": 36,
+      "isCurrentRole": false
+    },
+    {
+      "Title": "Regional Sales Manager",
+      "Company": "Putman Media/Food Processing Magazine",
+      "location": "unknown",
+      "startDate": "2007",
+      "endDate": "2008",
+      "description": "Secured over $1.2M in new business through digital, print, and display advertising sales. Clients included Kraft Foods, Edlong Dairy Technologies, Bell Flavors, and Sherwin-Williams.",
+      "durationMonths": 12,
+      "isCurrentRole": false
+    },
+    {
+      "Title": "Account Executive",
+      "Company": "WRMN Radio & 106.7 The FISH, Salem Communications",
+      "location": "unknown",
+      "startDate": "2001",
+      "endDate": "2007",
+      "description": "Developed custom radio advertising solutions for a diverse range of clients. Delivered over $700K in new business. Clients included Allstate Arena, Disney Live Shows, and Cracker Barrel.",
+      "durationMonths": 72,
+      "isCurrentRole": false
+    }
+  ],
+  "Skills": [
+    "Consultative Media & Advertising Sales",
+    "Digital Media, OTT & CTV Sales",
+    "Print, Display, and Radio Advertising",
+    "Integrated Media Solutions",
+    "Sales Prospecting & Lead Generation",
+    "Business Development & Account Management",
+    "Sales Strategy & Contract Negotiation",
+    "CRM & Sales Enablement Tools (Salesforce, Microsoft Office Suite, Google Drive, Zoom, Teams)",
+    "Microsoft Office Suite (Word, PowerPoint, Outlook, Excel)",
+    "CRM: Salesforce, Magazine Manager",
+    "Digital Marketing: SEO, PPC, OTT, Social Media Marketing"
+  ],
+  "Red_Flags": [
+    "No direct experience in influencer marketing specifically, which is a core focus of the role",
+    "Background is more in traditional media and advertising rather than social media influencer campaigns",
+    "Experience with CRM tools includes Salesforce but no specific mention of HubSpot which is mentioned in the job description"
+  ]
+}
+====================================
+JSON extracted using regex
+Initial JSON parsing failed: Expected ',' or ']' after array element in JSON at position 4877
+Found balanced braces but invalid JSON, continuing search
+Failed to parse resume analysis JSON from Claude: Error: Could not extract valid JSON from Claude response: Expected ',' or ']' after array element in JSON at position 4877
+    at analyzeResumeWithClaude (/home/runner/workspace/server/services/anthropicService.ts:593:17)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async analyzeResume (/home/runner/workspace/server/services/aiService.ts:95:30)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:679:30)
+Error analyzing resume with Claude: Error: Could not extract valid JSON from Claude response: Expected ',' or ']' after array element in JSON at position 4877
+    at analyzeResumeWithClaude (/home/runner/workspace/server/services/anthropicService.ts:593:17)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async analyzeResume (/home/runner/workspace/server/services/aiService.ts:95:30)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:679:30)
+Error using Claude for resume analysis, falling back to OpenAI: Error: Failed to analyze resume with Claude: Could not extract valid JSON from Claude response: Expected ',' or ']' after array element in JSON at position 4877
+    at analyzeResumeWithClaude (/home/runner/workspace/server/services/anthropicService.ts:869:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async analyzeResume (/home/runner/workspace/server/services/aiService.ts:95:30)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:679:30)

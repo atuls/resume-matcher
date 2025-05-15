@@ -289,32 +289,15 @@ export async function analyzeResumeWithClaude(
         systemPrompt = "You are Claude, a truthful AI assistant focused on accurate resume analysis. Only analyze the specific text provided. Never fabricate information. Return analysis in valid JSON format.";
         console.log("Using custom analysis prompt from settings");
         
-        // Get custom analysis prompt but add strict verification requirements
+        // Use the custom analysis prompt exactly as provided in settings
         const originalPrompt = analysisPromptSetting.value;
         
-        // Enhanced prompt with strict verification markers to prevent fabrication
-        userPrompt = `CRITICAL INSTRUCTION: You must ONLY analyze the exact resume text provided below.
-DO NOT invent, fabricate, or hallucinate ANY information that is not explicitly stated in this resume.
-Your response MUST contain ONLY information that appears verbatim in the resume text.
-
-EXTRACTION FORMAT: Extract information EXACTLY as follows, copying dates and titles WORD FOR WORD:
-- For work experience: Use EXACT company names, EXACT job titles, EXACT start/end dates AS SHOWN in the resume 
-- For education: Use EXACT school names, EXACT degrees, EXACT dates AS SHOWN in the resume
-- For skills: List ONLY skills EXPLICITLY mentioned in the resume text
-
-${originalPrompt.replace('{JOB_DESCRIPTION}', truncatedJob).replace('{{JOB_DESCRIPTION}}', truncatedJob).replace('{RESUME}', truncatedResume).replace('{{CANDIDATE_RESUME}}', truncatedResume)}
-
-IMPORTANT VERIFICATION MARKERS (These exact terms MUST appear in your analysis if they appear in the resume):
-- Candidate Name: "${truncatedResume.includes('Olivia DeSpirito') ? 'Olivia DeSpirito' : 'unknown'}"
-- Company: "${truncatedResume.includes('HOTWORX') ? 'HOTWORX' : 'unknown'}" 
-- Position: "${truncatedResume.includes('Sales Associate') ? 'Sales Associate' : 'unknown'}"
-- Location: "${truncatedResume.includes('Grand Junction') ? 'Grand Junction, Colorado' : 'unknown'}"
-- Education: "${truncatedResume.includes('Colorado Mesa University') ? 'Colorado Mesa University' : 'unknown'}"
-- Contact: "${truncatedResume.includes('oliviadespirito123@gmail.com') ? 'oliviadespirito123@gmail.com' : 'unknown'}"
-
-If you cannot find these details in the resume, state "I cannot find this information in the resume text provided" rather than inventing information.
-
-Your response will be verified against these key details, and discrepancies will result in your analysis being rejected.`;
+        // Replace placeholders with actual content but don't add additional guardrails
+        userPrompt = originalPrompt
+            .replace('{JOB_DESCRIPTION}', truncatedJob)
+            .replace('{{JOB_DESCRIPTION}}', truncatedJob)
+            .replace('{RESUME}', truncatedResume)
+            .replace('{{CANDIDATE_RESUME}}', truncatedResume);
         
         // Add detailed debugging for what is being sent to Claude
         console.log("======= CLAUDE REQUEST CONTENT DEBUG (FULL) =======");
