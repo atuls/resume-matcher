@@ -19,7 +19,6 @@ import {
   Linkedin, FileText as FileIcon, FileSearch
 } from "lucide-react";
 import { DebugPanel } from "@/components/DebugPanel";
-import { ResumeRedFlagsTab } from "@/components/ResumeRedFlagsTab";
 import { ResumeSkillsTab } from "@/components/ResumeSkillsTab";
 import { ResumeWorkHistoryTab } from "@/components/ResumeWorkHistoryTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -584,10 +583,6 @@ export default function ResumeProfilePage() {
                     <FileSearch className="h-4 w-4 mr-2" />
                     Raw Text
                   </TabsTrigger>
-                  <TabsTrigger value="red-flags">
-                    <AlertTriangle className="h-4 w-4 mr-2" />
-                    Red Flags
-                  </TabsTrigger>
                   <TabsTrigger value="debug">
                     <AlertCircle className="h-4 w-4 mr-2" />
                     Debug
@@ -634,30 +629,6 @@ export default function ResumeProfilePage() {
                       <p>No extracted text found for this resume.</p>
                     </div>
                   )}
-                </TabsContent>
-
-                <TabsContent value="red-flags">
-                  {/* Red flags component */}
-                  <ResumeRedFlagsTab 
-                    redFlags={analysis?.parsedRedFlags || 
-                             (redFlagData?.analysis?.red_flags || 
-                              redFlagData?.analysis?.redFlags || [])}
-                    isLoading={analysisLoading || isAnalysisLoading || isRedFlagLoading}
-                    dataSource={analysis?.parsedRedFlags ? "Parsed LLM Response" : "Red Flag Analysis API"}
-                  />
-                  
-                  {/* Debug data info */}
-                  <div className="mt-4 p-4 bg-gray-50 rounded-md">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-sm font-medium">Red Flag Data:</h3>
-                      <Badge variant="outline" className="text-xs">
-                        Source: {redFlagData?.analysis ? "Red Flag API" : "Parsed from LLM response"}
-                      </Badge>
-                    </div>
-                    <pre className="text-xs overflow-auto max-h-40 p-3 bg-gray-100 rounded-md">
-                      {JSON.stringify(redFlagData, null, 2) || "No red flag data available"}
-                    </pre>
-                  </div>
                 </TabsContent>
                 
                 <TabsContent value="debug">
