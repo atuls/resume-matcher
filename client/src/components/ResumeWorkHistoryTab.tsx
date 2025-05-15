@@ -357,52 +357,7 @@ export function ResumeWorkHistoryTab({
         </Alert>
       )}
       
-      {/* Red Flags Section */}
-      <div className="rounded-md border p-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-2">
-            <AlertTriangle className="h-5 w-5 text-amber-500" />
-            <h3 className="font-medium">Potential Red Flags</h3>
-          </div>
-          
-          {/* Source indicator for transparency */}
-          <div className="flex items-center">
-            <div className={`px-2 py-1 rounded-md text-xs ${
-              redFlagSource === "main_analysis" 
-                ? "bg-blue-100 text-blue-800" 
-                : redFlagSource === "red_flag_analysis" 
-                  ? "bg-amber-100 text-amber-800" 
-                  : "bg-gray-100 text-gray-800"
-            }`}>
-              {redFlagSource === "main_analysis" 
-                ? "Using main analysis data" 
-                : redFlagSource === "red_flag_analysis" 
-                  ? "Using red flag analysis data" 
-                  : "Using legacy data format"}
-            </div>
-          </div>
-        </div>
-        
-        {potentialRedFlags.length > 0 ? (
-          <div className="space-y-4">
-            {potentialRedFlags.map((flag: any, index: number) => (
-              <div key={index} className="p-3 bg-amber-50 text-amber-800 rounded-md">
-                <div className="font-medium mb-1">
-                  {flag.title || (typeof flag === 'string' ? "Potential Issue" : "Potential Issue")}
-                </div>
-                <p className="text-sm">
-                  {flag.description || flag.issue || (typeof flag === 'string' ? flag : JSON.stringify(flag))}
-                </p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="py-3 px-4 bg-green-50 text-green-800 rounded-md flex items-center">
-            <CheckCircle className="h-5 w-5 mr-2" />
-            <p>No red flags detected in work history</p>
-          </div>
-        )}
-      </div>
+      {/* Red Flags Section removed from Work History tab to avoid duplication */}
       
       {/* Work History Roles */}
       <div className="rounded-md border p-4">
