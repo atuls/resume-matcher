@@ -1,6 +1,6 @@
 import { db } from '../db';
 import { analysisResults } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and, count, desc, isNull, isNotNull, notLike } from 'drizzle-orm';
 
 interface WorkHistoryItem {
   Title: string;
@@ -318,39 +318,160 @@ export class ResponseParserService {
   /**
    * Process all analysis results in the database
    */
-  static async processAllAnalysisResults(): Promise<{
+  static async processAllAnalysisResults(limit = 0, offset = 0): Promise<{
     successful: number;
     failed: number;
     total: number;
+    totalPending: number;
+    processedIds: string[];
+    failedIds: string[];
   }> {
     try {
-      // Fetch all analysis results
-      const results = await db
-        .select()
-        .from(analysisResults);
+      // Query to get the total count of pending records
+      const [pendingCount] = await db
+        .select({ count: count() })
+        .from(analysisResults)
+        .where(eq(analysisResults.parsingStatus, "pending"));
       
-      console.log(`Processing ${results.length} analysis results`);
+      const totalPending = Number(pendingCount.count);
+      
+      // Prepare the query to fetch records
+      let query = db
+        .select()
+        .from(analysisResults)
+        .where(eq(analysisResults.parsingStatus, "pending"))
+        .orderBy(desc(analysisResults.createdAt));
+      
+      // Apply pagination if specified
+      if (offset > 0) {
+        query = query.offset(offset);
+      }
+      
+      // Apply limit if specified
+      if (limit > 0) {
+        query = query.limit(limit);
+      }
+      
+      // Execute the query
+      const results = await query;
+      
+      console.log(`Processing ${results.length} analysis results (offset: ${offset}, limit: ${limit}, total pending: ${totalPending})`);
       
       let successful = 0;
       let failed = 0;
+      const processedIds: string[] = [];
+      const failedIds: string[] = [];
       
       // Process each analysis result
       for (const result of results) {
-        const success = await this.processAnalysisResult(result.id);
-        if (success) {
-          successful++;
-        } else {
+        try {
+          const success = await this.processAnalysisResult(result.id);
+          if (success) {
+            successful++;
+            processedIds.push(result.id);
+          } else {
+            failed++;
+            failedIds.push(result.id);
+          }
+        } catch (error) {
+          console.error(`Error processing analysis result ${result.id}:`, error);
           failed++;
+          failedIds.push(result.id);
         }
       }
       
       return {
         successful,
         failed,
-        total: results.length
+        total: results.length,
+        totalPending,
+        processedIds,
+        failedIds
       };
     } catch (error) {
       console.error('Error processing all analysis results:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Process a batch of unprocessed analysis results 
+   * (records with raw response but no parsed fields)
+   */
+  static async processBatchUnprocessed(limit = 10): Promise<{
+    successful: number;
+    failed: number;
+    total: number;
+    totalUnprocessed: number;
+    processedIds: string[];
+    failedIds: string[];
+  }> {
+    try {
+      // Query to get the total count of unprocessed records
+      const [unprocessedCount] = await db
+        .select({ count: count() })
+        .from(analysisResults)
+        .where(
+          and(
+            isNull(analysisResults.parsedSkills),
+            isNull(analysisResults.parsedWorkHistory),
+            isNull(analysisResults.parsedRedFlags),
+            isNotNull(analysisResults.rawResponse)
+          )
+        );
+      
+      const totalUnprocessed = Number(unprocessedCount.count);
+      
+      // Fetch unprocessed analysis results with limit
+      const results = await db
+        .select()
+        .from(analysisResults)
+        .where(
+          and(
+            isNull(analysisResults.parsedSkills),
+            isNull(analysisResults.parsedWorkHistory),
+            isNull(analysisResults.parsedRedFlags),
+            isNotNull(analysisResults.rawResponse)
+          )
+        )
+        .orderBy(desc(analysisResults.createdAt))
+        .limit(limit);
+      
+      console.log(`Processing ${results.length} unprocessed analysis results (limit: ${limit}, total unprocessed: ${totalUnprocessed})`);
+      
+      let successful = 0;
+      let failed = 0;
+      const processedIds: string[] = [];
+      const failedIds: string[] = [];
+      
+      // Process each analysis result
+      for (const result of results) {
+        try {
+          const success = await this.processAnalysisResult(result.id);
+          if (success) {
+            successful++;
+            processedIds.push(result.id);
+          } else {
+            failed++;
+            failedIds.push(result.id);
+          }
+        } catch (error) {
+          console.error(`Error processing analysis result ${result.id}:`, error);
+          failed++;
+          failedIds.push(result.id);
+        }
+      }
+      
+      return {
+        successful,
+        failed,
+        total: results.length,
+        totalUnprocessed,
+        processedIds,
+        failedIds
+      };
+    } catch (error) {
+      console.error('Error processing batch of unprocessed analysis results:', error);
       throw error;
     }
   }
