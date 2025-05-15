@@ -17,6 +17,8 @@ interface DebugPanelProps {
 export function DebugPanel({ rawResponse, resumeId, analysis, redFlagData }: DebugPanelProps) {
   const [debugInfo, setDebugInfo] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isProcessing, setIsProcessing] = React.useState(false);
+  const [foundAnalysisId, setFoundAnalysisId] = React.useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -59,7 +61,44 @@ export function DebugPanel({ rawResponse, resumeId, analysis, redFlagData }: Deb
   
   const actualRawResponse = getRawResponse();
 
-  const debugResponse = () => {
+  // Function to save parsed results to the database
+  const saveAnalysisResults = async (analysisId: string) => {
+    try {
+      const response = await fetch(`/api/analysis-results/${analysisId}/process`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to save analysis results: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log("Analysis results saved successfully:", data);
+      
+      // Invalidate queries to refresh the UI
+      queryClient.invalidateQueries({ queryKey: [`/api/resumes/${resumeId}/analysis`] });
+      
+      toast({
+        title: "Analysis processed",
+        description: "Raw response has been parsed and saved to the database.",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Error saving analysis results:", error);
+      toast({
+        title: "Processing failed",
+        description: error instanceof Error ? error.message : "Failed to save analysis results",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  const debugResponse = async () => {
     try {
       console.log("Debug - Raw Response:", actualRawResponse);
       let info = "";
@@ -79,6 +118,16 @@ export function DebugPanel({ rawResponse, resumeId, analysis, redFlagData }: Deb
         
         setDebugInfo(info);
         return;
+      }
+      
+      // If this is an analysis result with an ID, add a button to process and save it
+      let analysisId = '';
+      if (typeof actualRawResponse === 'object' && actualRawResponse !== null) {
+        if (Array.isArray(actualRawResponse) && actualRawResponse.length > 0 && actualRawResponse[0].id) {
+          analysisId = actualRawResponse[0].id;
+        } else if (actualRawResponse.id) {
+          analysisId = actualRawResponse.id;
+        }
       }
       
       if (typeof actualRawResponse === 'string') {
@@ -245,9 +294,19 @@ export function DebugPanel({ rawResponse, resumeId, analysis, redFlagData }: Deb
         info += "Score: 0\n";
       }
       
+      // Add information about saving to database if an analysis ID was found
+      if (analysisId) {
+        info += "\n\nAnalysis ID found: " + analysisId;
+        info += "\nClick 'Save & Process Analysis' to save these results to the database.";
+      }
+      
       setDebugInfo(info);
+      
+      // Return the analysis ID if found
+      return analysisId;
     } catch (e: any) {
       setDebugInfo(`Error analyzing raw response: ${e.message}`);
+      return null;
     }
   };
   
@@ -331,15 +390,50 @@ export function DebugPanel({ rawResponse, resumeId, analysis, redFlagData }: Deb
             </Button>
           )}
           
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={debugResponse}
-            className="flex items-center"
-          >
-            <Code className="h-4 w-4 mr-2" />
-            Analyze Raw Response
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={async () => {
+                const analysisId = await debugResponse();
+                setFoundAnalysisId(analysisId);
+              }}
+              className="flex items-center"
+            >
+              <Code className="h-4 w-4 mr-2" />
+              Analyze Raw Response
+            </Button>
+            
+            {foundAnalysisId && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                disabled={isProcessing}
+                onClick={async () => {
+                  setIsProcessing(true);
+                  try {
+                    await saveAnalysisResults(foundAnalysisId);
+                    setDebugInfo(prev => prev + "\n\n✅ Analysis processed and saved to database!");
+                  } finally {
+                    setIsProcessing(false);
+                  }
+                }}
+                className="flex items-center bg-green-50 hover:bg-green-100 border-green-200 hover:border-green-300 text-green-700"
+              >
+                {isProcessing ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Code className="h-4 w-4 mr-2" />
+                    Save & Process Analysis
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
       
