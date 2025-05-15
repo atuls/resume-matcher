@@ -47,9 +47,20 @@ export default function ResumeProfilePage() {
   const parseAnalysisData = (analysisData: any, redFlagData: any) => {
     console.log("CENTRALIZED PARSER: Starting unified parsing process");
     
+    // Enhanced logging to identify the raw response structure
+    console.log("CENTRALIZED PARSER: Analysis data structure:", 
+      analysisData ? Object.keys(analysisData) : "undefined");
+    
     // Step 1: Try to parse from analysis.rawResponse first (highest priority)
     if (analysisData?.rawResponse) {
       try {
+        console.log("CENTRALIZED PARSER: Raw data type:", typeof analysisData.rawResponse);
+        console.log("CENTRALIZED PARSER: Raw response preview:", 
+          typeof analysisData.rawResponse === 'string' 
+            ? analysisData.rawResponse.substring(0, 200) 
+            : JSON.stringify(analysisData.rawResponse).substring(0, 200)
+        );
+        
         console.log("CENTRALIZED PARSER: Attempting to parse from analysis.rawResponse");
         const parsedData = parseRawResponse(analysisData.rawResponse);
         

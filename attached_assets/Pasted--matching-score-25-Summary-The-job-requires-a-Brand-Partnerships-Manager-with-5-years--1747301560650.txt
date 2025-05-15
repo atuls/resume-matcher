@@ -1,0 +1,56 @@
+{
+  "matching_score": 25,
+  "Summary": "The job requires a Brand Partnerships Manager with 5+ years of sales experience in influencer marketing, digital media, or advertising who can own the full sales cycle, develop relationships, and have deep knowledge of influencer marketing trends. The candidate is a Namer and Naming Consultant with experience since 1996 in creating names, taglines, and verbal branding. While the candidate has strong creative writing skills and client relationship experience, there is minimal overlap with the specific requirements of influencer marketing sales, managing a sales pipeline, or the specific industry knowledge required for this position. The candidate's background is primarily in naming and verbal branding rather than sales or influencer marketing specifically.",
+  "Work_History": [
+    {
+      "Title": "Senior Namer",
+      "Company": "US Web / CKS",
+      "location": "unknown",
+      "startDate": "unknown",
+      "endDate": "unknown",
+      "description": "",
+      "durationMonths": "unknown",
+      "isCurrentRole": false
+    },
+    {
+      "Title": "Naming Manager",
+      "Company": "marchFIRST",
+      "location": "unknown",
+      "startDate": "unknown",
+      "endDate": "unknown",
+      "description": "",
+      "durationMonths": "unknown",
+      "isCurrentRole": false
+    },
+    {
+      "Title": "Freelance Namer & Name Consultant",
+      "Company": "Self-employed",
+      "location": "unknown",
+      "startDate": "1996",
+      "endDate": "present",
+      "description": "Creating names, taglines, and verbal branding for clients",
+      "durationMonths": "unknown",
+      "isCurrentRole": true
+    }
+  ],
+  "Skills": [
+    "Naming",
+    "Verbal branding",
+    "Tagline writing",
+    "Pre-legal availability screening",
+    "Copywriting",
+    "Screenwriting",
+    "Blogging",
+    "Article writing",
+    "Songwriting",
+    "Lyric writing"
+  ],
+  "Red_Flags": [
+    "Mismatched experience - candidate specializes in naming and verbal branding rather than influencer marketing or sales",
+    "No demonstrated experience with CRM systems (HubSpot, Salesforce) as required in the job description",
+    "No specific experience with influencer marketing or digital media sales mentioned",
+    "No indication of pipeline management or sales cycle experience",
+    "No mention of social media expertise or industry trend analysis capabilities",
+    "Candidate is primarily seeking naming consultant work rather than a full-time sales position"
+  ]
+}

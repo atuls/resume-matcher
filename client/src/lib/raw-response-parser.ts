@@ -437,21 +437,67 @@ function extractScore(data: any): number {
  * @param rawResponse The raw text response from the LLM
  * @returns Structured data extracted from the response
  */
-export function parseRawResponse(rawResponse: string): ParsedRawResponse {
+export function parseRawResponse(rawResponse: string | any): ParsedRawResponse {
   try {
+    // Enhanced debugging for raw response type
+    console.log("PARSER: Raw response type:", typeof rawResponse);
+    
+    // If it's already an object (not a string), try to use it directly
+    if (typeof rawResponse === 'object' && rawResponse !== null) {
+      console.log("PARSER: Raw response is already an object, checking for expected fields");
+      
+      // Look directly for our expected fields
+      let hasExpectedFormat = false;
+      if (rawResponse.matching_score !== undefined) {
+        console.log("PARSER: Found direct matching_score field:", rawResponse.matching_score);
+        hasExpectedFormat = true;
+      }
+      
+      if (Array.isArray(rawResponse.Work_History)) {
+        console.log("PARSER: Found direct Work_History array with", rawResponse.Work_History.length, "items");
+        hasExpectedFormat = true;
+      }
+      
+      if (Array.isArray(rawResponse.Skills)) {
+        console.log("PARSER: Found direct Skills array with", rawResponse.Skills.length, "items");
+        hasExpectedFormat = true;
+      }
+      
+      if (Array.isArray(rawResponse.Red_Flags)) {
+        console.log("PARSER: Found direct Red_Flags array with", rawResponse.Red_Flags.length, "items");
+        hasExpectedFormat = true;
+      }
+      
+      // If we found the expected format, use the object directly
+      if (hasExpectedFormat) {
+        return {
+          workHistory: rawResponse.Work_History || [],
+          skills: rawResponse.Skills || [],
+          redFlags: rawResponse.Red_Flags || [],
+          summary: rawResponse.Summary || "",
+          score: rawResponse.matching_score || 0,
+          rawData: rawResponse
+        };
+      }
+      
+      // If it doesn't have our expected format, convert to JSON string for processing
+      rawResponse = JSON.stringify(rawResponse);
+    }
+    
     if (!rawResponse) {
-      console.error("Raw response is empty");
+      console.error("PARSER: Raw response is empty");
       throw new Error("Raw response is empty");
     }
     
     // First try to extract JSON from the raw response
+    console.log("PARSER: Attempting to extract JSON from string");
     const extractedJson = extractJsonFromText(rawResponse);
     if (!extractedJson) {
-      console.error("Failed to extract JSON from raw response");
+      console.error("PARSER: Failed to extract JSON from raw response");
       
       // If JSON extraction failed but we have text, create a minimal structure
       // with the raw text as the summary
-      if (rawResponse.trim()) {
+      if (typeof rawResponse === 'string' && rawResponse.trim()) {
         return {
           workHistory: [],
           skills: [],
