@@ -191,67 +191,157 @@ export function DebugPanel({ rawResponse, resumeId, analysis, redFlagData }: Deb
         let summary = '';
         let score = 0;
         
-        // Check if it has parsedJson
+        // We're focusing specifically on finding and using the parsedJson object 
+        // as a single source of truth
+        
+        let parsedJson: any = null;
+        
+        // First check if the object has a parsedJson property directly
         if (actualRawResponse.parsedJson) {
-          info += "Object has parsedJson property\n";
-          info += `parsedJson keys: ${Object.keys(actualRawResponse.parsedJson).join(', ')}\n\n`;
-          
-          const parsedJson = actualRawResponse.parsedJson;
-          
-          // Check for specific fields
-          if (parsedJson.Skills || parsedJson.skills) {
-            skills = parsedJson.Skills || parsedJson.skills;
-            info += `✅ Found Skills array in parsedJson with ${skills.length} items\n`;
-          }
-          
-          if (parsedJson.Work_History || parsedJson.work_history || parsedJson.workHistory) {
-            workHistory = parsedJson.Work_History || parsedJson.work_history || parsedJson.workHistory;
-            info += `✅ Found Work History array in parsedJson with ${workHistory.length} items\n`;
-          }
-          
-          if (parsedJson.Red_Flags || parsedJson.red_flags || parsedJson.redFlags) {
-            redFlags = parsedJson.Red_Flags || parsedJson.red_flags || parsedJson.redFlags;
-            info += `✅ Found Red Flags array in parsedJson with ${redFlags.length} items\n`;
-          }
-          
-          if (parsedJson.Summary || parsedJson.summary) {
-            summary = parsedJson.Summary || parsedJson.summary;
-            info += `✅ Found Summary in parsedJson\n`;
-          }
-          
-          if (parsedJson.matching_score || parsedJson.matchingScore || parsedJson.score) {
-            score = parsedJson.matching_score || parsedJson.matchingScore || parsedJson.score;
-            info += `✅ Found score in parsedJson: ${score}\n`;
-          }
+          info += "✅ Found parsedJson field at top level\n";
+          parsedJson = actualRawResponse.parsedJson;
+        } 
+        // Next check if it has a nested rawResponse.parsedJson
+        else if (actualRawResponse.rawResponse && actualRawResponse.rawResponse.parsedJson) {
+          info += "✅ Found parsedJson in nested rawResponse object\n";
+          parsedJson = actualRawResponse.rawResponse.parsedJson;
         }
         
-        // Check for direct properties with case-insensitive handling
-        if (actualRawResponse.Skills || actualRawResponse.skills) {
-          const skillsArray = actualRawResponse.Skills || actualRawResponse.skills;
-          skills = skillsArray;
-          info += `✅ Found Skills array directly with ${skillsArray.length} items\n`;
+        // If we found parsedJson, extract all the fields we need using the exact keys
+        // (this matches our server-side parser)
+        if (parsedJson) {
+          info += `parsedJson keys: ${Object.keys(parsedJson).join(', ')}\n\n`;
+          
+          // TARGET FIELDS (exact matches as a priority)
+          // - matching_score for score
+          // - summary for summary
+          // - work_history for work history
+          // - red_flags for red flags
+          // - skills for skills
+          
+          // Extract fields from parsedJson with exact keys first
+          let fieldsFound = 0;
+          
+          // Extract matching_score
+          if (parsedJson.matching_score !== undefined) {
+            score = parsedJson.matching_score;
+            info += `✅ Found matching_score in parsedJson: ${score}\n`;
+            fieldsFound++;
+          }
+          
+          // Extract summary
+          if (parsedJson.summary) {
+            summary = parsedJson.summary;
+            info += `✅ Found summary in parsedJson\n`;
+            fieldsFound++;
+          }
+          
+          // Extract work_history
+          if (parsedJson.work_history && Array.isArray(parsedJson.work_history)) {
+            workHistory = parsedJson.work_history;
+            info += `✅ Found work_history array in parsedJson with ${workHistory.length} items\n`;
+            fieldsFound++;
+          }
+          
+          // Extract red_flags
+          if (parsedJson.red_flags && Array.isArray(parsedJson.red_flags)) {
+            redFlags = parsedJson.red_flags;
+            info += `✅ Found red_flags array in parsedJson with ${redFlags.length} items\n`;
+            fieldsFound++;
+          }
+          
+          // Extract skills
+          if (parsedJson.skills && Array.isArray(parsedJson.skills)) {
+            skills = parsedJson.skills;
+            info += `✅ Found skills array in parsedJson with ${skills.length} items\n`;
+            fieldsFound++;
+          }
+          
+          // If we didn't find any of the exact fields, try case-insensitive and alternative names
+          if (fieldsFound === 0) {
+            info += "⚠️ Did not find any fields with exact names (matching_score, summary, work_history, red_flags, skills)\n";
+            info += "⚠️ Trying case variations as a fallback\n";
+            
+            // Extract score (case variations)
+            if (parsedJson.Score !== undefined || parsedJson.score !== undefined) {
+              score = parsedJson.Score || parsedJson.score;
+              info += `✅ Found Score/score in parsedJson: ${score}\n`;
+            }
+            
+            // Extract summary (case variations)
+            if (parsedJson.Summary) {
+              summary = parsedJson.Summary;
+              info += `✅ Found Summary in parsedJson\n`;
+            }
+            
+            // Extract work history (case variations)
+            if (parsedJson.Work_History && Array.isArray(parsedJson.Work_History)) {
+              workHistory = parsedJson.Work_History;
+              info += `✅ Found Work_History array in parsedJson with ${workHistory.length} items\n`;
+            }
+            
+            // Extract red flags (case variations)
+            if (parsedJson.Red_Flags && Array.isArray(parsedJson.Red_Flags)) {
+              redFlags = parsedJson.Red_Flags;
+              info += `✅ Found Red_Flags array in parsedJson with ${redFlags.length} items\n`;
+            }
+            
+            // Extract skills (case variations)
+            if (parsedJson.Skills && Array.isArray(parsedJson.Skills)) {
+              skills = parsedJson.Skills;
+              info += `✅ Found Skills array in parsedJson with ${skills.length} items\n`;
+            }
+          }
+        } else {
+          info += "⚠️ No parsedJson field found in the response - server parsing might fail\n";
         }
         
-        if (actualRawResponse.Work_History || actualRawResponse.work_history || actualRawResponse.workHistory) {
-          const workHistoryArray = actualRawResponse.Work_History || actualRawResponse.work_history || actualRawResponse.workHistory;
-          workHistory = workHistoryArray;
-          info += `✅ Found Work History array directly with ${workHistoryArray.length} items\n`;
-        }
-        
-        if (actualRawResponse.Red_Flags || actualRawResponse.red_flags || actualRawResponse.redFlags) {
-          const redFlagsArray = actualRawResponse.Red_Flags || actualRawResponse.red_flags || actualRawResponse.redFlags;
-          redFlags = redFlagsArray;
-          info += `✅ Found Red Flags array directly with ${redFlagsArray.length} items\n`;
-        }
-        
-        if (actualRawResponse.Summary || actualRawResponse.summary) {
-          summary = actualRawResponse.Summary || actualRawResponse.summary;
-          info += `✅ Found Summary directly\n`;
-        }
-        
-        if (actualRawResponse.matching_score || actualRawResponse.matchingScore || actualRawResponse.score) {
-          score = actualRawResponse.matching_score || actualRawResponse.matchingScore || actualRawResponse.score;
-          info += `✅ Found score directly: ${score}\n`;
+        // Check for nested rawResponse property (this is an additional path to check)
+        if (!parsedJson && actualRawResponse.rawResponse && typeof actualRawResponse.rawResponse === 'object') {
+          info += "⚠️ No parsedJson found, checking nested rawResponse for a consistent data source\n";
+          
+          // Look for nested properties inside rawResponse
+          const nestedRawResponse = actualRawResponse.rawResponse;
+          
+          // Check if it has the expected fields from our single source of truth pattern
+          const hasNestedFields = 
+            nestedRawResponse.matching_score !== undefined || 
+            nestedRawResponse.skills !== undefined ||
+            nestedRawResponse.work_history !== undefined ||
+            nestedRawResponse.red_flags !== undefined ||
+            nestedRawResponse.summary !== undefined;
+          
+          if (hasNestedFields) {
+            info += "✅ Found consistent field names directly in nested rawResponse\n";
+            
+            // Extract fields using the same names for consistency with our server parser
+            if (nestedRawResponse.matching_score !== undefined) {
+              score = nestedRawResponse.matching_score;
+              info += `✅ Found matching_score in nested rawResponse: ${score}\n`;
+            }
+            
+            if (nestedRawResponse.summary) {
+              summary = nestedRawResponse.summary;
+              info += `✅ Found summary in nested rawResponse\n`;
+            }
+            
+            if (nestedRawResponse.work_history && Array.isArray(nestedRawResponse.work_history)) {
+              workHistory = nestedRawResponse.work_history;
+              info += `✅ Found work_history array in nested rawResponse with ${workHistory.length} items\n`;
+            }
+            
+            if (nestedRawResponse.red_flags && Array.isArray(nestedRawResponse.red_flags)) {
+              redFlags = nestedRawResponse.red_flags;
+              info += `✅ Found red_flags array in nested rawResponse with ${redFlags.length} items\n`;
+            }
+            
+            if (nestedRawResponse.skills && Array.isArray(nestedRawResponse.skills)) {
+              skills = nestedRawResponse.skills;
+              info += `✅ Found skills array in nested rawResponse with ${skills.length} items\n`;
+            }
+          } else {
+            info += "⚠️ Nested rawResponse does not have expected field names\n";
+          }
         }
         
         // Check if any results were found
