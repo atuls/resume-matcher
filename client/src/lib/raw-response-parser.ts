@@ -446,6 +446,11 @@ export function parseRawResponse(rawResponse: string | any): ParsedRawResponse {
     if (typeof rawResponse === 'object' && rawResponse !== null) {
       console.log("PARSER: Raw response is already an object, checking expected fields");
       
+      // Debug logging - show all top-level keys
+      if (typeof rawResponse === 'object') {
+        console.log("PARSER DEBUG: Top-level keys in raw response:", Object.keys(rawResponse));
+      }
+      
       // Special handling for arrays - this matches the API response format we're seeing
       if (Array.isArray(rawResponse)) {
         console.log("PARSER: Raw response is an array with", rawResponse.length, "items");
@@ -468,10 +473,24 @@ export function parseRawResponse(rawResponse: string | any): ParsedRawResponse {
           
           // If the first item has our expected fields directly
           const firstItem = rawResponse[0];
+          
+          // Debug what keys are in the object
+          if (firstItem && typeof firstItem === 'object') {
+            console.log("PARSER DEBUG: Available keys in first array item:", Object.keys(firstItem));
+            if (firstItem.rawResponse && typeof firstItem.rawResponse === 'object') {
+              console.log("PARSER DEBUG: Available keys in nested rawResponse:", Object.keys(firstItem.rawResponse));
+              
+              // If rawResponse has parsedJson, log that too since it's a common container in our structure
+              if (firstItem.rawResponse.parsedJson && typeof firstItem.rawResponse.parsedJson === 'object') {
+                console.log("PARSER DEBUG: Keys in parsedJson:", Object.keys(firstItem.rawResponse.parsedJson));
+              }
+            }
+          }
+          
           if (firstItem.matching_score !== undefined || 
-              Array.isArray(firstItem.Work_History) ||
-              Array.isArray(firstItem.Skills) ||
-              Array.isArray(firstItem.Red_Flags)) {
+              Array.isArray(firstItem.Work_History) || Array.isArray(firstItem["Work History"]) ||
+              Array.isArray(firstItem.Skills) || Array.isArray(firstItem["Skills"]) ||
+              Array.isArray(firstItem.Red_Flags) || Array.isArray(firstItem["Red Flags"])) {
             console.log("PARSER: First array item has expected fields, using it directly");
             return parseRawResponse(firstItem);
           }
@@ -485,18 +504,21 @@ export function parseRawResponse(rawResponse: string | any): ParsedRawResponse {
         hasExpectedFormat = true;
       }
       
-      if (Array.isArray(rawResponse.Work_History)) {
-        console.log("PARSER: Found direct Work_History array with", rawResponse.Work_History.length, "items");
+      if (Array.isArray(rawResponse.Work_History) || Array.isArray(rawResponse["Work History"])) {
+        const workHistory = rawResponse.Work_History || rawResponse["Work History"];
+        console.log("PARSER: Found direct Work_History array with", workHistory.length, "items");
         hasExpectedFormat = true;
       }
       
-      if (Array.isArray(rawResponse.Skills)) {
-        console.log("PARSER: Found direct Skills array with", rawResponse.Skills.length, "items");
+      if (Array.isArray(rawResponse.Skills) || Array.isArray(rawResponse["Skills"])) {
+        const skills = rawResponse.Skills || rawResponse["Skills"];
+        console.log("PARSER: Found direct Skills array with", skills.length, "items");
         hasExpectedFormat = true;
       }
       
-      if (Array.isArray(rawResponse.Red_Flags)) {
-        console.log("PARSER: Found direct Red_Flags array with", rawResponse.Red_Flags.length, "items");
+      if (Array.isArray(rawResponse.Red_Flags) || Array.isArray(rawResponse["Red Flags"])) {
+        const redFlags = rawResponse.Red_Flags || rawResponse["Red Flags"];
+        console.log("PARSER: Found direct Red_Flags array with", redFlags.length, "items");
         hasExpectedFormat = true;
       }
       
@@ -509,11 +531,11 @@ export function parseRawResponse(rawResponse: string | any): ParsedRawResponse {
       // If we found the expected format, use the object directly
       if (hasExpectedFormat) {
         return {
-          workHistory: rawResponse.Work_History || [],
-          skills: rawResponse.Skills || [],
-          redFlags: rawResponse.Red_Flags || [],
-          summary: rawResponse.Summary || "",
-          score: rawResponse.matching_score || 0,
+          workHistory: rawResponse.Work_History || rawResponse["Work History"] || [],
+          skills: rawResponse.Skills || rawResponse["Skills"] || [],
+          redFlags: rawResponse.Red_Flags || rawResponse["Red Flags"] || [],
+          summary: rawResponse.Summary || rawResponse["Summary"] || "",
+          score: rawResponse.matching_score || rawResponse["matching score"] || 0,
           rawData: rawResponse
         };
       }
