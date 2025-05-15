@@ -59,6 +59,8 @@ export function ResumeWorkHistoryTab({
   // Initialize variables
   let workHistorySource = "";
   let workHistory: any[] = [];
+  let directData: any = { workHistory: [], skills: [], redFlags: [], summary: "", score: 0, rawData: null };
+  let directDataAvailable = false;
   
   // Priority 1: Use centralized parsed data if available
   if (parsedData && parsedData.workHistory && parsedData.workHistory.length > 0) {
@@ -69,8 +71,6 @@ export function ResumeWorkHistoryTab({
   // Priority 2: Parse raw response directly
   else {
     // This handles the exact format seen in your screenshots with Work_History field
-    let directData: any = { workHistory: [], skills: [], redFlags: [], summary: "", score: 0, rawData: null };
-    let directDataAvailable = false;
     
     // Try to parse directly from rawResponse
     if (analysis?.rawResponse) {
@@ -148,7 +148,7 @@ export function ResumeWorkHistoryTab({
   
   // Prioritize direct Work_History from raw response first (best match to screenshot)
   if (directDataAvailable && !workHistory.length) { // Only if we haven't already set workHistory earlier
-    workHistory = directData.workHistory.map(item => ({
+    workHistory = directData.workHistory.map((item: any) => ({
       title: item.Title || item.title || '',
       company: item.Company || item.company || '',
       location: item.location || item.Location || '',
@@ -158,29 +158,29 @@ export function ResumeWorkHistoryTab({
       durationMonths: item.durationMonths || item.DurationMonths || 0,
       isCurrentRole: item.isCurrentRole || item.IsCurrentRole || false
     }));
-    dataSource = "direct_raw_parser";
+    workHistorySource = "direct_raw_parser";
     console.log("Using work history directly from raw response parser (source 1) - MATCH SCREENSHOT");
   }
   // Then try the regular extractor
   else if (analysisExtractedData.workHistory && analysisExtractedData.workHistory.length > 0) {
     workHistory = analysisExtractedData.workHistory;
-    dataSource = "main_analysis";
+    workHistorySource = "main_analysis";
     console.log("Using work history from main analysis (source 2)");
   } 
   // Then use red flag analysis
   else if (rfExtractedData.workHistory && rfExtractedData.workHistory.length > 0) {
     workHistory = rfExtractedData.workHistory;
-    dataSource = "red_flag_analysis";
+    workHistorySource = "red_flag_analysis";
     console.log("Using work history from red flag analysis (source 3)");
   } 
   // Finally, fall back to legacy method
   else {
     workHistory = extractWorkHistory(redFlagData);
-    dataSource = "legacy_method";
+    workHistorySource = "legacy_method";
     console.log("Using work history from legacy extraction method (source 4)");
   }
   
-  console.log("Final work history source:", dataSource);
+  console.log("Final work history source:", workHistorySource);
   console.log("Final work history:", workHistory);
     
   // Extract red flags using the same source priority order for consistency
@@ -288,7 +288,7 @@ export function ResumeWorkHistoryTab({
       {/* Show data source indicator */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center" title="Data source indicator">
-          {dataSource === 'direct_raw_parser' ? (
+          {workHistorySource === 'direct_raw_parser' ? (
             <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-md flex items-center">
               <Zap className="h-3 w-3 mr-1" />
               Using Work_History from direct LLM response
@@ -296,7 +296,7 @@ export function ResumeWorkHistoryTab({
           ) : (
             <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-md flex items-center">
               <Code className="h-3 w-3 mr-1" />
-              Using {dataSource}
+              Using {workHistorySource}
             </span>
           )}
         </div>
