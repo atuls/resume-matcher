@@ -4,6 +4,26 @@ All notable changes to the Resume Analyzer project will be documented in this fi
 
 ## [Unreleased]
 
+## [1.8.0] - 2025-05-15
+
+### Added
+- Batch processing capability with "Analyze Next 50 Unanalyzed" button
+- Real-time progress tracking for batch analysis with WebSocket updates
+- Structured database storage for analysis results with parsing status indicators
+- Enhanced candidate tracking with "Mark as Contacted" functionality
+- Background job processing with proper controls to prevent unintended batch executions
+
+### Changed
+- Improved performance by avoiding unnecessary API calls during page loads
+- Enhanced WebSocket progress notifications with detailed status updates
+- Better UI feedback during batch processing operations
+
+### Fixed
+- Fixed "Mark as Contacted" functionality by updating to use correct database field name
+- Resolved issue with automatic batch processing running unintentionally
+- Fixed error handling in batch processing to track successful and failed record IDs
+- Eliminated redundant API calls for red flag analysis during page loads
+
 ## [1.7.0] - 2024-05-15
 
 ### Added

@@ -13,6 +13,7 @@ An AI-powered resume analysis platform that efficiently matches candidate resume
 - **Visual Progress**: Color-coded match scores with progress bars
 - **Sortable Results**: Sort candidates by match score to prioritize best matches
 - **Multi-model AI Support**: Choose between OpenAI GPT or Anthropic Claude for analysis
+- **Batch Processing Controls**: Process unanalyzed resumes in controlled batches with progress tracking
 - **Customizable Analysis Prompts**: Configure how AI models analyze resumes via settings
 - **Advanced Debugging**: Debug Info tab shows raw AI responses for troubleshooting with overall score display
 - **On-demand Resume Analysis**: Analyze resumes only when needed to reduce API usage
@@ -58,12 +59,14 @@ The application requires the following environment variables:
 2. **Upload Resumes**: Upload one or multiple candidate resumes
 3. **Match Resumes with Jobs**: Use the "Match with Job" feature to score candidates
 4. **Batch Matching**: Use "Match All with Job" to process multiple resumes at once
-5. **View Matches**: Browse candidates with their match scores, sort by score to find best matches
-6. **On-demand Analysis**: Click the "Analyze" button for any candidate to view their position details, highlights, and red flags
-7. **Efficient Processing**: Analyze only the candidates you're interested in to reduce API usage and speed up processing
-8. **View Details**: Click on a resume to see detailed candidate information and job-specific scores
-9. **Job-specific Matching**: Use the job selection dropdown in candidate profiles to compare match scores against different job positions
-10. **Re-run Analysis**: Update match scores for specific job-candidate combinations using the Re-run Analysis button
+5. **Batch Processing**: Use "Analyze Next 50 Unanalyzed" to process batches of unanalyzed resumes with real-time progress tracking
+6. **View Matches**: Browse candidates with their match scores, sort by score to find best matches
+7. **On-demand Analysis**: Click the "Analyze" button for any candidate to view their position details, highlights, and red flags
+8. **Efficient Processing**: Analyze only the candidates you're interested in to reduce API usage and speed up processing
+9. **View Details**: Click on a resume to see detailed candidate information and job-specific scores
+10. **Job-specific Matching**: Use the job selection dropdown in candidate profiles to compare match scores against different job positions
+11. **Re-run Analysis**: Update match scores for specific job-candidate combinations using the Re-run Analysis button
+12. **Candidate Tracking**: Mark candidates as contacted with a simple checkbox to track outreach efforts
 
 ## Data Flow
 
