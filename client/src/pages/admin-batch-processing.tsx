@@ -229,7 +229,7 @@ export default function AdminBatchProcessing() {
                 >
                   {isPendingProcessing ? (
                     <>
-                      <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                      <RotateCw className="mr-2 h-4 w-4 animate-spin" />
                       Processing Batch...
                     </>
                   ) : (
@@ -270,7 +270,7 @@ export default function AdminBatchProcessing() {
                 >
                   {isUnprocessedProcessing ? (
                     <>
-                      <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                      <RotateCw className="mr-2 h-4 w-4 animate-spin" />
                       Processing Batch...
                     </>
                   ) : (
