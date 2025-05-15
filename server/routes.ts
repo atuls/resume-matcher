@@ -1793,20 +1793,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Process a batch of unprocessed analysis results (records with raw response but no parsed fields)
   app.post("/api/admin/batch-process-unprocessed", async (req: Request, res: Response) => {
     try {
-      console.log("Processing batch of unprocessed analysis results");
+      const { jobDescriptionId, batchSize = 50, startProcessing = false } = req.body;
       
-      // Get batch size from request body (default to 10)
-      const limit = req.body.limit || 10;
+      console.log(`Processing batch of unanalyzed resumes for job ${jobDescriptionId}, batchSize: ${batchSize}, startProcessing: ${startProcessing}`);
       
-      const result = await ResponseParserService.processBatchUnprocessed(limit);
+      // If no job description ID is provided, fall back to processing unprocessed analysis results
+      if (!jobDescriptionId) {
+        console.log("No jobDescriptionId provided, falling back to processing unprocessed analysis results");
+        const result = await ResponseParserService.processBatchUnprocessed(batchSize);
+        
+        return res.json({
+          message: `Processed ${result.successful} of ${result.total} unprocessed analysis results (${result.totalUnprocessed} total unprocessed)`,
+          ...result
+        });
+      }
       
-      res.json({
-        message: `Processed ${result.successful} of ${result.total} unprocessed analysis results (${result.totalUnprocessed} total unprocessed)`,
-        ...result
+      // Get the job description
+      const jobDescription = await storage.getJobDescription(jobDescriptionId);
+      if (!jobDescription) {
+        return res.status(404).json({ message: "Job description not found" });
+      }
+      
+      // Get job requirements
+      const requirements = await storage.getJobRequirements(jobDescriptionId);
+      
+      // Get all resumes
+      const allResumes = await storage.getResumes();
+      if (!allResumes || allResumes.length === 0) {
+        return res.status(400).json({ message: "No resumes found" });
+      }
+      
+      // Get all existing analyses for this job
+      const existingAnalyses = await storage.getAnalysisResultsByJob(jobDescriptionId);
+      
+      // Create a map of resume IDs that already have analyses
+      const existingAnalysisMap = new Map();
+      existingAnalyses.forEach(analysis => {
+        existingAnalysisMap.set(analysis.resumeId, true);
       });
+      
+      // Filter to only include resumes without existing analysis
+      const unanalyzedResumeIds = allResumes
+        .filter(resume => !existingAnalysisMap.has(resume.id))
+        .map(resume => resume.id);
+      
+      // Limit to the requested batch size
+      const resumeIdsToProcess = unanalyzedResumeIds.slice(0, batchSize);
+      
+      console.log(`Found ${unanalyzedResumeIds.length} unanalyzed resumes, processing ${resumeIdsToProcess.length}`);
+      
+      // Send back the initial response with processing information
+      const response = {
+        message: `Found ${unanalyzedResumeIds.length} unanalyzed resumes, processing ${resumeIdsToProcess.length}`,
+        pendingCount: unanalyzedResumeIds.length,
+        processingCount: resumeIdsToProcess.length,
+        resumeIds: resumeIdsToProcess
+      };
+      
+      res.json(response);
+      
+      // Only process if startProcessing is true and there are resumes to analyze
+      if (startProcessing && resumeIdsToProcess.length > 0) {
+        console.log(`Starting batch analysis for ${resumeIdsToProcess.length} unanalyzed resumes as requested`);
+        // Process in background after sending initial response
+        processBatchAnalysis(resumeIdsToProcess, jobDescriptionId, jobDescription, requirements)
+          .catch(error => {
+            console.error("Fatal error in batch analysis:", error);
+          });
+      } else if (!startProcessing) {
+        console.log("Batch analysis not requested (startProcessing=false), skipping batch analysis");
+      } else {
+        console.log("No new resumes to process, skipping batch analysis");
+      }
     } catch (error) {
-      console.error("Error processing batch of unprocessed analysis results:", error);
-      res.status(500).json({ message: "Error processing batch of unprocessed analysis results", error: error instanceof Error ? error.message : "Unknown error" });
+      console.error("Error processing batch of unanalyzed resumes:", error);
+      if (!res.headersSent) {
+        res.status(500).json({ 
+          message: "Error processing batch of unanalyzed resumes", 
+          error: error instanceof Error ? error.message : "Unknown error" 
+        });
+      }
     }
   });
 
