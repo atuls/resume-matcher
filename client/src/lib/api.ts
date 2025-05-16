@@ -268,12 +268,21 @@ export async function getResumeRedFlagAnalysis(resumeId: string, jobDescriptionI
   jobDescriptionId: string | null;
   analysis: RedFlagAnalysis;
 }> {
+  // Add timestamp to prevent browser caching
+  const timestamp = Date.now();
+  
   const url = jobDescriptionId 
-    ? `/api/resumes/${resumeId}/red-flag-analysis?jobDescriptionId=${encodeURIComponent(jobDescriptionId)}`
-    : `/api/resumes/${resumeId}/red-flag-analysis`;
+    ? `/api/resumes/${resumeId}/red-flag-analysis?jobDescriptionId=${encodeURIComponent(jobDescriptionId)}&_t=${timestamp}`
+    : `/api/resumes/${resumeId}/red-flag-analysis?_t=${timestamp}`;
     
   const response = await fetch(url, {
     credentials: "include",
+    // Add cache control headers to prevent caching
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    }
   });
   
   if (!response.ok) {
