@@ -46,8 +46,11 @@ import {
   insertCandidateJobConnectionSchema,
   JobDescription,
   JobRequirement,
-  Resume
+  Resume,
+  analysisResults
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, desc } from "drizzle-orm";
 
 // Configure multer for memory storage of uploaded files
 const upload = multer({
@@ -461,30 +464,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get red flag analysis for a resume
+  // Get red flag analysis for a resume - directly from the database
   app.get("/api/resumes/:id/red-flag-analysis", async (req: Request, res: Response) => {
     // Disable caching for this endpoint to ensure we always get fresh data
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
     
+    const resumeId = req.params.id;
+    const jobDescriptionId = req.query.jobDescriptionId?.toString() || null;
+    
+    console.log(`Getting red flag analysis for resume ${resumeId} with job ${jobDescriptionId || 'none'}`);
+    
     try {
-      const resume = await storage.getResume(req.params.id);
+      // Fetch the resume to verify it exists
+      const resume = await storage.getResume(resumeId);
       if (!resume) {
         return res.status(404).json({ message: "Resume not found" });
       }
       
-      // Check if we already have an analysis result that we can extract data from
-      let hasRelevantAnalysis = false;
-      let allRequirements: string[] = [];
-      let majorRedFlags: RedFlagAnalysis[] = [];
+      // Query the database directly for the most recent analysis result
+      let analysisQuery;
+      if (jobDescriptionId) {
+        // Get analysis for specific job description
+        analysisQuery = await db
+          .select()
+          .from(analysisResults)
+          .where(and(
+            eq(analysisResults.resumeId, resumeId),
+            eq(analysisResults.jobDescriptionId, jobDescriptionId)
+          ))
+          .orderBy(desc(analysisResults.createdAt))
+          .limit(1);
+      } else {
+        // Get most recent analysis for this resume
+        analysisQuery = await db
+          .select()
+          .from(analysisResults)
+          .where(eq(analysisResults.resumeId, resumeId))
+          .orderBy(desc(analysisResults.createdAt))
+          .limit(1);
+      }
       
-      // Try to get any analysis results for this resume
-      const allAnalysisResults = await storage.getAnalysisResultsByResume(resume.id);
+      console.log(`Found ${analysisQuery.length} analysis result(s) in database for resume ${resumeId}`);
       
-      if (allAnalysisResults && allAnalysisResults.length > 0) {
-        // Use the most recent analysis result
-        const latestAnalysis = allAnalysisResults[0];
+      // Set default values
+      let currentJobPosition = null;
+      let currentCompany = null;
+      let isCurrentlyEmployed = false;
+      let redFlags: string[] = [];
+      let highlights: string[] = [];
+      let recentRoles: Array<{ title: string; company: string; durationMonths: number; isContract: boolean }> = [];
+      let averageTenureMonths = 0;
+      
+      if (analysisQuery.length > 0) {
+        // Use the most recent analysis result directly from the database
+        const latestAnalysis = analysisQuery[0];
         
         let rawData = null;
         try {
@@ -532,7 +567,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get the job description ID from the query, if any
       const jobDescriptionId = req.query.jobDescriptionId?.toString() || null;
       
-      // Search for relevant analysis data
+      // Default values for when no analysis is found
       let currentJobPosition = null;
       let currentCompany = null;
       let isCurrentlyEmployed = false;
@@ -541,22 +576,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let recentRoles: Array<{ title: string; company: string; durationMonths: number; isContract: boolean }> = [];
       let averageTenureMonths = 0;
       
-      // If we have analysis results, try to extract structured data
-      if (allAnalysisResults && allAnalysisResults.length > 0) {
-        // Get the latest analysis that matches the requested job description
-        let targetAnalysis = null;
+      // Query the database directly for analysis results based on the resume ID and optionally job ID
+      const analysisQuery = jobDescriptionId
+        ? await db
+            .select()
+            .from(analysisResults)
+            .where(and(
+              eq(analysisResults.resumeId, req.params.id),
+              eq(analysisResults.jobDescriptionId, jobDescriptionId)
+            ))
+            .orderBy(desc(analysisResults.createdAt))
+            .limit(1)
+        : await db
+            .select()
+            .from(analysisResults)
+            .where(eq(analysisResults.resumeId, req.params.id))
+            .orderBy(desc(analysisResults.createdAt))
+            .limit(1);
+      
+      // Log the found result for debugging
+      console.log(`Found ${analysisQuery.length} analysis results for resume ${req.params.id} with job ${jobDescriptionId || 'none'}`);
+      
+      if (analysisQuery.length > 0) {
+        const targetAnalysis = analysisQuery[0];
         
-        if (jobDescriptionId) {
-          // First try to find an analysis for the specific job description
-          targetAnalysis = allAnalysisResults.find(a => a.jobDescriptionId === jobDescriptionId);
-        }
-        
-        // If no matching analysis found or no job specified, use the latest one
-        if (!targetAnalysis) {
-          targetAnalysis = allAnalysisResults[0];
-        }
-        
-        if (targetAnalysis) {
+        // Check if the analysis has parsed fields - use those directly from the database
+        if (targetAnalysis.parsedRedFlags || targetAnalysis.parsedWorkHistory || targetAnalysis.parsedSkills) {
           try {
             // Try to extract red flags from parsed fields
             if (targetAnalysis.parsedRedFlags) {
