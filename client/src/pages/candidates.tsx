@@ -438,10 +438,6 @@ export default function CandidatesPage() {
         // Log the scores we received
         console.log(`Received ${Object.keys(processedScores).length} scores from the server`);
         setLoadingAnalysis(false);
-          
-          setResumeScores(scores);
-          
-          // Set initial random scores for all resumes that don't have scores
           // This gives immediate feedback to the user while analysis is being performed
           const initialScores = {...scores};
           let scoresInitialized = false;
