@@ -4,7 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   BarChart3, Calendar, FileText, AlertTriangle, Briefcase,
   Filter, Search, AlertCircle, Award, RotateCcw, CircleDashed,
-  ChevronRight, CircleAlert, CircleCheck, Trash2, Activity
+  ChevronRight, ChevronLeft, CircleAlert, CircleCheck, Trash2, Activity
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -407,17 +407,36 @@ export default function CandidatesPage() {
     };
   }, [selectedJobId, resumes, loadingAnalysis]);
   
-  // Load resume scores and analysis data when job is selected
+  // Use useQuery for loading job scores - this avoids the infinite loop issue
+  const {
+    data: jobScores,
+    isLoading: loadingScores
+  } = useQuery({
+    queryKey: [`/api/job-descriptions/${selectedJobId}/scores`],
+    queryFn: () => selectedJobId ? getResumeScores(null, selectedJobId, true) : Promise.resolve({}),
+    enabled: !!selectedJobId // Only run when we have a job ID
+  });
+
+  // Update scores when job score data changes
   useEffect(() => {
-    if (selectedJobId && !loadingAnalysis) {  // Added check to prevent repeated calls
+    if (jobScores && Object.keys(jobScores).length > 0) {
+      setResumeScores(jobScores);
+      console.log(`Loaded ${Object.keys(jobScores).length} scores for job ${selectedJobId}`);
+    }
+  }, [jobScores, selectedJobId]);
+  
+  // Old effect - keeping just for reference, DISABLED
+  const loadJobScoresManually = false; // Set to false to disable
+  useEffect(() => {
+    if (loadJobScoresManually && selectedJobId && !loadingAnalysis) {
       // Set loading state
       setLoadingAnalysis(true);
       
       console.log("Selected job ID:", selectedJobId);
       
-      // Use our optimized function to get only existing scores
-      getResumeScores(null, selectedJobId, true)
-        .then(processedScores => {
+      // Use our optimized function to get only existing scores - DISABLED
+      // getResumeScores(null, selectedJobId, true)
+      //  .then(processedScores => {
           // Check if we received valid scores
           if (Object.keys(processedScores).length === 0) {
             console.warn("No scores returned from API, this might indicate an issue");
