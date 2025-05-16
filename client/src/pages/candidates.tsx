@@ -160,13 +160,23 @@ export default function CandidatesPage() {
       if (selectedJobId && resumes.length > 0) {
         try {
           console.log("Fetching scores for job:", selectedJobId);
-          // Get scores only for visible resumes (current page)
-          const resumeIds = resumes.map(r => r.id);
-          const scores = await getResumeScores(
-            resumeIds, 
+          
+          // First try to get all existing scores for this job (faster approach)
+          let scores = await getResumeScores(
+            null, 
             selectedJobId,
             true // Only get existing scores
           );
+          
+          // If that doesn't return data for the current visible resumes,
+          // make a targeted request for just the current page of resumes
+          if (Object.keys(scores).length === 0) {
+            console.log("No existing scores found, fetching specific resume scores");
+            const resumeIds = resumes.map(r => r.id);
+            scores = await getResumeScores(resumeIds, selectedJobId);
+          }
+          
+          console.log(`Loaded ${Object.keys(scores).length} scores for job ${selectedJobId}`);
           setResumeScores(scores);
         } catch (error) {
           console.error("Error fetching scores:", error);
@@ -621,17 +631,17 @@ export default function CandidatesPage() {
                         <div className="h-3 w-32 bg-gray-200 animate-pulse rounded"></div>
                         <div className="h-3 w-24 bg-gray-200 animate-pulse rounded"></div>
                       </div>
-                    ) : resumeAnalysis[resume.id] && resumeAnalysis[resume.id].strengths?.length ? (
+                    ) : resumeAnalysis[resume.id] && resumeAnalysis[resume.id].highlights?.length ? (
                       <div className="space-y-1">
-                        {resumeAnalysis[resume.id].strengths.slice(0, 2).map((strength, idx) => (
+                        {resumeAnalysis[resume.id].highlights.slice(0, 2).map((highlight, idx) => (
                           <div key={idx} className="flex items-center text-sm">
                             <CheckCircle className="h-3.5 w-3.5 mr-1 text-emerald-500" />
-                            <span className="text-xs">{strength}</span>
+                            <span className="text-xs">{highlight}</span>
                           </div>
                         ))}
-                        {resumeAnalysis[resume.id].strengths.length > 2 && (
+                        {resumeAnalysis[resume.id].highlights.length > 2 && (
                           <div className="text-xs text-primary">
-                            +{resumeAnalysis[resume.id].strengths.length - 2} more
+                            +{resumeAnalysis[resume.id].highlights.length - 2} more
                           </div>
                         )}
                       </div>
