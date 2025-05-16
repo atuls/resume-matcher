@@ -46,6 +46,9 @@ export default function CandidatesPage() {
   
   // Loading state for red flag analysis
   const [loadingAnalysis, setLoadingAnalysis] = useState<boolean>(false);
+  
+  // State for raw analysis processing
+  const [processingRawAnalysis, setProcessingRawAnalysis] = useState<boolean>(false);
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const { toast } = useToast();
@@ -312,6 +315,57 @@ export default function CandidatesPage() {
     return 0;
   });
   
+  // Handler for processing raw analysis
+  const handleProcessRawAnalysis = async () => {
+    if (!selectedJobId) return;
+    
+    try {
+      setProcessingRawAnalysis(true);
+      
+      const result = await processRawAnalysisForJob(selectedJobId);
+      
+      toast({
+        title: "Processing complete",
+        description: `${result.processedCount} analyses processed successfully. ${result.skippedCount} skipped. ${result.errorCount} errors.`,
+        variant: "default"
+      });
+      
+      // Refresh the analysis data after processing
+      if (result.processedCount > 0) {
+        // Clear current analysis data
+        setResumeAnalysis({});
+        
+        // Re-fetch analysis for visible resumes
+        const visibleResumes = resumes.slice(0, Math.min(resumes.length, 20));
+        
+        // Create an array of promises to fetch analysis for each resume
+        const promises = visibleResumes.map(async (resume) => {
+          try {
+            const result = await getResumeRedFlagAnalysis(resume.id, selectedJobId);
+            setResumeAnalysis(prev => ({
+              ...prev,
+              [resume.id]: result.analysis
+            }));
+          } catch (err) {
+            console.error(`Error analyzing resume ${resume.id}:`, err);
+          }
+        });
+        
+        // Wait for all promises to resolve
+        await Promise.all(promises);
+      }
+    } catch (error) {
+      console.error("Error processing raw analysis:", error);
+      toast({
+        title: "Error processing analysis",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setProcessingRawAnalysis(false);
+    }
+  };
+
   // Handle delete confirmation
   const handleDeleteClick = (id: string) => {
     setResumeToDelete(id);
@@ -455,32 +509,56 @@ export default function CandidatesPage() {
               Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalResumes)} of {totalResumes} candidates
             </div>
             
-            {selectedJobId && (
-              <div className="flex items-center bg-white rounded-md border p-1.5 shadow-sm">
-                <span className="mr-2 font-medium">Sort by:</span>
-                <div className="flex bg-gray-100 rounded p-0.5">
-                  <button
-                    className={`px-3 py-1 rounded text-sm ${sortField !== 'score' ? 'bg-white shadow-sm' : ''}`}
-                    onClick={() => handleSort('name')}
+            <div className="flex items-center gap-2">
+              {selectedJobId && (
+                <div className="flex items-center bg-white rounded-md border p-1.5 shadow-sm">
+                  <span className="mr-2 font-medium">Sort by:</span>
+                  <div className="flex bg-gray-100 rounded p-0.5">
+                    <button
+                      className={`px-3 py-1 rounded text-sm ${sortField !== 'score' ? 'bg-white shadow-sm' : ''}`}
+                      onClick={() => handleSort('name')}
+                    >
+                      Name
+                    </button>
+                    <button
+                      className={`px-3 py-1 rounded text-sm ${sortField === 'score' ? 'bg-white shadow-sm' : ''}`}
+                      onClick={() => handleSort('score')}
+                    >
+                      Match Score
+                    </button>
+                  </div>
+                  <button 
+                    className="ml-2 p-1 rounded hover:bg-gray-100"
+                    onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+                    title={sortDirection === 'asc' ? 'Ascending' : 'Descending'}
                   >
-                    Name
-                  </button>
-                  <button
-                    className={`px-3 py-1 rounded text-sm ${sortField === 'score' ? 'bg-white shadow-sm' : ''}`}
-                    onClick={() => handleSort('score')}
-                  >
-                    Match Score
+                    {sortDirection === 'asc' ? '↑' : '↓'}
                   </button>
                 </div>
-                <button 
-                  className="ml-2 p-1 rounded hover:bg-gray-100"
-                  onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-                  title={sortDirection === 'asc' ? 'Ascending' : 'Descending'}
+              )}
+              
+              {selectedJobId && (
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center"
+                  onClick={handleProcessRawAnalysis}
+                  disabled={processingRawAnalysis}
                 >
-                  {sortDirection === 'asc' ? '↑' : '↓'}
-                </button>
-              </div>
-            )}
+                  {processingRawAnalysis ? (
+                    <>
+                      <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full mr-2"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="h-4 w-4 mr-1.5" />
+                      Analyze Raw Responses
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
           
           <div className="flex items-center gap-2">
