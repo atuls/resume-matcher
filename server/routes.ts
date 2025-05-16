@@ -464,19 +464,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get red flag analysis for a resume - directly from the database
+  // Get red flag analysis for a resume with direct database query
   app.get("/api/resumes/:id/red-flag-analysis", async (req: Request, res: Response) => {
     // Disable caching for this endpoint to ensure we always get fresh data
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
     
-    const resumeId = req.params.id;
-    const jobDescriptionId = req.query.jobDescriptionId?.toString() || null;
-    
-    console.log(`Getting red flag analysis for resume ${resumeId} with job ${jobDescriptionId || 'none'}`);
-    
     try {
+      const resumeId = req.params.id;
+      const jobDescriptionIdParam = req.query.jobDescriptionId?.toString() || null;
+      
+      console.log(`Getting red flag analysis for resume ${resumeId} with job ${jobDescriptionIdParam || 'none'}`);
+      
       // Fetch the resume to verify it exists
       const resume = await storage.getResume(resumeId);
       if (!resume) {
