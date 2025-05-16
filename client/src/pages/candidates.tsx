@@ -134,15 +134,32 @@ export default function CandidatesPage() {
       });
   };
   
-  // Fetch resumes
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalResumes, setTotalResumes] = useState(0);
+  
+  // Fetch resumes with pagination
   const {
-    data: resumes,
+    data: resumesData,
     isLoading,
     refetch: refetchResumes
   } = useQuery({
-    queryKey: ['/api/resumes'],
-    queryFn: getResumes
+    queryKey: ['/api/resumes', page, pageSize],
+    queryFn: () => getResumes(page, pageSize)
   });
+  
+  // Extract resumes and pagination info
+  const resumes = resumesData?.resumes || [];
+  
+  // Update pagination state when data changes
+  useEffect(() => {
+    if (resumesData?.pagination) {
+      setTotalPages(resumesData.pagination.totalPages);
+      setTotalResumes(resumesData.pagination.total);
+    }
+  }, [resumesData]);
   
   // Fetch job descriptions for filter
   const { data: jobDescriptions } = useQuery({
@@ -731,8 +748,8 @@ export default function CandidatesPage() {
     }
   };
 
-  // Sort resumes
-  const sortedResumes = resumes ? [...resumes].sort((a, b) => {
+  // Sort and filter resumes
+  const sortedResumes = resumes.length > 0 ? [...resumes].sort((a, b) => {
     if (sortField === 'name') {
       const aName = a.candidateName || '';
       const bName = b.candidateName || '';
