@@ -181,12 +181,30 @@ export class DatabaseStorage implements IStorage {
     return resume;
   }
   
-  async getAllResumes(): Promise<Resume[]> {
+  async getAllResumes(page = 1, pageSize = 50): Promise<{ resumes: Resume[], total: number }> {
     const { db } = await import('./db');
-    const { desc } = await import('drizzle-orm');
+    const { desc, sql } = await import('drizzle-orm');
     const { resumes } = await import('@shared/schema');
 
-    return db.select().from(resumes).orderBy(desc(resumes.createdAt));
+    // Calculate offset
+    const offset = (page - 1) * pageSize;
+    
+    // Get total count first
+    const [countResult] = await db.select({
+      count: sql`count(*)`.mapWith(Number)
+    }).from(resumes);
+    
+    const total = countResult?.count || 0;
+    
+    // Get paginated results
+    const results = await db
+      .select()
+      .from(resumes)
+      .orderBy(desc(resumes.createdAt))
+      .limit(pageSize)
+      .offset(offset);
+    
+    return { resumes: results, total };
   }
   
   async createResume(resume: InsertResume): Promise<Resume> {
