@@ -484,260 +484,166 @@ export default function CandidatesPage() {
         </div>
       ) : sortedResumes.length > 0 ? (
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th 
-                  scope="col" 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort('name')}
-                >
-                  <div className="flex items-center">
-                    Candidate
-                    {sortField === 'name' && (
-                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+          {/* Revised display layout - simpler card layout for each candidate */}
+          <div className="space-y-0">
+            {sortedResumes.map(resume => (
+              <div key={resume.id} className="p-4 border-b hover:bg-gray-50 relative">
+                <div className="flex justify-between items-start">
+                  {/* Main content - candidate info */}
+                  <div className="flex-1">
+                    <h3 className="text-lg font-medium">
+                      {resume.candidateName || 'Unnamed Candidate'}
+                    </h3>
+                    {resume.candidateTitle && (
+                      <p className="text-gray-600">{resume.candidateTitle}</p>
                     )}
-                  </div>
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  File
-                </th>
-                <th 
-                  scope="col" 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort('date')}
-                >
-                  <div className="flex items-center">
-                    Uploaded
-                    {sortField === 'date' && (
-                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </div>
-                </th>
-                <th 
-                  scope="col" 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort('score')}
-                >
-                  <div className="flex items-center">
-                    <BarChart3 className="h-4 w-4 mr-1 text-primary" />
-                    Match Score
-                    {sortField === 'score' && (
-                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </div>
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <div className="flex items-center">
-                    <Briefcase className="h-4 w-4 mr-1 text-gray-500" />
-                    Current Position
-                  </div>
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <div className="flex items-center">
-                    <Award className="h-4 w-4 mr-1 text-gray-500" />
-                    Highlights
-                  </div>
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <div className="flex items-center">
-                    <AlertCircle className="h-4 w-4 mr-1 text-gray-500" />
-                    Red Flags
-                  </div>
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {sortedResumes.map(resume => (
-                <tr key={resume.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-start">
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
-                          {resume.candidateName || 'Unnamed Candidate'}
-                        </div>
-                        {resume.candidateTitle && (
-                          <div className="text-sm text-gray-500">
-                            {resume.candidateTitle}
-                          </div>
-                        )}
-                      </div>
+                    
+                    {/* File info */}
+                    <div className="flex items-center mt-2 text-sm text-gray-500">
+                      <FileText className="h-4 w-4 mr-1.5" />
+                      <span>{resume.fileName} ({formatFileSize(resume.fileSize)})</span>
+                      <span className="mx-2">•</span>
+                      <Calendar className="h-4 w-4 mr-1.5" />
+                      <span>Uploaded {formatDate(resume.createdAt)}</span>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <FileText className="h-4 w-4 mr-2 text-gray-400" />
-                      <div className="text-sm text-gray-900">
-                        {resume.fileName}
-                        <div className="text-xs text-gray-500">
-                          {formatFileSize(resume.fileSize)}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {formatDate(resume.createdAt)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {!selectedJobId ? (
-                      <div className="text-sm text-gray-400 italic">
-                        Select a job
-                      </div>
-                    ) : loadingAnalysis ? (
-                      <div className="h-5 w-16 bg-gray-200 animate-pulse rounded"></div>
-                    ) : resumeScores[resume.id] ? (
-                      <div className="flex items-center">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex items-center">
-                                <Progress 
-                                  value={resumeScores[resume.id].score} 
-                                  className="w-16 h-2 mr-2"
-                                />
-                                <span className="text-sm font-medium">
-                                  {resumeScores[resume.id].score}%
-                                </span>
-                                <div className="text-xs text-gray-500 ml-2">
-                                  {formatDate(resumeScores[resume.id].matchedAt)}
-                                </div>
+                    
+                    {/* Score display */}
+                    {selectedJobId && (
+                      <div className="mt-3">
+                        {loadingAnalysis ? (
+                          <div className="h-5 w-32 bg-gray-200 animate-pulse rounded"></div>
+                        ) : resumeScores[resume.id] ? (
+                          <div className="flex items-center">
+                            <BarChart3 className="h-5 w-5 mr-2 text-primary" />
+                            <div>
+                              <div className="font-semibold">
+                                {resumeScores[resume.id].score}% Match
                               </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Match score: {resumeScores[resume.id].score}%</p>
-                              <p>Matched {formatDate(resumeScores[resume.id].matchedAt)}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    ) : (
-                      <div className="flex items-center text-gray-400">
-                        <CircleDashed className="h-4 w-4 mr-1" />
-                        <span className="text-sm">Not matched</span>
-                      </div>
-                    )}
-                  </td>
-                  
-                  {/* Current Position column */}
-                  <td className="px-6 py-4">
-                    {loadingAnalysis ? (
-                      <div className="h-4 w-24 bg-gray-200 animate-pulse rounded"></div>
-                    ) : resumeAnalysis[resume.id] ? (
-                      <div className="flex items-center text-sm">
-                        <Briefcase className="h-4 w-4 mr-1 text-gray-500" />
-                        <span className="font-medium">
-                          {resumeAnalysis[resume.id].currentJobPosition || 
-                           (resumeAnalysis[resume.id].isCurrentlyEmployed ? 
-                             "Employed" : "Unemployed")}
-                        </span>
-                      </div>
-                    ) : !selectedJobId ? (
-                      <div className="text-sm text-gray-400 italic">
-                        Select a job
-                      </div>
-                    ) : (
-                      <div className="flex items-center text-gray-400">
-                        <CircleDashed className="h-4 w-4 mr-1" />
-                        <span className="text-sm">Not analyzed</span>
-                      </div>
-                    )}
-                  </td>
-                  
-                  {/* Highlights column */}
-                  <td className="px-6 py-4">
-                    {loadingAnalysis ? (
-                      <div className="space-y-1">
-                        <div className="h-3 w-32 bg-gray-200 animate-pulse rounded"></div>
-                        <div className="h-3 w-24 bg-gray-200 animate-pulse rounded"></div>
-                      </div>
-                    ) : resumeAnalysis[resume.id] && resumeAnalysis[resume.id].highlights?.length ? (
-                      <div className="space-y-1">
-                        {resumeAnalysis[resume.id].highlights.slice(0, 2).map((highlight, idx) => (
-                          <div key={idx} className="flex items-center text-sm">
-                            <CheckCircle className="h-3.5 w-3.5 mr-1 text-emerald-500" />
-                            <span className="text-xs">{highlight}</span>
+                              <div className="text-xs text-gray-500">
+                                Matched {formatDate(resumeScores[resume.id].matchedAt)}
+                              </div>
+                            </div>
+                            <Progress 
+                              value={resumeScores[resume.id].score} 
+                              className="w-24 h-2 ml-3"
+                            />
                           </div>
-                        ))}
-                        {resumeAnalysis[resume.id].highlights.length > 2 && (
-                          <div className="text-xs text-primary">
-                            +{resumeAnalysis[resume.id].highlights.length - 2} more
+                        ) : (
+                          <div className="flex items-center text-gray-400">
+                            <CircleDashed className="h-5 w-5 mr-2" />
+                            <span>Not matched</span>
                           </div>
                         )}
                       </div>
-                    ) : !selectedJobId ? (
-                      <div className="text-sm text-gray-400 italic">
-                        Select a job
-                      </div>
-                    ) : (
-                      <div className="flex items-center text-gray-400">
-                        <CircleDashed className="h-4 w-4 mr-1" />
-                        <span className="text-sm">None identified</span>
+                    )}
+                    
+                    {/* Current Position + Highlights & Red Flags */}
+                    {selectedJobId && (
+                      <div className="grid grid-cols-3 gap-4 mt-4">
+                        {/* Current Position */}
+                        <div>
+                          <div className="text-sm font-medium mb-1 flex items-center">
+                            <Briefcase className="h-4 w-4 mr-1 text-gray-500" />
+                            Current Position
+                          </div>
+                          {loadingAnalysis ? (
+                            <div className="h-4 w-24 bg-gray-200 animate-pulse rounded"></div>
+                          ) : resumeAnalysis[resume.id] ? (
+                            <div className="text-sm">
+                              {resumeAnalysis[resume.id].currentJobPosition || 
+                               (resumeAnalysis[resume.id].isCurrentlyEmployed ? 
+                                 "Employed" : "Unemployed")}
+                            </div>
+                          ) : (
+                            <div className="text-sm text-gray-400">Not analyzed</div>
+                          )}
+                        </div>
+                        
+                        {/* Highlights */}
+                        <div>
+                          <div className="text-sm font-medium mb-1 flex items-center">
+                            <Award className="h-4 w-4 mr-1 text-gray-500" />
+                            Highlights
+                          </div>
+                          {loadingAnalysis ? (
+                            <div>
+                              <div className="h-3 w-32 bg-gray-200 animate-pulse rounded mb-1"></div>
+                              <div className="h-3 w-24 bg-gray-200 animate-pulse rounded"></div>
+                            </div>
+                          ) : resumeAnalysis[resume.id] && resumeAnalysis[resume.id].highlights?.length ? (
+                            <div className="space-y-1">
+                              {resumeAnalysis[resume.id].highlights.slice(0, 2).map((highlight, idx) => (
+                                <div key={idx} className="text-sm flex items-center">
+                                  <CheckCircle className="h-3.5 w-3.5 mr-1 text-emerald-500 flex-shrink-0" />
+                                  <span className="text-xs line-clamp-1">{highlight}</span>
+                                </div>
+                              ))}
+                              {resumeAnalysis[resume.id].highlights.length > 2 && (
+                                <div className="text-xs text-primary">
+                                  +{resumeAnalysis[resume.id].highlights.length - 2} more
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="text-sm text-gray-400">None identified</div>
+                          )}
+                        </div>
+                        
+                        {/* Red Flags */}
+                        <div>
+                          <div className="text-sm font-medium mb-1 flex items-center">
+                            <AlertCircle className="h-4 w-4 mr-1 text-gray-500" />
+                            Red Flags
+                          </div>
+                          {loadingAnalysis ? (
+                            <div>
+                              <div className="h-3 w-32 bg-gray-200 animate-pulse rounded mb-1"></div>
+                              <div className="h-3 w-24 bg-gray-200 animate-pulse rounded"></div>
+                            </div>
+                          ) : resumeAnalysis[resume.id] && resumeAnalysis[resume.id].redFlags?.length ? (
+                            <div className="space-y-1">
+                              {resumeAnalysis[resume.id].redFlags.slice(0, 2).map((flag, idx) => (
+                                <div key={idx} className="text-sm flex items-center">
+                                  <XCircle className="h-3.5 w-3.5 mr-1 text-red-500 flex-shrink-0" />
+                                  <span className="text-xs line-clamp-1">{flag}</span>
+                                </div>
+                              ))}
+                              {resumeAnalysis[resume.id].redFlags.length > 2 && (
+                                <div className="text-xs text-primary">
+                                  +{resumeAnalysis[resume.id].redFlags.length - 2} more
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="text-sm text-gray-400">None identified</div>
+                          )}
+                        </div>
                       </div>
                     )}
-                  </td>
+                  </div>
                   
-                  {/* Red Flags column */}
-                  <td className="px-6 py-4">
-                    {loadingAnalysis ? (
-                      <div className="space-y-1">
-                        <div className="h-3 w-32 bg-gray-200 animate-pulse rounded"></div>
-                        <div className="h-3 w-24 bg-gray-200 animate-pulse rounded"></div>
-                      </div>
-                    ) : resumeAnalysis[resume.id] && resumeAnalysis[resume.id].redFlags?.length ? (
-                      <div className="space-y-1">
-                        {resumeAnalysis[resume.id].redFlags.slice(0, 2).map((flag, idx) => (
-                          <div key={idx} className="flex items-center text-sm">
-                            <XCircle className="h-3.5 w-3.5 mr-1 text-red-500" />
-                            <span className="text-xs">{flag}</span>
-                          </div>
-                        ))}
-                        {resumeAnalysis[resume.id].redFlags.length > 2 && (
-                          <div className="text-xs text-primary">
-                            +{resumeAnalysis[resume.id].redFlags.length - 2} more
-                          </div>
-                        )}
-                      </div>
-                    ) : !selectedJobId ? (
-                      <div className="text-sm text-gray-400 italic">
-                        Select a job
-                      </div>
-                    ) : (
-                      <div className="flex items-center text-gray-400">
-                        <CircleDashed className="h-4 w-4 mr-1" />
-                        <span className="text-sm">None identified</span>
-                      </div>
-                    )}
-                  </td>
-                  
-                  {/* Actions column */}
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setLocation(`/resumes/${resume.id}`)}
-                      >
-                        <Activity className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteClick(resume.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  {/* Actions */}
+                  <div className="flex space-x-2 ml-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setLocation(`/resumes/${resume.id}`)}
+                    >
+                      <Activity className="h-4 w-4 mr-1" />
+                      View
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteClick(resume.id)}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="text-center py-12 bg-white rounded-lg shadow-sm">
