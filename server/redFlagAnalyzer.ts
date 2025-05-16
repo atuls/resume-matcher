@@ -5,11 +5,11 @@ import { analysisResults } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 
 /**
- * Handler function for the red flag analysis endpoint
- * This extracts resume red flags, highlights, and work history information
+ * Handles the red flag analysis endpoint
+ * This avoids the duplicate variable declaration issues in the main routes.ts file
  */
 export async function handleRedFlagAnalysis(req: Request, res: Response) {
-  // Add cache control headers to prevent browser caching
+  // Add cache control headers
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
@@ -20,13 +20,13 @@ export async function handleRedFlagAnalysis(req: Request, res: Response) {
     
     console.log(`Getting red flag analysis for resume ${resumeId} with job ${jobId || 'none'}`);
     
-    // Fetch the resume to verify it exists
+    // Fetch the resume
     const resume = await storage.getResume(resumeId);
     if (!resume) {
       return res.status(404).json({ message: "Resume not found" });
     }
     
-    // Create an analysis data object to hold all our results
+    // Create an object to hold analysis data
     const analysisData = {
       currentJobPosition: null as string | null,
       currentCompany: null as string | null,
@@ -53,28 +53,13 @@ export async function handleRedFlagAnalysis(req: Request, res: Response) {
           .orderBy(desc(analysisResults.createdAt))
           .limit(1);
     
-    console.log(`Found ${analysisQuery.length} analysis results for resume ${resumeId} with job ${jobId || 'none'}`);
+    console.log(`Found ${analysisQuery.length} analysis results for resume ${resumeId}`);
     
     if (analysisQuery.length > 0) {
-      // Use the most recent analysis result directly from the database
+      // Process the latest analysis
       const latestAnalysis = analysisQuery[0];
       
-      // Try to extract data from raw response if available
-      let rawData = null;
-      try {
-        if (latestAnalysis.rawResponse) {
-          // Handle both cases: when it's already an object or when it's a JSON string
-          if (typeof latestAnalysis.rawResponse === 'object') {
-            rawData = latestAnalysis.rawResponse;
-          } else {
-            rawData = JSON.parse(latestAnalysis.rawResponse);
-          }
-        }
-      } catch (e) {
-        console.error("Error parsing raw response:", e);
-      }
-      
-      // Extract data from parsed fields
+      // Extract red flags
       if (latestAnalysis.parsedRedFlags) {
         try {
           const parsedRedFlags = typeof latestAnalysis.parsedRedFlags === 'string'
@@ -89,6 +74,7 @@ export async function handleRedFlagAnalysis(req: Request, res: Response) {
         }
       }
       
+      // Extract work history
       if (latestAnalysis.parsedWorkHistory) {
         try {
           const parsedWorkHistory = typeof latestAnalysis.parsedWorkHistory === 'string'
@@ -117,6 +103,7 @@ export async function handleRedFlagAnalysis(req: Request, res: Response) {
         }
       }
       
+      // Extract skills
       if (latestAnalysis.parsedSkills) {
         try {
           const parsedSkills = typeof latestAnalysis.parsedSkills === 'string'
@@ -125,9 +112,9 @@ export async function handleRedFlagAnalysis(req: Request, res: Response) {
           
           if (Array.isArray(parsedSkills)) {
             analysisData.highlights = parsedSkills;
-          } else if (parsedSkills && Array.isArray(parsedSkills.highlights)) {
+          } else if (parsedSkills && parsedSkills.highlights) {
             analysisData.highlights = parsedSkills.highlights;
-          } else if (parsedSkills && Array.isArray(parsedSkills.keySkills)) {
+          } else if (parsedSkills && parsedSkills.keySkills) {
             analysisData.highlights = parsedSkills.keySkills;
           }
         } catch (e) {
@@ -135,34 +122,42 @@ export async function handleRedFlagAnalysis(req: Request, res: Response) {
         }
       }
       
-      // Fallback to raw data if parsed fields don't have what we need
-      if (rawData) {
-        // Extract red flags if missing
-        if (analysisData.redFlags.length === 0 && Array.isArray(rawData.redFlags)) {
-          analysisData.redFlags = rawData.redFlags;
-        }
-        
-        // Extract highlights if missing
-        if (analysisData.highlights.length === 0) {
-          if (Array.isArray(rawData.highlights)) {
-            analysisData.highlights = rawData.highlights;
-          } else if (rawData.keySkills && Array.isArray(rawData.keySkills)) {
-            analysisData.highlights = rawData.keySkills;
+      // Try to extract from raw response if no data from parsed fields
+      if (latestAnalysis.rawResponse) {
+        try {
+          let rawData = typeof latestAnalysis.rawResponse === 'string'
+            ? JSON.parse(latestAnalysis.rawResponse)
+            : latestAnalysis.rawResponse;
+          
+          // Extract red flags if missing
+          if (analysisData.redFlags.length === 0 && Array.isArray(rawData.redFlags)) {
+            analysisData.redFlags = rawData.redFlags;
           }
-        }
-        
-        // Extract current job position if missing
-        if (!analysisData.currentJobPosition) {
-          if (rawData.currentJobPosition) {
-            analysisData.currentJobPosition = rawData.currentJobPosition;
-          } else if (rawData.currentPosition) {
-            analysisData.currentJobPosition = rawData.currentPosition;
+          
+          // Extract highlights if missing
+          if (analysisData.highlights.length === 0) {
+            if (Array.isArray(rawData.highlights)) {
+              analysisData.highlights = rawData.highlights;
+            } else if (rawData.keySkills && Array.isArray(rawData.keySkills)) {
+              analysisData.highlights = rawData.keySkills;
+            }
           }
-        }
-        
-        // Extract current company if missing
-        if (!analysisData.currentCompany && rawData.currentCompany) {
-          analysisData.currentCompany = rawData.currentCompany;
+          
+          // Extract current job position if missing
+          if (!analysisData.currentJobPosition) {
+            if (rawData.currentJobPosition) {
+              analysisData.currentJobPosition = rawData.currentJobPosition;
+            } else if (rawData.currentPosition) {
+              analysisData.currentJobPosition = rawData.currentPosition;
+            }
+          }
+          
+          // Extract current company if missing
+          if (!analysisData.currentCompany && rawData.currentCompany) {
+            analysisData.currentCompany = rawData.currentCompany;
+          }
+        } catch (e) {
+          console.error("Error processing raw response:", e);
         }
       }
     }
@@ -174,7 +169,7 @@ export async function handleRedFlagAnalysis(req: Request, res: Response) {
       analysis: analysisData
     });
   } catch (error) {
-    console.error("Error getting red flag analysis:", error);
-    return res.status(500).json({ message: "Failed to get red flag analysis", error: error.message });
+    console.error("Error in red flag analysis:", error);
+    return res.status(500).json({ message: "Error processing red flag analysis", error: String(error) });
   }
 }
