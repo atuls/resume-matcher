@@ -466,31 +466,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Get red flag analysis for a resume from the database
   app.get("/api/resumes/:id/red-flag-analysis", async (req: Request, res: Response) => {
-    // Disable caching for this endpoint to ensure we always get fresh data
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    
-    try {
-      const resumeId = req.params.id;
-      const jobId = req.query.jobDescriptionId?.toString() || null;
-      
-      console.log(`Getting red flag analysis for resume ${resumeId} with job ${jobId || 'none'}`);
-      
-      // Fetch the resume to verify it exists
-      const resume = await storage.getResume(resumeId);
-      if (!resume) {
-        return res.status(404).json({ message: "Resume not found" });
-      }
-      
-      // Set default values
-      let currentJobPosition = null;
-      let currentCompany = null;
-      let isCurrentlyEmployed = false;
-      let redFlags: string[] = [];
-      let highlights: string[] = [];
-      let recentRoles: Array<{ title: string; company: string; durationMonths: number; isContract: boolean }> = [];
-      let averageTenureMonths = 0;
+    // Use the separate service to handle red flag analysis
+    const { handleRedFlagAnalysis } = await import('./redFlagAnalysisService');
+    return handleRedFlagAnalysis(req, res);
       
       if (analysisQuery.length > 0) {
         // Use the most recent analysis result directly from the database

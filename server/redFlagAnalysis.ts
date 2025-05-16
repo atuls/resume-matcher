@@ -1,236 +1,182 @@
-// Import required modules
 import { Request, Response } from "express";
 import { storage } from "./storage";
 import { db } from "./db";
 import { analysisResults } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { analyzeRedFlags } from "./services/skillsExtractor";
 
 /**
- * Handler function for the resume red flag analysis endpoint
+ * Handler function for processing resume red flag analysis
  */
 export async function handleRedFlagAnalysis(req: Request, res: Response) {
-  // Disable caching for this endpoint to ensure we always get fresh data
+  // Disable caching for this endpoint
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
   
   try {
     const resumeId = req.params.id;
-    const jobId = req.query.jobDescriptionId?.toString() || null;
+    const jobDescriptionId = req.query.jobDescriptionId?.toString() || null;
     
-    console.log(`Getting red flag analysis for resume ${resumeId} with job ${jobId || 'none'}`);
+    console.log(`Getting red flag analysis for resume ${resumeId} with job ${jobDescriptionId || 'none'}`);
     
-    // Fetch the resume to verify it exists
+    // Fetch the resume
     const resume = await storage.getResume(resumeId);
     if (!resume) {
       return res.status(404).json({ message: "Resume not found" });
     }
     
-    // Default values for when no analysis is found
-    let currentJobPosition = null;
-    let currentCompany = null;
-    let isCurrentlyEmployed = false;
-    let redFlags: string[] = [];
-    let highlights: string[] = [];
-    let recentRoles: Array<{ title: string; company: string; durationMonths: number; isContract: boolean }> = [];
-    let averageTenureMonths = 0;
+    // Create data container for analysis results
+    const analysisData = {
+      currentJobPosition: null as string | null,
+      currentCompany: null as string | null,
+      isCurrentlyEmployed: false,
+      redFlags: [] as string[],
+      highlights: [] as string[],
+      recentRoles: [] as Array<{ title: string; company: string; durationMonths: number; isContract: boolean }>,
+      averageTenureMonths: 0
+    };
     
-    // Query the database directly for analysis results based on the resume ID and job ID
-    const query = jobId 
-      ? await db
-          .select()
+    // Query the database for analysis results
+    const analysisQuery = jobDescriptionId 
+      ? await db.select()
           .from(analysisResults)
           .where(and(
             eq(analysisResults.resumeId, resumeId),
-            eq(analysisResults.jobDescriptionId, jobId)
+            eq(analysisResults.jobDescriptionId, jobDescriptionId)
           ))
           .orderBy(desc(analysisResults.createdAt))
           .limit(1)
-      : await db
-          .select()
+      : await db.select()
           .from(analysisResults)
           .where(eq(analysisResults.resumeId, resumeId))
           .orderBy(desc(analysisResults.createdAt))
           .limit(1);
     
-    console.log(`Found ${query.length} analysis result(s) in database for resume ${resumeId}`);
+    console.log(`Found ${analysisQuery.length} analysis results for resume ${resumeId}`);
     
-    // If we found analysis results, extract the data
-    if (query.length > 0) {
-      const analysis = query[0];
-      console.log(`Analysis ID: ${analysis.id}, created at ${analysis.createdAt}`);
+    if (analysisQuery.length > 0) {
+      // Use the most recent analysis result
+      const analysis = analysisQuery[0];
       
-      // Try to get data from parsed fields
-      if (analysis.parsedRedFlags || analysis.parsedWorkHistory || analysis.parsedSkills) {
-        console.log("Using parsed fields from database");
-        
-        // Extract red flags
-        if (analysis.parsedRedFlags) {
-          try {
-            const parsedRedFlags = typeof analysis.parsedRedFlags === 'string'
-              ? JSON.parse(analysis.parsedRedFlags)
-              : analysis.parsedRedFlags;
+      // Try to parse red flags from the analysis
+      if (analysis.parsedRedFlags) {
+        try {
+          const parsedFlags = typeof analysis.parsedRedFlags === 'string'
+            ? JSON.parse(analysis.parsedRedFlags)
+            : analysis.parsedRedFlags;
             
-            if (Array.isArray(parsedRedFlags)) {
-              redFlags = parsedRedFlags;
-            } else if (typeof parsedRedFlags === 'object' && parsedRedFlags !== null) {
-              redFlags = Object.values(parsedRedFlags).filter(item => typeof item === 'string');
-            }
-            console.log(`Extracted ${redFlags.length} red flags from parsed fields`);
-          } catch (e) {
-            console.error("Error parsing red flags:", e);
+          if (Array.isArray(parsedFlags)) {
+            analysisData.redFlags = parsedFlags;
           }
-        }
-        
-        // Extract work history
-        if (analysis.parsedWorkHistory) {
-          try {
-            const parsedWorkHistory = typeof analysis.parsedWorkHistory === 'string'
-              ? JSON.parse(analysis.parsedWorkHistory)
-              : analysis.parsedWorkHistory;
-            
-            if (typeof parsedWorkHistory === 'object' && parsedWorkHistory !== null) {
-              // Extract recent roles
-              if (Array.isArray(parsedWorkHistory.recentRoles)) {
-                recentRoles = parsedWorkHistory.recentRoles;
-              }
-              
-              // Extract current position
-              if (parsedWorkHistory.currentJobPosition) {
-                currentJobPosition = parsedWorkHistory.currentJobPosition;
-              } else if (parsedWorkHistory.currentPosition) {
-                currentJobPosition = parsedWorkHistory.currentPosition;
-              }
-              
-              // Extract current company
-              if (parsedWorkHistory.currentCompany) {
-                currentCompany = parsedWorkHistory.currentCompany;
-              }
-              
-              // Extract employment status
-              if (typeof parsedWorkHistory.isCurrentlyEmployed === 'boolean') {
-                isCurrentlyEmployed = parsedWorkHistory.isCurrentlyEmployed;
-              }
-              
-              // Extract average tenure
-              if (typeof parsedWorkHistory.averageTenureMonths === 'number') {
-                averageTenureMonths = parsedWorkHistory.averageTenureMonths;
-              }
-            }
-          } catch (e) {
-            console.error("Error parsing work history:", e);
-          }
-        }
-        
-        // Extract highlights/skills
-        if (analysis.parsedSkills) {
-          try {
-            const parsedSkills = typeof analysis.parsedSkills === 'string'
-              ? JSON.parse(analysis.parsedSkills)
-              : analysis.parsedSkills;
-            
-            if (typeof parsedSkills === 'object' && parsedSkills !== null) {
-              if (Array.isArray(parsedSkills.highlights)) {
-                highlights = parsedSkills.highlights;
-              } else if (Array.isArray(parsedSkills.keySkills)) {
-                highlights = parsedSkills.keySkills;
-              } else if (Array.isArray(parsedSkills.skills)) {
-                highlights = parsedSkills.skills;
-              } else if (Array.isArray(parsedSkills)) {
-                highlights = parsedSkills;
-              }
-            }
-            console.log(`Extracted ${highlights.length} highlights from parsed fields`);
-          } catch (e) {
-            console.error("Error parsing skills:", e);
-          }
+        } catch (error) {
+          console.error("Error parsing red flags:", error);
         }
       }
       
-      // If we're missing data, try the raw response as backup
-      if ((!redFlags.length || !highlights.length || !currentJobPosition) && analysis.rawResponse) {
-        console.log("Using raw response as backup");
+      // Try to parse skills from the analysis
+      if (analysis.parsedSkills) {
         try {
-          const parsedResponse = typeof analysis.rawResponse === 'string'
+          const parsedSkills = typeof analysis.parsedSkills === 'string'
+            ? JSON.parse(analysis.parsedSkills)
+            : analysis.parsedSkills;
+            
+          if (Array.isArray(parsedSkills)) {
+            analysisData.highlights = parsedSkills;
+          } else if (parsedSkills && parsedSkills.highlights) {
+            analysisData.highlights = parsedSkills.highlights;
+          } else if (parsedSkills && parsedSkills.keySkills) {
+            analysisData.highlights = parsedSkills.keySkills;
+          }
+        } catch (error) {
+          console.error("Error parsing skills:", error);
+        }
+      }
+      
+      // Try to parse work history from the analysis
+      if (analysis.parsedWorkHistory) {
+        try {
+          const parsedWorkHistory = typeof analysis.parsedWorkHistory === 'string'
+            ? JSON.parse(analysis.parsedWorkHistory)
+            : analysis.parsedWorkHistory;
+            
+          if (parsedWorkHistory) {
+            if (parsedWorkHistory.currentJobPosition) {
+              analysisData.currentJobPosition = parsedWorkHistory.currentJobPosition;
+            }
+            if (parsedWorkHistory.currentCompany) {
+              analysisData.currentCompany = parsedWorkHistory.currentCompany;
+            }
+            if (parsedWorkHistory.isCurrentlyEmployed !== undefined) {
+              analysisData.isCurrentlyEmployed = parsedWorkHistory.isCurrentlyEmployed;
+            }
+            if (Array.isArray(parsedWorkHistory.recentRoles)) {
+              analysisData.recentRoles = parsedWorkHistory.recentRoles;
+            }
+            if (parsedWorkHistory.averageTenureMonths) {
+              analysisData.averageTenureMonths = parsedWorkHistory.averageTenureMonths;
+            }
+          }
+        } catch (error) {
+          console.error("Error parsing work history:", error);
+        }
+      }
+      
+      // If we don't have data from parsed fields, try to extract from raw response
+      if ((!analysisData.redFlags.length || !analysisData.highlights.length) && analysis.rawResponse) {
+        try {
+          const rawData = typeof analysis.rawResponse === 'string'
             ? JSON.parse(analysis.rawResponse)
             : analysis.rawResponse;
-          
-          if (typeof parsedResponse === 'object' && parsedResponse !== null) {
-            // Extract missing redFlags
-            if (!redFlags.length) {
-              if (Array.isArray(parsedResponse.redFlags)) {
-                redFlags = parsedResponse.redFlags;
-              } else if (parsedResponse.analysis && Array.isArray(parsedResponse.analysis.redFlags)) {
-                redFlags = parsedResponse.analysis.redFlags;
+            
+          if (rawData) {
+            // Extract red flags if missing
+            if (!analysisData.redFlags.length) {
+              if (Array.isArray(rawData.redFlags)) {
+                analysisData.redFlags = rawData.redFlags;
+              } else if (rawData.analysis && Array.isArray(rawData.analysis.redFlags)) {
+                analysisData.redFlags = rawData.analysis.redFlags;
               }
             }
             
-            // Extract missing highlights
-            if (!highlights.length) {
-              if (Array.isArray(parsedResponse.highlights)) {
-                highlights = parsedResponse.highlights;
-              } else if (parsedResponse.analysis && Array.isArray(parsedResponse.analysis.highlights)) {
-                highlights = parsedResponse.analysis.highlights;
-              } else if (parsedResponse.keySkills && Array.isArray(parsedResponse.keySkills)) {
-                highlights = parsedResponse.keySkills;
+            // Extract highlights if missing
+            if (!analysisData.highlights.length) {
+              if (Array.isArray(rawData.highlights)) {
+                analysisData.highlights = rawData.highlights;
+              } else if (rawData.analysis && Array.isArray(rawData.analysis.highlights)) {
+                analysisData.highlights = rawData.analysis.highlights;
+              } else if (rawData.keySkills && Array.isArray(rawData.keySkills)) {
+                analysisData.highlights = rawData.keySkills;
               }
             }
             
-            // Extract missing current job
-            if (!currentJobPosition) {
-              if (parsedResponse.currentJobPosition) {
-                currentJobPosition = parsedResponse.currentJobPosition;
-              } else if (parsedResponse.currentPosition) {
-                currentJobPosition = parsedResponse.currentPosition;
+            // Extract current job position if missing
+            if (!analysisData.currentJobPosition) {
+              if (rawData.currentJobPosition) {
+                analysisData.currentJobPosition = rawData.currentJobPosition;
+              } else if (rawData.currentPosition) {
+                analysisData.currentJobPosition = rawData.currentPosition;
               }
             }
             
-            // Extract missing company
-            if (!currentCompany && parsedResponse.currentCompany) {
-              currentCompany = parsedResponse.currentCompany;
+            // Extract current company if missing
+            if (!analysisData.currentCompany && rawData.currentCompany) {
+              analysisData.currentCompany = rawData.currentCompany;
             }
           }
-        } catch (e) {
-          console.error("Error extracting from raw response:", e);
-        }
-      }
-    } else {
-      console.log("No existing analysis found for this resume/job combination");
-      
-      // If we have a job ID but no analysis, try to perform a quick analysis
-      if (jobId) {
-        try {
-          // Get the job description
-          const jobDescription = await storage.getJobDescription(jobId);
-          if (jobDescription) {
-            // Analyze resume for red flags
-            const analysis = await analyzeRedFlags(resume.extractedText, jobDescription.description);
-            redFlags = analysis.redFlags;
-            highlights = analysis.highlights || [];
-          }
-        } catch (e) {
-          console.error("Error analyzing resume for red flags:", e);
+        } catch (error) {
+          console.error("Error extracting data from raw response:", error);
         }
       }
     }
     
-    // Return the analysis data we found, or default empty values
+    // Return the analysis data
     return res.status(200).json({
-      resumeId: resumeId,
-      jobDescriptionId: jobId,
-      analysis: {
-        currentJobPosition,
-        currentCompany,
-        isCurrentlyEmployed,
-        redFlags,
-        highlights,
-        recentRoles,
-        averageTenureMonths
-      }
+      resumeId,
+      jobDescriptionId,
+      analysis: analysisData
     });
   } catch (error) {
-    console.error("Error getting red flag analysis:", error);
-    return res.status(500).json({ message: "Failed to get red flag analysis", error: error.message });
+    console.error("Error in red flag analysis:", error);
+    return res.status(500).json({ message: "Error processing red flag analysis" });
   }
 }
