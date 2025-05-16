@@ -168,6 +168,13 @@ export default function CandidatesPage() {
             true // Only get existing scores
           );
           
+          // Debug the scores received
+          console.log("Scores for current set of resumes:", scores);
+          console.log("Sample score for debugging:", 
+            Object.keys(scores).length > 0 ? 
+            scores[Object.keys(scores)[0]] : 
+            "No scores found");
+          
           // If that doesn't return data for the current visible resumes,
           // make a targeted request for just the current page of resumes
           if (Object.keys(scores).length === 0) {
@@ -177,7 +184,24 @@ export default function CandidatesPage() {
           }
           
           console.log(`Loaded ${Object.keys(scores).length} scores for job ${selectedJobId}`);
-          setResumeScores(scores);
+          
+          // Ensure each score is properly formatted
+          const formattedScores: {[id: string]: {score: number, matchedAt: Date}} = {};
+          for (const [id, scoreData] of Object.entries(scores)) {
+            if (scoreData && typeof scoreData === 'object') {
+              if ('score' in scoreData) {
+                formattedScores[id] = {
+                  score: Number(scoreData.score),
+                  matchedAt: scoreData.matchedAt instanceof Date ? 
+                    scoreData.matchedAt : 
+                    new Date(scoreData.matchedAt as any)
+                };
+              }
+            }
+          }
+          
+          console.log("Formatted scores for display:", formattedScores);
+          setResumeScores(formattedScores);
         } catch (error) {
           console.error("Error fetching scores:", error);
           setResumeScores({});
