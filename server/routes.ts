@@ -485,7 +485,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Query the database directly for the most recent analysis result
       let analysisQuery;
-      if (jobDescriptionId) {
+      if (jobDescriptionIdParam) {
         // Get analysis for specific job description
         analysisQuery = await db
           .select()

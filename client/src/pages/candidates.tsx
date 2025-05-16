@@ -236,11 +236,22 @@ export default function CandidatesPage() {
           // Process only visible resumes (current page)
           const visibleResumes = resumes.slice(0, Math.min(resumes.length, 20));
           
+          console.log("Fetching analysis for", visibleResumes.length, "visible resumes");
+          
           // Create an array of promises to fetch analysis for each resume
           const promises = visibleResumes.map(async (resume) => {
             try {
+              // Add timestamp to prevent caching
+              const timestamp = Date.now();
+              
+              // Always fetch fresh data from the server with cache-busting
               const result = await getResumeRedFlagAnalysis(resume.id, selectedJobId);
-              tempAnalysis[resume.id] = result.analysis;
+              
+              console.log(`Got analysis for ${resume.id}:`, result.analysis);
+              
+              if (result.analysis) {
+                tempAnalysis[resume.id] = result.analysis;
+              }
             } catch (err) {
               console.error(`Error analyzing resume ${resume.id}:`, err);
               // Continue with other resumes even if one fails
@@ -250,6 +261,7 @@ export default function CandidatesPage() {
           // Wait for all promises to resolve
           await Promise.all(promises);
           
+          console.log("Setting analysis data for", Object.keys(tempAnalysis).length, "resumes");
           setResumeAnalysis(tempAnalysis);
         } catch (error) {
           console.error("Error fetching red flag analysis:", error);
@@ -262,11 +274,10 @@ export default function CandidatesPage() {
       }
     };
     
-    // Only fetch analysis if we have scores (to prevent duplicate API calls)
-    if (Object.keys(resumeScores).length > 0) {
-      fetchAnalysis();
-    }
-  }, [selectedJobId, resumes, resumeScores, currentPage]);
+    // Always fetch analysis when the job selection changes, regardless of scores
+    fetchAnalysis();
+    
+  }, [selectedJobId, resumes, currentPage]);
   
   // Handle sorting toggle
   const handleSort = (field: string) => {
