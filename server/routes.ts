@@ -524,51 +524,181 @@ export async function registerRoutes(app: Express): Promise<Server> {
         allRequirements = await extractSkillsFromResume(resume.extractedText);
       }
       
-      // Create simplified red flag analysis with basic information
-      const basicRedFlags = ["No recent experience found", "Potential job hopping", "Short tenure in recent positions"];
+      // Get the job description ID from the query, if any
+      const jobDescriptionId = req.query.jobDescriptionId?.toString() || null;
       
-      // Extract basic job information from the resume - just for example
-      // In a real implementation, you'd want to parse these from the text
-      const currentJobPosition = "Software Engineer";
-      const currentCompany = "Tech Company";
-      const isCurrentlyEmployed = true;
+      // Search for relevant analysis data
+      let currentJobPosition = null;
+      let currentCompany = null;
+      let isCurrentlyEmployed = false;
+      let redFlags: string[] = [];
+      let highlights: string[] = [];
+      let recentRoles: Array<{ title: string; company: string; durationMonths: number; isContract: boolean }> = [];
+      let averageTenureMonths = 0;
       
-      // Create sample recent roles data for the work history tab
-      const recentRoles = [
-        {
-          title: "Software Engineer",
-          company: "Tech Company",
-          durationMonths: 24,
-          isContract: false
-        },
-        {
-          title: "Junior Developer",
-          company: "Startup Inc",
-          durationMonths: 18,
-          isContract: false
+      // If we have analysis results, try to extract structured data
+      if (allAnalysisResults && allAnalysisResults.length > 0) {
+        // Get the latest analysis that matches the requested job description
+        let targetAnalysis = null;
+        
+        if (jobDescriptionId) {
+          // First try to find an analysis for the specific job description
+          targetAnalysis = allAnalysisResults.find(a => a.jobDescriptionId === jobDescriptionId);
         }
-      ];
+        
+        // If no matching analysis found or no job specified, use the latest one
+        if (!targetAnalysis) {
+          targetAnalysis = allAnalysisResults[0];
+        }
+        
+        if (targetAnalysis) {
+          try {
+            // Try to extract red flags from parsed fields
+            if (targetAnalysis.parsedRedFlags) {
+              try {
+                const parsedRedFlags = typeof targetAnalysis.parsedRedFlags === 'string'
+                  ? JSON.parse(targetAnalysis.parsedRedFlags)
+                  : targetAnalysis.parsedRedFlags;
+                
+                if (Array.isArray(parsedRedFlags)) {
+                  redFlags = parsedRedFlags;
+                } else if (typeof parsedRedFlags === 'object' && parsedRedFlags !== null) {
+                  // Handle case where it might be an object with red flags
+                  redFlags = Object.values(parsedRedFlags).filter(item => typeof item === 'string');
+                }
+              } catch (e) {
+                console.error("Error parsing red flags:", e);
+              }
+            }
+            
+            // Try to extract work history
+            if (targetAnalysis.parsedWorkHistory) {
+              try {
+                const parsedWorkHistory = typeof targetAnalysis.parsedWorkHistory === 'string'
+                  ? JSON.parse(targetAnalysis.parsedWorkHistory)
+                  : targetAnalysis.parsedWorkHistory;
+                
+                if (Array.isArray(parsedWorkHistory)) {
+                  recentRoles = parsedWorkHistory.map((role: any) => ({
+                    title: role.title || role.position || 'Unknown Position',
+                    company: role.company || role.employer || 'Unknown Company',
+                    durationMonths: role.durationMonths || role.duration || 0,
+                    isContract: Boolean(role.isContract || role.contract)
+                  }));
+                  
+                  // Calculate average tenure
+                  if (recentRoles.length > 0) {
+                    averageTenureMonths = recentRoles.reduce((sum, role) => sum + role.durationMonths, 0) / recentRoles.length;
+                  }
+                  
+                  // Extract current position from work history if available
+                  if (recentRoles.length > 0) {
+                    // Assume the first role is the current one
+                    currentJobPosition = recentRoles[0].title;
+                    currentCompany = recentRoles[0].company;
+                    isCurrentlyEmployed = true;
+                  }
+                }
+              } catch (e) {
+                console.error("Error parsing work history:", e);
+              }
+            }
+            
+            // Try to extract skills as highlights
+            if (targetAnalysis.parsedSkills) {
+              try {
+                const parsedSkills = typeof targetAnalysis.parsedSkills === 'string'
+                  ? JSON.parse(targetAnalysis.parsedSkills)
+                  : targetAnalysis.parsedSkills;
+                
+                if (Array.isArray(parsedSkills)) {
+                  highlights = parsedSkills.slice(0, 5); // Get top 5 skills
+                } else if (typeof parsedSkills === 'object' && parsedSkills !== null) {
+                  // Handle case where it might be an object with skills
+                  highlights = Object.values(parsedSkills)
+                    .filter(item => typeof item === 'string')
+                    .slice(0, 5);
+                }
+              } catch (e) {
+                console.error("Error parsing skills:", e);
+              }
+            }
+            
+            // If we still don't have what we need, try using rawResponse as a fallback
+            if ((redFlags.length === 0 || highlights.length === 0 || recentRoles.length === 0) && targetAnalysis.rawResponse) {
+              try {
+                const rawResponseString = typeof targetAnalysis.rawResponse === 'string'
+                  ? targetAnalysis.rawResponse
+                  : JSON.stringify(targetAnalysis.rawResponse);
+                
+                const rawData = JSON.parse(rawResponseString);
+                
+                // Look for red flags in the raw data
+                if (redFlags.length === 0) {
+                  const possibleRedFlagFields = ['red_flags', 'redFlags', 'Red_Flags', 'Red Flags'];
+                  for (const field of possibleRedFlagFields) {
+                    if (rawData[field] && Array.isArray(rawData[field])) {
+                      redFlags = rawData[field];
+                      break;
+                    }
+                  }
+                }
+                
+                // Look for skills/highlights in the raw data
+                if (highlights.length === 0) {
+                  const possibleSkillFields = ['skills', 'Skills', 'key_skills', 'keySkills'];
+                  for (const field of possibleSkillFields) {
+                    if (rawData[field] && Array.isArray(rawData[field])) {
+                      highlights = rawData[field].slice(0, 5);
+                      break;
+                    }
+                  }
+                }
+                
+                // Look for work history in the raw data
+                if (recentRoles.length === 0) {
+                  const possibleWorkHistoryFields = ['work_history', 'workHistory', 'Work_History', 'Work History', 'experience'];
+                  for (const field of possibleWorkHistoryFields) {
+                    if (rawData[field] && Array.isArray(rawData[field])) {
+                      recentRoles = rawData[field].map((role: any) => ({
+                        title: role.title || role.position || 'Unknown Position',
+                        company: role.company || role.employer || 'Unknown Company',
+                        durationMonths: role.durationMonths || role.duration || 0,
+                        isContract: Boolean(role.isContract || role.contract)
+                      }));
+                      break;
+                    }
+                  }
+                }
+              } catch (e) {
+                console.error("Error parsing raw response:", e);
+              }
+            }
+          } catch (error) {
+            console.error("Error extracting analysis data:", error);
+          }
+        }
+      }
       
-      // Calculate average tenure
-      const averageTenureMonths = recentRoles.reduce((sum, role) => sum + role.durationMonths, 0) / recentRoles.length;
-      
-      // Extract highlights from requirements
-      const highlights = allRequirements.slice(0, 3);
+      // If no red flags found, add a default one
+      if (redFlags.length === 0) {
+        redFlags = ["No relevant experience data found"];
+      }
       
       // Return the data in a structure compatible with the frontend
       res.json({
         resumeId: resume.id,
-        jobDescriptionId: req.query.jobDescriptionId?.toString() || null,
+        jobDescriptionId: jobDescriptionId,
         analysis: {
           currentJobPosition,
           currentCompany,
           isCurrentlyEmployed,
           recentRoles,
           averageTenureMonths,
-          hasJobHoppingHistory: false,
-          hasContractRoles: false,
-          redFlags: basicRedFlags,
-          highlights
+          hasJobHoppingHistory: recentRoles.length > 2 && averageTenureMonths < 12,
+          hasContractRoles: recentRoles.some(role => role.isContract),
+          redFlags: redFlags,
+          highlights: highlights
         },
         requirements: allRequirements
       });
