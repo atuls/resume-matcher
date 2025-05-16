@@ -594,3 +594,13 @@ export async function deleteCandidateJobConnection(id: string): Promise<void> {
   await apiRequest("DELETE", `/api/candidate-connections/${id}`);
   return;
 }
+
+export async function processRawAnalysisForJob(jobDescriptionId: string): Promise<{
+  processed: number;
+  skipped: number;
+  errors: number;
+  message: string;
+}> {
+  const response = await apiRequest("POST", `/api/job-descriptions/${jobDescriptionId}/process-raw-analysis`);
+  return response.json();
+}

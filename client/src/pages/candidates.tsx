@@ -36,7 +36,8 @@ import {
   getResumeScores,
   getResumeRedFlagAnalysis,
   deleteResume,
-  analyzeUnanalyzedResumes
+  analyzeUnanalyzedResumes,
+  processRawAnalysisForJob
 } from '@/lib/api';
 import { formatDate, formatFileSize } from '@/lib/utils';
 import websocketService, { BatchAnalysisEvent } from '@/lib/websocket';
@@ -829,6 +830,16 @@ export default function CandidatesPage() {
                     >
                       <RotateCcw className={`h-4 w-4 ${loadingAnalysis ? 'animate-spin' : ''}`} />
                       {loadingAnalysis ? 'Processing...' : 'Analyze Next 50 Unanalyzed'}
+                    </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      className="flex items-center gap-2 bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+                      onClick={() => handleProcessRawAnalysis()}
+                      disabled={loadingAnalysis}
+                    >
+                      <Activity className={`h-4 w-4 ${loadingAnalysis ? 'animate-spin' : ''}`} />
+                      {loadingAnalysis ? 'Processing...' : 'Process Stored Raw Analysis'}
                     </Button>
                   </div>
                 )}
