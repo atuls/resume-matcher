@@ -584,8 +584,8 @@ export default function CandidatesPage() {
                     </>
                   ) : (
                     <>
-                      <AlertCircle className="h-4 w-4 mr-1.5" />
-                      Analyze Raw Responses
+                      <RefreshCw className="h-4 w-4 mr-1.5" />
+                      Reprocess Analysis Data
                     </>
                   )}
                 </Button>
@@ -711,7 +711,7 @@ export default function CandidatesPage() {
                               <div className="h-3 w-32 bg-gray-200 animate-pulse rounded mb-1"></div>
                               <div className="h-3 w-24 bg-gray-200 animate-pulse rounded"></div>
                             </div>
-                          ) : resumeAnalysis[resume.id] && resumeAnalysis[resume.id].highlights?.length ? (
+                          ) : resumeAnalysis[resume.id] && resumeAnalysis[resume.id].highlights?.length > 0 ? (
                             <div className="space-y-1">
                               {resumeAnalysis[resume.id].highlights.slice(0, 2).map((highlight, idx) => (
                                 <div key={idx} className="text-sm flex items-center">
