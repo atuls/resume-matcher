@@ -29,7 +29,7 @@ export interface IStorage {
   
   // Resume methods
   getResume(id: string): Promise<Resume | undefined>;
-  getAllResumes(): Promise<Resume[]>;
+  getAllResumes(page?: number, pageSize?: number): Promise<{ resumes: Resume[], total: number }>;
   createResume(resume: InsertResume): Promise<Resume>;
   deleteResume(id: string): Promise<boolean>;
   

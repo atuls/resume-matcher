@@ -423,8 +423,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all resumes
   app.get("/api/resumes", async (req: Request, res: Response) => {
     try {
-      const resumes = await storage.getAllResumes();
-      res.json(resumes);
+      // Get pagination parameters
+      const page = req.query.page ? parseInt(req.query.page as string) : 1;
+      const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string) : 50;
+      
+      console.time('getAllResumes');
+      const { resumes, total } = await storage.getAllResumes(page, pageSize);
+      console.timeEnd('getAllResumes');
+      
+      // Return paginated results with metadata
+      res.json({
+        resumes,
+        pagination: {
+          page,
+          pageSize,
+          total,
+          totalPages: Math.ceil(total / pageSize)
+        }
+      });
     } catch (error) {
       console.error("Error fetching resumes:", error);
       res.status(500).json({ message: "Failed to fetch resumes" });

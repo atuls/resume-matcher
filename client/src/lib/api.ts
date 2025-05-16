@@ -178,8 +178,16 @@ export async function uploadMultipleResumes(files: File[]): Promise<Resume[]> {
   }
 }
 
-export async function getResumes(): Promise<Resume[]> {
-  const response = await fetch("/api/resumes", {
+export async function getResumes(page = 1, pageSize = 50): Promise<{
+  resumes: Resume[],
+  pagination: {
+    page: number,
+    pageSize: number,
+    total: number,
+    totalPages: number
+  }
+}> {
+  const response = await fetch(`/api/resumes?page=${page}&pageSize=${pageSize}`, {
     credentials: "include",
   });
   
