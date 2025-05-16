@@ -463,6 +463,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Get red flag analysis for a resume
   app.get("/api/resumes/:id/red-flag-analysis", async (req: Request, res: Response) => {
+    // Disable caching for this endpoint to ensure we always get fresh data
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
     try {
       const resume = await storage.getResume(req.params.id);
       if (!resume) {
