@@ -327,22 +327,41 @@ export default function CandidatesPage() {
       
       toast({
         title: "Processing complete",
-        description: `${result.processedCount} analyses processed successfully. ${result.skippedCount} skipped. ${result.errorCount} errors.`,
+        description: `${result.processed || 0} analyses processed successfully. ${result.skipped || 0} skipped. ${result.errors || 0} errors.`,
         variant: "default"
       });
       
       // Refresh the analysis data after processing
-      if (result.processedCount > 0) {
-        // Clear current analysis data
+      if (result.processed > 0) {
+        console.log("Raw analysis processing completed successfully, refreshing data...");
+        
+        // Clear current analysis data to force re-fetching
         setResumeAnalysis({});
         
+        // Invalidate all relevant queries to force refetching from the server
+        queryClient.invalidateQueries({
+          queryKey: [`/api/job-descriptions/${selectedJobId}/candidates`]
+        });
+        
+        queryClient.invalidateQueries({
+          queryKey: [`/api/job-descriptions/${selectedJobId}/resume-scores`]
+        });
+        
+        // Force re-fetch of the resume list with the updated data
+        resumesQuery.refetch();
+        
+        // Create a small delay to allow the server to process all the changes
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         // Re-fetch analysis for visible resumes
-        const visibleResumes = resumes.slice(0, Math.min(resumes.length, 20));
+        const visibleResumes = resumes;
+        console.log(`Re-fetching analysis for ${visibleResumes.length} visible resumes`);
         
         // Create an array of promises to fetch analysis for each resume
         const promises = visibleResumes.map(async (resume) => {
           try {
             const result = await getResumeRedFlagAnalysis(resume.id, selectedJobId);
+            console.log(`Updated analysis for resume ${resume.id}:`, result.analysis);
             setResumeAnalysis(prev => ({
               ...prev,
               [resume.id]: result.analysis
@@ -354,6 +373,7 @@ export default function CandidatesPage() {
         
         // Wait for all promises to resolve
         await Promise.all(promises);
+        console.log("All analyses refreshed successfully");
       }
     } catch (error) {
       console.error("Error processing raw analysis:", error);
