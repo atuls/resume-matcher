@@ -391,33 +391,53 @@ export default function CandidatesPage() {
   
   // Load resume scores and analysis data when job is selected
   useEffect(() => {
-    if (selectedJobId && resumes && resumes.length > 0) {
-      // Fetch scores for all resumes
-      const resumeIds = resumes.map(resume => resume.id);
-      
+    if (selectedJobId) {
       // Set loading state
       setLoadingAnalysis(true);
       
       console.log("Selected job ID:", selectedJobId);
-      console.log("Resume IDs to fetch scores for:", resumeIds);
       
-      // Track which resumes need analysis
-      const resumesNeedingAnalysis = new Set(resumeIds);
-      
-      // Get resume scores for the selected job
-      getResumeScores(resumeIds, selectedJobId)
-        .then(scores => {
-          console.log("Fetched scores:", scores);
-          
-          // Check if we received valid scores
-          if (Object.keys(scores).length === 0) {
-            console.warn("No scores returned from API, this might indicate an issue");
-          }
-          
-          // Debug: check specific resume scores
-          resumeIds.forEach(id => {
-            console.log(`Score for resume ${id}:`, scores[id] ? scores[id].score : 'not found');
-          });
+      // Use direct fetch to avoid sending all resume IDs
+      fetch(`/api/job-descriptions/${selectedJobId}/resume-scores`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ 
+          resumeIds: [], // Empty array to get only existing scores 
+          startProcessing: false
+        }),
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Failed to fetch resume scores: ${response.status} ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then(scores => {
+        console.log("Fetched scores:", scores);
+        
+        // Process scores to ensure date objects
+        const processedScores: {[id: string]: {score: number, matchedAt: Date}} = {};
+        for (const [id, scoreData] of Object.entries(scores)) {
+          processedScores[id] = {
+            score: (scoreData as any).score,
+            matchedAt: new Date((scoreData as any).matchedAt)
+          };
+        }
+        
+        // Check if we received valid scores
+        if (Object.keys(processedScores).length === 0) {
+          console.warn("No scores returned from API, this might indicate an issue");
+        }
+        
+        // Update scores
+        setResumeScores(processedScores);
+        
+        // Log the scores we received
+        console.log(`Received ${Object.keys(processedScores).length} scores from the server`);
+        setLoadingAnalysis(false);
           
           setResumeScores(scores);
           
