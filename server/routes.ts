@@ -542,17 +542,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get the job description ID from the query, if any
       const jobDescriptionId = req.query.jobDescriptionId?.toString() || null;
       
-      // Default values for when no analysis is found
-      let currentJobPosition = null;
-      let currentCompany = null;
-      let isCurrentlyEmployed = false;
-      let redFlags: string[] = [];
-      let highlights: string[] = [];
-      let recentRoles: Array<{ title: string; company: string; durationMonths: number; isContract: boolean }> = [];
-      let averageTenureMonths = 0;
-      
-      // Query the database directly for analysis results based on the resume ID and optionally job ID
-      const analysisQuery = jobDescriptionId
         ? await db
             .select()
             .from(analysisResults)
