@@ -5,7 +5,7 @@ import type { Resume } from "@shared/schema";
 import { 
   Plus, Calendar, FileText, Trash2, AlertCircle, Filter, Search, 
   Briefcase, BarChart3, CircleDashed, CheckCircle, XCircle,
-  ChevronLeft, Award, AlertTriangle
+  ChevronLeft, Award, AlertTriangle, ChevronRight, CircleAlert, CircleCheck, Activity
 } from "lucide-react";
 import { 
   getResumes, 
@@ -29,7 +29,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 
 export default function CandidatesPage() {
   const [showUploader, setShowUploader] = useState(false);
@@ -50,11 +50,16 @@ export default function CandidatesPage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   
   // Check if we're on a job-specific route
   const [jobMatch, jobParams] = useRoute("/jobs/:id/candidates");
   const jobId = jobMatch ? jobParams.id : null;
   const [selectedJobId, setSelectedJobId] = useState<string | null>(jobId);
+  
+  // Current page for pagination (1-based index)
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 50; // Number of items per page
   
   // Set selected job when route changes
   useEffect(() => {
@@ -63,15 +68,23 @@ export default function CandidatesPage() {
     }
   }, [jobId]);
 
-  // Fetch resumes
+  // Fetch resumes with pagination
   const {
-    data: resumes,
+    data: resumeData,
     isLoading,
     refetch: refetchResumes
   } = useQuery({
-    queryKey: ['/api/resumes'],
-    queryFn: getResumes
+    queryKey: ['/api/resumes', currentPage, pageSize],
+    queryFn: async () => {
+      const data = await getResumes(currentPage, pageSize);
+      return data;
+    }
   });
+  
+  // Safely extract resume data with pagination
+  const resumes = resumeData?.resumes || [];
+  const totalResumes = resumeData?.pagination?.total || 0;
+  const totalPages = Math.ceil(totalResumes / pageSize);
 
   // Fetch job descriptions for filter
   const { data: jobDescriptions } = useQuery({
@@ -93,7 +106,7 @@ export default function CandidatesPage() {
     onError: (error) => {
       toast({
         title: "Error deleting resume",
-        description: error.message,
+        description: "Failed to delete resume. Please try again.",
         variant: "destructive"
       });
     }
@@ -144,13 +157,15 @@ export default function CandidatesPage() {
   // Effect to fetch scores when job selection or resumes change
   useEffect(() => {
     const fetchScores = async () => {
-      if (selectedJobId && resumes && resumes.length > 0) {
+      if (selectedJobId && resumes.length > 0) {
         try {
           console.log("Fetching scores for job:", selectedJobId);
-          // Our enhanced getResumeScores function now handles date conversion
+          // Get scores only for visible resumes (current page)
+          const resumeIds = resumes.map(r => r.id);
           const scores = await getResumeScores(
-            resumes.map(r => r.id), 
-            selectedJobId
+            resumeIds, 
+            selectedJobId,
+            true // Only get existing scores
           );
           setResumeScores(scores);
         } catch (error) {
@@ -169,22 +184,22 @@ export default function CandidatesPage() {
     };
     
     fetchScores();
-  }, [selectedJobId, resumes, toast]);
+  }, [selectedJobId, resumes, toast, currentPage]);
   
   // Effect to fetch red flag analysis when job selection or resumes change
   useEffect(() => {
     const fetchAnalysis = async () => {
-      if (selectedJobId && resumes && resumes.length > 0) {
+      if (selectedJobId && resumes.length > 0) {
         try {
           setLoadingAnalysis(true);
           // Create a temporary object to store analysis results
           const tempAnalysis: {[resumeId: string]: RedFlagAnalysis} = {};
           
-          // Process up to 10 resumes at a time to prevent overloading
-          const topResumes = resumes.slice(0, 10);
+          // Process only visible resumes (current page)
+          const visibleResumes = resumes.slice(0, Math.min(resumes.length, 20));
           
           // Create an array of promises to fetch analysis for each resume
-          const promises = topResumes.map(async (resume) => {
+          const promises = visibleResumes.map(async (resume) => {
             try {
               const result = await getResumeRedFlagAnalysis(resume.id, selectedJobId);
               tempAnalysis[resume.id] = result.analysis;
@@ -213,7 +228,7 @@ export default function CandidatesPage() {
     if (Object.keys(resumeScores).length > 0) {
       fetchAnalysis();
     }
-  }, [selectedJobId, resumes, resumeScores]);
+  }, [selectedJobId, resumes, resumeScores, currentPage]);
   
   // Handle sorting toggle
   const handleSort = (field: string) => {
@@ -227,18 +242,14 @@ export default function CandidatesPage() {
     }
   };
 
-  // Filter resumes based on search query and selected job
-  const filteredResumes = resumes?.filter(resume => {
+  // Filter resumes based on search query
+  const filteredResumes = resumes.filter(resume => {
     // Apply name filter
     const nameMatch = !searchQuery || 
       (resume.candidateName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
        resume.fileName.toLowerCase().includes(searchQuery.toLowerCase()));
-       
-    // Apply job filter if a job is selected
-    // Note: In a real app, we would query for resumes that were matched with this job
-    // For now, we'll just show all resumes when a job is selected
     return nameMatch;
-  }) || [];
+  });
   
   // Sort resumes if sorting is enabled
   const sortedResumes = [...filteredResumes].sort((a, b) => {
@@ -280,10 +291,23 @@ export default function CandidatesPage() {
     }
   };
 
+  // Navigation controls for pagination
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(prev => prev + 1);
+    }
+  };
+
+  const goToPrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(prev => prev - 1);
+    }
+  };
+
   // Fetch job details if we're on a job-specific route
   const { data: jobDetail } = useQuery({
     queryKey: [`/api/job-descriptions/${jobId}`],
-    queryFn: () => getJobDescription(jobId!),
+    queryFn: () => jobId ? getJobDescription(jobId) : null,
     enabled: !!jobId,
   });
 
@@ -310,7 +334,7 @@ export default function CandidatesPage() {
         <div className="flex space-x-2">
           {filteredResumes.length > 0 && (
             <BatchMatchDialog 
-              resumes={resumes || []}
+              resumes={resumes}
               filteredResumeIds={filteredResumes.map(r => r.id)}
               buttonVariant="outline"
               preselectedJobId={jobId || undefined}
@@ -389,6 +413,36 @@ export default function CandidatesPage() {
         </div>
       ) : null}
 
+      {/* Pagination information */}
+      {totalResumes > 0 && (
+        <div className="flex justify-between items-center mb-4 text-sm text-gray-500">
+          <div>
+            Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalResumes)} of {totalResumes} candidates
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={goToPrevPage} 
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            <span>Page {currentPage} of {totalPages}</span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={goToNextPage} 
+              disabled={currentPage === totalPages}
+            >
+              Next
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="text-center py-8">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -439,235 +493,210 @@ export default function CandidatesPage() {
                     )}
                   </div>
                 </th>
-                <th 
-                  scope="col" 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <div className="flex items-center">
                     <Briefcase className="h-4 w-4 mr-1 text-gray-500" />
                     Current Position
                   </div>
                 </th>
-                <th 
-                  scope="col" 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <div className="flex items-center">
-                    <Award className="h-4 w-4 mr-1 text-emerald-500" />
+                    <Award className="h-4 w-4 mr-1 text-gray-500" />
                     Highlights
                   </div>
                 </th>
-                <th 
-                  scope="col" 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <div className="flex items-center">
-                    <AlertTriangle className="h-4 w-4 mr-1 text-amber-500" />
+                    <AlertCircle className="h-4 w-4 mr-1 text-gray-500" />
                     Red Flags
                   </div>
                 </th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {sortedResumes.map((resume) => (
+              {sortedResumes.map(resume => (
                 <tr key={resume.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap cursor-pointer" onClick={() => window.location.href = `/resume/${resume.id}`}>
-                    <div className="flex items-center">
-                      <div>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-start">
+                      <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">
                           {resume.candidateName || 'Unnamed Candidate'}
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {resume.candidateTitle || 'No title available'}
+                        {resume.candidateTitle && (
+                          <div className="text-sm text-gray-500">
+                            {resume.candidateTitle}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <FileText className="h-4 w-4 mr-2 text-gray-400" />
+                      <div className="text-sm text-gray-900">
+                        {resume.fileName}
+                        <div className="text-xs text-gray-500">
+                          {formatFileSize(resume.fileSize)}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap cursor-pointer" onClick={() => window.location.href = `/resume/${resume.id}`}>
-                    <div className="flex items-center">
-                      <FileText className="h-4 w-4 text-gray-400 mr-2" />
-                      <div className="text-sm text-gray-900">{resume.fileName}</div>
-                      <span className="ml-2 text-xs text-gray-500">({formatFileSize(resume.fileSize)})</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap cursor-pointer" onClick={() => window.location.href = `/resume/${resume.id}`}>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <Calendar className="h-4 w-4 mr-1" />
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
                       {formatDate(resume.createdAt)}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {selectedJobId ? (
-                      resumeScores[resume.id] ? (
-                          <div className="flex flex-col space-y-1">
-                            <div className="flex items-center">
-                              <Badge 
-                                variant={
-                                  resumeScores[resume.id].score >= 80 ? "secondary" :
-                                  resumeScores[resume.id].score >= 60 ? "default" :
-                                  "outline"
-                                } 
-                                className={`mr-2 ${
-                                  resumeScores[resume.id].score >= 80 ? "bg-emerald-500" : ""
-                                }`}
-                              >
-                                {resumeScores[resume.id].score}%
-                              </Badge>
-                              <span className="text-xs text-gray-500">
-                                {formatDate(resumeScores[resume.id].matchedAt)}
-                              </span>
-                            </div>
-                            <Progress 
-                              value={resumeScores[resume.id].score} 
-                              max={100}
-                              className={`h-1.5 ${
-                                resumeScores[resume.id].score >= 80 ? "bg-emerald-100" :
-                                resumeScores[resume.id].score >= 60 ? "bg-blue-100" :
-                                "bg-gray-100"
-                              }`}
-                            />
+                    {!selectedJobId ? (
+                      <div className="text-sm text-gray-400 italic">
+                        Select a job
+                      </div>
+                    ) : loadingAnalysis ? (
+                      <div className="h-5 w-16 bg-gray-200 animate-pulse rounded"></div>
+                    ) : resumeScores[resume.id] ? (
+                      <div className="flex items-center">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center">
+                                <Progress 
+                                  value={resumeScores[resume.id].score} 
+                                  className="w-16 h-2 mr-2"
+                                />
+                                <span className="text-sm font-medium">
+                                  {resumeScores[resume.id].score}%
+                                </span>
+                                <div className="text-xs text-gray-500 ml-2">
+                                  {formatDate(resumeScores[resume.id].matchedAt)}
+                                </div>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Match score: {resumeScores[resume.id].score}%</p>
+                              <p>Matched {formatDate(resumeScores[resume.id].matchedAt)}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    ) : (
+                      <div className="flex items-center text-gray-400">
+                        <CircleDashed className="h-4 w-4 mr-1" />
+                        <span className="text-sm">Not matched</span>
+                      </div>
+                    )}
+                  </td>
+                  
+                  {/* Current Position column */}
+                  <td className="px-6 py-4">
+                    {loadingAnalysis ? (
+                      <div className="h-4 w-24 bg-gray-200 animate-pulse rounded"></div>
+                    ) : resumeAnalysis[resume.id] ? (
+                      <div className="flex items-center text-sm">
+                        <Briefcase className="h-4 w-4 mr-1 text-gray-500" />
+                        <span className="font-medium">
+                          {resumeAnalysis[resume.id].currentJobPosition || 
+                           (resumeAnalysis[resume.id].isCurrentlyEmployed ? 
+                             "Employed" : "Unemployed")}
+                        </span>
+                      </div>
+                    ) : !selectedJobId ? (
+                      <div className="text-sm text-gray-400 italic">
+                        Select a job
+                      </div>
+                    ) : (
+                      <div className="flex items-center text-gray-400">
+                        <CircleDashed className="h-4 w-4 mr-1" />
+                        <span className="text-sm">Not analyzed</span>
+                      </div>
+                    )}
+                  </td>
+                  
+                  {/* Highlights column */}
+                  <td className="px-6 py-4">
+                    {loadingAnalysis ? (
+                      <div className="space-y-1">
+                        <div className="h-3 w-32 bg-gray-200 animate-pulse rounded"></div>
+                        <div className="h-3 w-24 bg-gray-200 animate-pulse rounded"></div>
+                      </div>
+                    ) : resumeAnalysis[resume.id] && resumeAnalysis[resume.id].strengths?.length ? (
+                      <div className="space-y-1">
+                        {resumeAnalysis[resume.id].strengths.slice(0, 2).map((strength, idx) => (
+                          <div key={idx} className="flex items-center text-sm">
+                            <CheckCircle className="h-3.5 w-3.5 mr-1 text-emerald-500" />
+                            <span className="text-xs">{strength}</span>
                           </div>
-                        ) : (
-                          <div className="flex items-center text-gray-400">
-                            <CircleDashed className="h-4 w-4 mr-1" />
-                            <span className="text-sm">Not matched</span>
+                        ))}
+                        {resumeAnalysis[resume.id].strengths.length > 2 && (
+                          <div className="text-xs text-primary">
+                            +{resumeAnalysis[resume.id].strengths.length - 2} more
                           </div>
                         )}
-                      </td>
-                      
-                      {/* Current Position column */}
-                      <td className="px-6 py-4">
-                        {loadingAnalysis ? (
-                          <div className="h-4 w-24 bg-gray-200 animate-pulse rounded"></div>
-                        ) : resumeAnalysis[resume.id] ? (
-                          <div className="flex items-center text-sm">
-                            <Briefcase className="h-4 w-4 mr-1 text-gray-500" />
-                            <span className="font-medium">
-                              {resumeAnalysis[resume.id].currentJobPosition || 
-                               (resumeAnalysis[resume.id].isCurrentlyEmployed ? 
-                               "Employed" : "Unemployed")}
-                            </span>
+                      </div>
+                    ) : !selectedJobId ? (
+                      <div className="text-sm text-gray-400 italic">
+                        Select a job
+                      </div>
+                    ) : (
+                      <div className="flex items-center text-gray-400">
+                        <CircleDashed className="h-4 w-4 mr-1" />
+                        <span className="text-sm">None identified</span>
+                      </div>
+                    )}
+                  </td>
+                  
+                  {/* Red Flags column */}
+                  <td className="px-6 py-4">
+                    {loadingAnalysis ? (
+                      <div className="space-y-1">
+                        <div className="h-3 w-32 bg-gray-200 animate-pulse rounded"></div>
+                        <div className="h-3 w-24 bg-gray-200 animate-pulse rounded"></div>
+                      </div>
+                    ) : resumeAnalysis[resume.id] && resumeAnalysis[resume.id].redFlags?.length ? (
+                      <div className="space-y-1">
+                        {resumeAnalysis[resume.id].redFlags.slice(0, 2).map((flag, idx) => (
+                          <div key={idx} className="flex items-center text-sm">
+                            <XCircle className="h-3.5 w-3.5 mr-1 text-red-500" />
+                            <span className="text-xs">{flag}</span>
                           </div>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              // Fetch analysis for just this resume
-                              const fetchSingleAnalysis = async () => {
-                                try {
-                                  setLoadingAnalysis(true);
-                                  const result = await getResumeRedFlagAnalysis(resume.id, selectedJobId);
-                                  setResumeAnalysis(prev => ({
-                                    ...prev,
-                                    [resume.id]: result.analysis
-                                  }));
-                                } catch (error) {
-                                  console.error(`Error analyzing resume ${resume.id}:`, error);
-                                } finally {
-                                  setLoadingAnalysis(false);
-                                }
-                              };
-                              
-                              fetchSingleAnalysis();
-                            }}
-                            className="text-primary text-xs hover:underline flex items-center"
-                          >
-                            <div className="mr-1">
-                              <CircleDashed className="h-3 w-3" />
-                            </div>
-                            Load data
-                          </button>
+                        ))}
+                        {resumeAnalysis[resume.id].redFlags.length > 2 && (
+                          <div className="text-xs text-primary">
+                            +{resumeAnalysis[resume.id].redFlags.length - 2} more
+                          </div>
                         )}
-                      </td>
-                      
-                      {/* Highlights column */}
-                      <td className="px-6 py-4">
-                        {loadingAnalysis ? (
-                          <div className="space-y-1">
-                            <div className="h-3 w-32 bg-gray-200 animate-pulse rounded"></div>
-                            <div className="h-3 w-24 bg-gray-200 animate-pulse rounded"></div>
-                          </div>
-                        ) : resumeAnalysis[resume.id] && resumeAnalysis[resume.id].highlights && resumeAnalysis[resume.id].highlights.length > 0 ? (
-                          <div>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="text-sm text-emerald-600 flex items-start cursor-help">
-                                    <Award className="h-4 w-4 mr-1 mt-0.5 flex-shrink-0" />
-                                    <span className="line-clamp-2">{resumeAnalysis[resume.id].highlights[0]}</span>
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent className="max-w-sm">
-                                  <ul className="list-disc pl-5 space-y-1">
-                                    {resumeAnalysis[resume.id].highlights.map((highlight, idx) => (
-                                      <li key={idx} className="text-sm">{highlight}</li>
-                                    ))}
-                                  </ul>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </div>
-                        ) : resumeAnalysis[resume.id] ? (
-                          <span className="text-gray-400 text-sm">No highlights found</span>
-                        ) : (
-                          <div className="h-4 w-8 bg-gray-100 rounded"></div>
-                        )}
-                      </td>
-                      
-                      {/* Red Flags column */}
-                      <td className="px-6 py-4">
-                        {loadingAnalysis ? (
-                          <div className="space-y-1">
-                            <div className="h-3 w-28 bg-gray-200 animate-pulse rounded"></div>
-                            <div className="h-3 w-20 bg-gray-200 animate-pulse rounded"></div>
-                          </div>
-                        ) : resumeAnalysis[resume.id] && resumeAnalysis[resume.id].redFlags && resumeAnalysis[resume.id].redFlags.length > 0 ? (
-                          <div>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="text-sm text-amber-600 flex items-start cursor-help">
-                                    <AlertTriangle className="h-4 w-4 mr-1 mt-0.5 flex-shrink-0" />
-                                    <span className="line-clamp-2">{resumeAnalysis[resume.id].redFlags[0]}</span>
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent className="max-w-sm">
-                                  <ul className="list-disc pl-5 space-y-1">
-                                    {resumeAnalysis[resume.id].redFlags.map((flag, idx) => (
-                                      <li key={idx} className="text-sm">{flag}</li>
-                                    ))}
-                                  </ul>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </div>
-                        ) : resumeAnalysis[resume.id] ? (
-                          <span className="text-gray-400 text-sm">No red flags found</span>
-                        ) : (
-                          <div className="h-4 w-8 bg-gray-100 rounded"></div>
-                        )}
-                      </td>
-                    </>
-                  )}
+                      </div>
+                    ) : !selectedJobId ? (
+                      <div className="text-sm text-gray-400 italic">
+                        Select a job
+                      </div>
+                    ) : (
+                      <div className="flex items-center text-gray-400">
+                        <CircleDashed className="h-4 w-4 mr-1" />
+                        <span className="text-sm">None identified</span>
+                      </div>
+                    )}
+                  </td>
+                  
+                  {/* Actions column */}
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="text-primary"
-                        onClick={() => window.location.href = `/resume/${resume.id}`}
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setLocation(`/resumes/${resume.id}`)}
                       >
-                        View Profile
+                        <Activity className="h-4 w-4 mr-1" />
+                        View
                       </Button>
                       <Button
-                        size="icon"
                         variant="ghost"
-                        className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                        size="sm"
                         onClick={() => handleDeleteClick(resume.id)}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4 text-red-500" />
                       </Button>
                     </div>
                   </td>
@@ -677,10 +706,11 @@ export default function CandidatesPage() {
           </table>
         </div>
       ) : (
-        <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-medium mb-2">No Candidates Found</h3>
-          <p className="text-gray-600 mb-4">
-            Upload candidate resumes to start analyzing them against job descriptions.
+        <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+          <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-1">No candidates found</h3>
+          <p className="text-gray-500 mb-4">
+            {searchQuery ? 'No candidates match your search criteria' : 'No candidate resumes have been uploaded yet'}
           </p>
           <Button onClick={() => setShowUploader(true)}>
             <Plus className="mr-2 h-4 w-4" />
@@ -688,6 +718,7 @@ export default function CandidatesPage() {
           </Button>
         </div>
       )}
+
       {/* Delete confirmation dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
@@ -697,35 +728,17 @@ export default function CandidatesPage() {
               Are you sure you want to delete this resume? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-4">
-            {deleteMutation.isPending ? (
-              <div className="flex items-center justify-center p-4">
-                <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mr-2"></div>
-                <span>Deleting...</span>
-              </div>
-            ) : deleteMutation.isError ? (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Failed to delete resume. Please try again.
-                </AlertDescription>
-              </Alert>
-            ) : null}
-          </div>
           <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowDeleteDialog(false)} 
-              disabled={deleteMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={confirmDelete}
-              disabled={deleteMutation.isPending}
-            >
-              Delete
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              {deleteMutation.isPending ? (
+                <>
+                  <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
