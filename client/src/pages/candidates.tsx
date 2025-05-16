@@ -5,7 +5,8 @@ import type { Resume } from "@shared/schema";
 import { 
   Plus, Calendar, FileText, Trash2, AlertCircle, Filter, Search, 
   Briefcase, BarChart3, CircleDashed, CheckCircle, XCircle,
-  ChevronLeft, Award, AlertTriangle, ChevronRight, CircleAlert, CircleCheck, Activity
+  ChevronLeft, Award, AlertTriangle, ChevronRight, CircleAlert, CircleCheck, Activity,
+  RefreshCw
 } from "lucide-react";
 import { 
   getResumes, 
