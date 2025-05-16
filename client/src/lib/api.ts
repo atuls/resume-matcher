@@ -381,23 +381,55 @@ function processScoreData(data: any): { [resumeId: string]: { score: number, mat
   return processed;
 }
 
-export async function getResumeScores(resumeIds: string | string[], jobDescriptionId?: string): Promise<{
+export async function getResumeScores(
+  resumeIds: string | string[] | null, 
+  jobDescriptionId?: string, 
+  onlyExistingScores: boolean = false
+): Promise<{
   [resumeId: string]: { score: number, matchedAt: Date }
 }> {
   try {
-    // Ensure resumeIds is always an array
-    const resumeIdsArray = Array.isArray(resumeIds) ? resumeIds : [resumeIds];
-    
-    console.log(`Fetching scores for ${resumeIdsArray.length} resumes and job ${jobDescriptionId}`);
-    
     // If no jobDescriptionId is provided, return empty result
     if (!jobDescriptionId) {
       console.log('No jobDescriptionId provided, skipping score fetch');
       return {};
     }
     
-    // Using POST endpoint to handle large numbers of resumeIds
     const url = `/api/job-descriptions/${jobDescriptionId}/resume-scores`;
+    
+    // Optimization: If onlyExistingScores is true, don't send any resumeIds
+    // This improves performance by only fetching scores that already exist
+    if (onlyExistingScores) {
+      console.log(`Getting only existing scores for job ${jobDescriptionId}`);
+      console.time('getExistingScores');
+      
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          resumeIds: [], // Empty array tells server to return all existing scores
+          startProcessing: false
+        }),
+      });
+      
+      console.timeEnd('getExistingScores');
+      
+      if (!response.ok) {
+        console.error("Resume scores API error:", response.status, response.statusText);
+        throw new Error(`Failed to fetch resume scores: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return processScoreData(data);
+    }
+    
+    // Regular flow for specific resume IDs
+    const resumeIdsArray = !resumeIds ? [] : (Array.isArray(resumeIds) ? resumeIds : [resumeIds]);
+    
+    console.log(`Fetching scores for ${resumeIdsArray.length} resumes and job ${jobDescriptionId}`);
     
     // For small batches (under 20 resumes), use GET for simplicity
     if (resumeIdsArray.length <= 20) {

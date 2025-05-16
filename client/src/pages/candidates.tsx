@@ -414,49 +414,22 @@ export default function CandidatesPage() {
       
       console.log("Selected job ID:", selectedJobId);
       
-      // Use direct fetch to avoid sending all resume IDs
-      fetch(`/api/job-descriptions/${selectedJobId}/resume-scores`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ 
-          resumeIds: [], // Empty array to get only existing scores 
-          startProcessing: false
-        }),
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Failed to fetch resume scores: ${response.status} ${response.statusText}`);
-        }
-        return response.json();
-      })
-      .then(scores => {
-        console.log("Fetched scores:", scores);
-        
-        // Process scores to ensure date objects
-        const processedScores: {[id: string]: {score: number, matchedAt: Date}} = {};
-        for (const [id, scoreData] of Object.entries(scores)) {
-          processedScores[id] = {
-            score: (scoreData as any).score,
-            matchedAt: new Date((scoreData as any).matchedAt)
-          };
-        }
-        
-        // Check if we received valid scores
-        if (Object.keys(processedScores).length === 0) {
-          console.warn("No scores returned from API, this might indicate an issue");
-        }
-        
-        // Update scores
-        setResumeScores(processedScores);
-        
-        // Log the scores we received
-        console.log(`Received ${Object.keys(processedScores).length} scores from the server`);
-        setLoadingAnalysis(false);
+      // Use our optimized function to get only existing scores
+      getResumeScores(null, selectedJobId, true)
+        .then(processedScores => {
+          // Check if we received valid scores
+          if (Object.keys(processedScores).length === 0) {
+            console.warn("No scores returned from API, this might indicate an issue");
+          }
+          
+          // Update scores
+          setResumeScores(processedScores);
+          
+          // Log the scores we received
+          console.log(`Received ${Object.keys(processedScores).length} scores from the server`);
+          setLoadingAnalysis(false);
           // This gives immediate feedback to the user while analysis is being performed
-          const initialScores = {...scores};
+          const initialScores = {...processedScores};
           let scoresInitialized = false;
           
           resumeIds.forEach(id => {
