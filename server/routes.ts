@@ -1066,66 +1066,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Job description not found" });
       }
       
-      // Get job requirements
-      const requirements = await storage.getJobRequirements(jobDescriptionId);
-      
-      // Filter out resumes that already have analysis results to avoid reprocessing
-      const existingAnalysisMap = new Map();
+      // Skip checking all resumes and directly get existing analyses
       const existingAnalyses = await storage.getAnalysisResultsByJob(jobDescriptionId);
       
       // Create a map for faster lookups
+      const existingAnalysisMap = new Map();
       existingAnalyses.forEach(analysis => {
         existingAnalysisMap.set(analysis.resumeId, analysis);
       });
       
-      // Filter to only include resumes without existing analysis
-      const resumesToProcess = limitedResumeIds.filter(id => !existingAnalysisMap.has(id));
-      
-      console.log(`Found ${existingAnalyses.length} existing analyses; will process ${resumesToProcess.length} new resumes`);
-      
       // Format the existing scores for response
       const scoreMap: Record<string, { score: number, matchedAt: Date }> = {};
       
-      // Add existing analysis results to the score map
-      for (const resumeId of limitedResumeIds) {
-        const existingAnalysis = existingAnalysisMap.get(resumeId);
-        if (existingAnalysis) {
-          scoreMap[resumeId] = {
-            score: existingAnalysis.overallScore,
-            matchedAt: existingAnalysis.createdAt
-          };
-        }
-      }
+      // Add only existing analysis results to the score map
+      existingAnalyses.forEach(analysis => {
+        scoreMap[analysis.resumeId] = {
+          score: analysis.overallScore,
+          matchedAt: analysis.createdAt
+        };
+      });
       
-      console.log(`Returning ${Object.keys(scoreMap).length} existing scores for ${limitedResumeIds.length} requested resumes`);
+      console.log(`Returning ${Object.keys(scoreMap).length} existing scores`);
       
-      // Initialize results array for tracking (for backward compatibility)
-      const results = limitedResumeIds.map(id => ({
-        id,
-        status: existingAnalysisMap.has(id) ? 'complete' : 'queued',
-        message: existingAnalysisMap.has(id) ? 'Analysis already exists' : 'Analysis queued'
-      }));
-      
-      // Send initial response immediately with both scores and results
+      // Send response immediately with just the existing scores
       res.json(scoreMap);
       
-      // Only process if startProcessing is true and there are new resumes to analyze
-      if (startProcessing && resumesToProcess.length > 0) {
-        console.log(`Starting batch analysis for ${resumesToProcess.length} resumes as requested`);
-        // Process in background after sending initial response
-        processBatchAnalysis(resumesToProcess, jobDescriptionId, jobDescription, requirements)
-          .catch(error => {
-            console.error("Fatal error in batch analysis:", error);
-          });
-      } else if (!startProcessing) {
-        console.log("Batch analysis not requested (startProcessing=false), skipping batch analysis");
-      } else {
-        console.log("No new resumes to process, skipping batch analysis");
+      // Skip batch processing to improve performance
+      if (startProcessing) {
+        console.log("Batch processing requested but skipped for performance. Use the Process button to analyze resumes.");
       }
     } catch (error) {
-      console.error("Error initiating batch analysis:", error);
+      console.error("Error retrieving analysis results:", error);
       if (!res.headersSent) {
-        res.status(500).json({ message: "Failed to initiate batch analysis" });
+        res.status(500).json({ message: "Failed to retrieve analysis results" });
       }
     }
   });
@@ -1747,6 +1720,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error processing analysis result:", error);
       res.status(500).json({ message: "Error processing analysis result", error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+  
+  // Process stored raw analysis results for a specific job
+  app.post("/api/job-descriptions/:id/process-raw-analysis", async (req: Request, res: Response) => {
+    try {
+      const jobDescriptionId = req.params.id;
+      
+      // Get analysis results for this job
+      const analysisResults = await storage.getAnalysisResultsByJob(jobDescriptionId);
+      
+      console.log(`Processing ${analysisResults.length} raw analysis results for job ${jobDescriptionId}`);
+      
+      let processedCount = 0;
+      let skippedCount = 0;
+      let errorCount = 0;
+      
+      // Create WebSocket event for starting the process
+      broadcastUpdate({
+        type: 'processRawAnalysisStart',
+        jobId: jobDescriptionId,
+        total: analysisResults.length,
+        message: `Starting to process ${analysisResults.length} raw analysis results...`
+      });
+      
+      // Process each result
+      for (let i = 0; i < analysisResults.length; i++) {
+        const result = analysisResults[i];
+        try {
+          // Skip if already successfully processed
+          if (result.parsingStatus === 'complete' && 
+              result.parsedSkills && 
+              result.parsedWorkHistory && 
+              result.parsedRedFlags) {
+            skippedCount++;
+            continue;
+          }
+          
+          // Only process if we have a raw response
+          if (!result.rawResponse) {
+            skippedCount++;
+            continue;
+          }
+          
+          // Send progress update
+          broadcastUpdate({
+            type: 'processRawAnalysisProgress',
+            jobId: jobDescriptionId,
+            current: i + 1,
+            total: analysisResults.length,
+            progress: Math.round(((i + 1) / analysisResults.length) * 100),
+            message: `Processing ${i + 1}/${analysisResults.length} raw analysis results...`
+          });
+          
+          const success = await ResponseParserService.processAnalysisResult(result.id);
+          if (success) {
+            processedCount++;
+          } else {
+            errorCount++;
+          }
+        } catch (processError) {
+          console.error(`Error processing analysis result ${result.id}:`, processError);
+          errorCount++;
+        }
+      }
+      
+      // Send completion event
+      broadcastUpdate({
+        type: 'processRawAnalysisComplete',
+        jobId: jobDescriptionId,
+        processed: processedCount,
+        skipped: skippedCount,
+        errors: errorCount,
+        message: `Processed ${processedCount} analysis results, skipped ${skippedCount}, errors: ${errorCount}`
+      });
+      
+      res.json({
+        message: `Processed ${processedCount} analysis results, skipped ${skippedCount}, errors: ${errorCount}`,
+        processed: processedCount,
+        skipped: skippedCount,
+        errors: errorCount
+      });
+    } catch (error) {
+      console.error(`Error processing raw analysis for job ${req.params.id}:`, error);
+      res.status(500).json({ message: "Error processing raw analysis results" });
     }
   });
 
