@@ -473,40 +473,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     try {
       const resumeId = req.params.id;
-      const jobDescriptionIdParam = req.query.jobDescriptionId?.toString() || null;
+      const jobDescriptionId = req.query.jobDescriptionId?.toString() || null;
       
-      console.log(`Getting red flag analysis for resume ${resumeId} with job ${jobDescriptionIdParam || 'none'}`);
+      console.log(`Getting red flag analysis for resume ${resumeId} with job ${jobDescriptionId || 'none'}`);
       
       // Fetch the resume to verify it exists
       const resume = await storage.getResume(resumeId);
       if (!resume) {
         return res.status(404).json({ message: "Resume not found" });
       }
-      
-      // Query the database directly for the most recent analysis result
-      let analysisQuery;
-      if (jobDescriptionIdParam) {
-        // Get analysis for specific job description
-        analysisQuery = await db
-          .select()
-          .from(analysisResults)
-          .where(and(
-            eq(analysisResults.resumeId, resumeId),
-            eq(analysisResults.jobDescriptionId, jobDescriptionId)
-          ))
-          .orderBy(desc(analysisResults.createdAt))
-          .limit(1);
-      } else {
-        // Get most recent analysis for this resume
-        analysisQuery = await db
-          .select()
-          .from(analysisResults)
-          .where(eq(analysisResults.resumeId, resumeId))
-          .orderBy(desc(analysisResults.createdAt))
-          .limit(1);
-      }
-      
-      console.log(`Found ${analysisQuery.length} analysis result(s) in database for resume ${resumeId}`);
       
       // Set default values
       let currentJobPosition = null;

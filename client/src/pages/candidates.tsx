@@ -692,10 +692,11 @@ export default function CandidatesPage() {
                             <div className="text-sm">
                               {resumeAnalysis[resume.id].currentJobPosition || 
                                (resumeAnalysis[resume.id].isCurrentlyEmployed ? 
-                                 "Employed" : "Unemployed")}
+                                 "Employed" : "Unemployed") || 
+                                "Unknown"}
                             </div>
                           ) : (
-                            <div className="text-sm text-gray-400">Not analyzed</div>
+                            <div className="text-sm text-gray-400">Loading data...</div>
                           )}
                         </div>
                         
