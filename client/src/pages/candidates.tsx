@@ -335,45 +335,45 @@ export default function CandidatesPage() {
       if (result.processed > 0) {
         console.log("Raw analysis processing completed successfully, refreshing data...");
         
-        // Clear current analysis data to force re-fetching
+        // Reset the analysis state
         setResumeAnalysis({});
         
-        // Invalidate all relevant queries to force refetching from the server
+        // Invalidate queries to force refetching data
         queryClient.invalidateQueries({
           queryKey: [`/api/job-descriptions/${selectedJobId}/candidates`]
         });
         
-        queryClient.invalidateQueries({
-          queryKey: [`/api/job-descriptions/${selectedJobId}/resume-scores`]
-        });
-        
-        // Force re-fetch of the resume list with the updated data
-        resumesQuery.refetch();
-        
         // Create a small delay to allow the server to process all the changes
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 500));
         
+        // Use the same fetch mechanism we use in the useEffect to refresh data
         // Re-fetch analysis for visible resumes
-        const visibleResumes = resumes;
-        console.log(`Re-fetching analysis for ${visibleResumes.length} visible resumes`);
+        const tempAnalysis: Record<string, RedFlagAnalysis> = {};
+        setLoadingAnalysis(true);
         
-        // Create an array of promises to fetch analysis for each resume
-        const promises = visibleResumes.map(async (resume) => {
+        const promises = resumes.map(async (resume) => {
           try {
             const result = await getResumeRedFlagAnalysis(resume.id, selectedJobId);
-            console.log(`Updated analysis for resume ${resume.id}:`, result.analysis);
-            setResumeAnalysis(prev => ({
-              ...prev,
-              [resume.id]: result.analysis
-            }));
+            tempAnalysis[resume.id] = result.analysis;
           } catch (err) {
             console.error(`Error analyzing resume ${resume.id}:`, err);
           }
         });
         
-        // Wait for all promises to resolve
         await Promise.all(promises);
-        console.log("All analyses refreshed successfully");
+        setResumeAnalysis(tempAnalysis);
+        setLoadingAnalysis(false);
+        
+        // Force trigger a re-render rather than reloading the whole page
+        if (selectedJobId) {
+          // Update state to trigger useEffect hooks to run again
+          setCurrentPage(1); // Reset to first page
+          
+          // Invalidate score data to force refresh
+          queryClient.invalidateQueries({
+            queryKey: [`/api/job-descriptions/${selectedJobId}/resume-scores`]
+          });
+        }
       }
     } catch (error) {
       console.error("Error processing raw analysis:", error);
