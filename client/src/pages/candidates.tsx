@@ -550,6 +550,49 @@ export default function CandidatesPage() {
     }
   };
   
+  // Handle processing stored raw analysis results
+  const handleProcessRawAnalysis = async () => {
+    if (!selectedJobId) return;
+    
+    try {
+      // Set loading state
+      setLoadingAnalysis(true);
+      
+      // Show toast notification that processing is starting
+      toast({
+        title: "Processing raw analysis results",
+        description: "Processing stored raw analysis results for this job...",
+        duration: 5000,
+      });
+      
+      // Call the API to process raw analysis results
+      const result = await processRawAnalysisForJob(selectedJobId);
+      
+      // Update UI based on results
+      toast({
+        title: "Processing complete",
+        description: `Processed ${result.processed} results, skipped ${result.skipped}, errors: ${result.errors}`,
+        duration: 5000,
+      });
+      
+      // Refresh data
+      if (selectedJobId) {
+        queryClient.invalidateQueries({ queryKey: [`/api/job-descriptions/${selectedJobId}/resume-scores`] });
+      }
+      
+      setLoadingAnalysis(false);
+      
+    } catch (error) {
+      console.error("Error processing raw analysis:", error);
+      toast({
+        title: "Processing failed",
+        description: "There was an error processing the raw analysis results. Please try again.",
+        variant: "destructive"
+      });
+      setLoadingAnalysis(false);
+    }
+  };
+  
   // Batch analysis function to run all analyses on all resumes for selected job
   const handleBatchAnalysis = async (mode?: 'next10') => {
     if (!selectedJobId || !resumes || resumes.length === 0) return;
