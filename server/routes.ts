@@ -1047,18 +1047,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/job-descriptions/:id/resume-scores", async (req: Request, res: Response) => {
     try {
       const jobDescriptionId = req.params.id;
-      const { resumeIds, limit, startProcessing = false } = req.body;
+      const { resumeIds = [], limit, startProcessing = false } = req.body;
       
-      // Validate input
-      if (!Array.isArray(resumeIds) || resumeIds.length === 0) {
-        return res.status(400).json({ message: "No resume IDs provided" });
+      // If resumeIds is empty, we'll return all existing analysis results
+      const onlyExistingScores = resumeIds.length === 0;
+      
+      if (onlyExistingScores) {
+        console.log(`Fetching only existing scores for job ${jobDescriptionId}`);
+      } else {
+        console.log(`Processing scores request for job ${jobDescriptionId} with ${resumeIds.length} resumes${limit ? ` (limited to ${limit})` : ''}`);
       }
-      
-      // Apply limit if specified
-      const actualLimit = limit ? parseInt(limit.toString()) : resumeIds.length;
-      const limitedResumeIds = resumeIds.slice(0, actualLimit);
-      
-      console.log(`Processing scores request for job ${jobDescriptionId} with ${limitedResumeIds.length} resumes${limit ? ` (limited to ${actualLimit})` : ''}`);
       
       // Get job description
       const jobDescription = await storage.getJobDescription(jobDescriptionId);
@@ -1067,13 +1065,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Skip checking all resumes and directly get existing analyses
+      console.time('getAnalysisResultsByJob');
       const existingAnalyses = await storage.getAnalysisResultsByJob(jobDescriptionId);
-      
-      // Create a map for faster lookups
-      const existingAnalysisMap = new Map();
-      existingAnalyses.forEach(analysis => {
-        existingAnalysisMap.set(analysis.resumeId, analysis);
-      });
+      console.timeEnd('getAnalysisResultsByJob');
       
       // Format the existing scores for response
       const scoreMap: Record<string, { score: number, matchedAt: Date }> = {};
@@ -1086,13 +1080,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       });
       
-      console.log(`Returning ${Object.keys(scoreMap).length} existing scores`);
+      console.log(`Returning ${Object.keys(scoreMap).length} existing scores for job ${jobDescriptionId}`);
       
       // Send response immediately with just the existing scores
       res.json(scoreMap);
       
       // Skip batch processing to improve performance
-      if (startProcessing) {
+      if (startProcessing && !onlyExistingScores) {
         console.log("Batch processing requested but skipped for performance. Use the Process button to analyze resumes.");
       }
     } catch (error) {
