@@ -432,9 +432,12 @@ export default function CandidatesPage() {
           const initialScores = {...processedScores};
           let scoresInitialized = false;
           
-          resumeIds.forEach(id => {
+          // Instead of using resumeIds, we'll work with what we have from the existing data
+          const existingResumeIds = resumes.map(resume => resume.id);
+          
+          existingResumeIds.forEach(id => {
             if (!initialScores[id]) {
-              const idSum = id.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+              const idSum = id.split('').reduce((sum: number, char: string) => sum + char.charCodeAt(0), 0);
               const initialScore = 60 + (idSum % 31); // Gives scores between 60-90
               
               initialScores[id] = {
@@ -442,9 +445,6 @@ export default function CandidatesPage() {
                 matchedAt: new Date()
               };
               scoresInitialized = true;
-            } else {
-              // If we already have a score, we might not need to analyze this resume
-              resumesNeedingAnalysis.delete(id);
             }
           });
           
