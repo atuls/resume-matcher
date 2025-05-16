@@ -14,6 +14,7 @@ import {
   getResumeScores, 
   getJobDescription,
   getResumeRedFlagAnalysis,
+  processRawAnalysisForJob,
   RedFlagAnalysis
 } from "@/lib/api";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
