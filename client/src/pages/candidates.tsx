@@ -158,6 +158,7 @@ export default function CandidatesPage() {
     if (resumesData?.pagination) {
       setTotalPages(resumesData.pagination.totalPages);
       setTotalResumes(resumesData.pagination.total);
+      console.log(`Loaded page ${resumesData.pagination.page} of ${resumesData.pagination.totalPages} (${resumesData.pagination.total} total resumes)`);
     }
   }, [resumesData]);
   
@@ -404,11 +405,11 @@ export default function CandidatesPage() {
       websocketService.removeEventListener('batchAnalysisResumeStatus', handleBatchEvent as any);
       websocketService.removeEventListener('all', handleBatchEvent as any);
     };
-  }, [selectedJobId, resumes]);
+  }, [selectedJobId, resumes, loadingAnalysis]);
   
   // Load resume scores and analysis data when job is selected
   useEffect(() => {
-    if (selectedJobId) {
+    if (selectedJobId && !loadingAnalysis) {  // Added check to prevent repeated calls
       // Set loading state
       setLoadingAnalysis(true);
       
@@ -1232,6 +1233,94 @@ export default function CandidatesPage() {
                   ))}
                 </tbody>
               </table>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-4">
+                  <div className="flex flex-1 justify-between sm:hidden">
+                    <Button
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={page <= 1}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                      disabled={page >= totalPages}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Next
+                    </Button>
+                  </div>
+                  <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm text-gray-700">
+                        Showing <span className="font-medium">{(page - 1) * pageSize + 1}</span> to{" "}
+                        <span className="font-medium">{Math.min(page * pageSize, totalResumes)}</span> of{" "}
+                        <span className="font-medium">{totalResumes}</span> candidates
+                      </p>
+                    </div>
+                    <div>
+                      <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                        <Button
+                          onClick={() => setPage(p => Math.max(1, p - 1))}
+                          disabled={page <= 1}
+                          variant="outline"
+                          size="sm"
+                          className="rounded-l-md"
+                        >
+                          <span className="sr-only">Previous</span>
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        
+                        {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
+                          // Calculate which page numbers to show
+                          let pageNum = 0;
+                          if (totalPages <= 5) {
+                            // If 5 or fewer pages, show all
+                            pageNum = i + 1;
+                          } else if (page <= 3) {
+                            // If near start, show first 5 pages
+                            pageNum = i + 1;
+                          } else if (page >= totalPages - 2) {
+                            // If near end, show last 5 pages
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            // Otherwise show current page and 2 before/after
+                            pageNum = page - 2 + i;
+                          }
+                          
+                          return (
+                            <Button
+                              key={pageNum}
+                              onClick={() => setPage(pageNum)}
+                              variant={page === pageNum ? "default" : "outline"}
+                              size="sm"
+                              className={`px-4 ${page === pageNum ? 'bg-primary text-white' : ''}`}
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        })}
+                        
+                        <Button
+                          onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                          disabled={page >= totalPages}
+                          variant="outline"
+                          size="sm"
+                          className="rounded-r-md"
+                        >
+                          <span className="sr-only">Next</span>
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </nav>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center py-8 border border-dashed border-gray-300 rounded-lg bg-gray-50">
