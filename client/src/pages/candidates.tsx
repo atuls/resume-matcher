@@ -447,12 +447,42 @@ export default function CandidatesPage() {
         </div>
       ) : null}
 
-      {/* Pagination information */}
+      {/* Sorting and Pagination Controls */}
       {totalResumes > 0 && (
-        <div className="flex justify-between items-center mb-4 text-sm text-gray-500">
-          <div>
-            Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalResumes)} of {totalResumes} candidates
+        <div className="flex flex-col md:flex-row justify-between items-center mb-4 text-sm text-gray-500 gap-3">
+          <div className="flex items-center">
+            <div className="mr-4">
+              Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalResumes)} of {totalResumes} candidates
+            </div>
+            
+            {selectedJobId && (
+              <div className="flex items-center bg-white rounded-md border p-1.5 shadow-sm">
+                <span className="mr-2 font-medium">Sort by:</span>
+                <div className="flex bg-gray-100 rounded p-0.5">
+                  <button
+                    className={`px-3 py-1 rounded text-sm ${sortField !== 'score' ? 'bg-white shadow-sm' : ''}`}
+                    onClick={() => handleSort('name')}
+                  >
+                    Name
+                  </button>
+                  <button
+                    className={`px-3 py-1 rounded text-sm ${sortField === 'score' ? 'bg-white shadow-sm' : ''}`}
+                    onClick={() => handleSort('score')}
+                  >
+                    Match Score
+                  </button>
+                </div>
+                <button 
+                  className="ml-2 p-1 rounded hover:bg-gray-100"
+                  onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+                  title={sortDirection === 'asc' ? 'Ascending' : 'Descending'}
+                >
+                  {sortDirection === 'asc' ? '↑' : '↓'}
+                </button>
+              </div>
+            )}
           </div>
+          
           <div className="flex items-center gap-2">
             <Button 
               variant="outline" 
