@@ -607,41 +607,75 @@ export default function ResumeProfilePage() {
                 </TabsList>
                 
                 <TabsContent value="skills">
-                  <ResumeSkillsTab
-                    analysis={analysis}
-                    analysisLoading={analysisLoading || isAnalysisLoading || isParsedAnalysisLoading}
-                    analysisError={parsedAnalysisError || analysisError}
-                    resumeId={resumeId!}
-                    runSkillsAnalysis={runSkillsAnalysis}
-                    setAnalysisLoading={setAnalysisLoading}
-                    parsedData={
-                      parsedAnalysisData?.status === "success" ? {
-                        skills: parsedAnalysisData.parsedData.skills || []
-                      } : (
-                        analysis && Array.isArray(analysis) && analysis[0] && analysis[0].parsingStatus === 'success' ? {
-                          skills: analysis[0].parsedSkills || []
-                        } : undefined
-                      )
-                    }
-                    dataSource={parsedAnalysisData?.status === "success" ? 'database_parsed_fields' : undefined}
-                  />
+                  {isParsedAnalysisLoading ? (
+                    <div className="flex justify-center items-center p-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    </div>
+                  ) : parsedAnalysisData?.status === "success" && parsedAnalysisData.parsedData.skills.length > 0 ? (
+                    <div className="space-y-4">
+                      <div className="flex justify-between">
+                        <h3 className="text-lg font-medium">Skills</h3>
+                        <span className="text-sm text-gray-500">{parsedAnalysisData.parsedData.skills.length} skills identified</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {parsedAnalysisData.parsedData.skills.map((skill, index) => (
+                          <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="py-8 text-center text-gray-500">
+                      <p>No skills data available for this resume</p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="mt-4"
+                        onClick={runSkillsAnalysis}
+                      >
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Run Skills Analysis
+                      </Button>
+                    </div>
+                  )}
                 </TabsContent>
                 
                 <TabsContent value="history">
-                  <ResumeWorkHistoryTab
-                    redFlagData={redFlagData}
-                    redFlagLoading={redFlagLoading}
-                    isRedFlagLoading={isRedFlagLoading}
-                    redFlagError={redFlagError}
-                    analysis={analysis}
-                    parsedData={
-                      analysis && Array.isArray(analysis) && analysis[0] && analysis[0].parsingStatus === 'success' ? {
-                        workHistory: analysis[0].parsedWorkHistory || [],
-                        redFlags: analysis[0].parsedRedFlags || []
-                      } : undefined
-                    }
-                    dataSource={analysis && Array.isArray(analysis) && analysis[0] && analysis[0].parsingStatus === 'success' ? 'database_parsed_fields' : undefined}
-                  />
+                  {isParsedAnalysisLoading ? (
+                    <div className="flex justify-center items-center p-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    </div>
+                  ) : parsedAnalysisData?.status === "success" && parsedAnalysisData.parsedData.workHistory.length > 0 ? (
+                    <div className="space-y-6">
+                      <div className="flex justify-between">
+                        <h3 className="text-lg font-medium">Work History</h3>
+                        <span className="text-sm text-gray-500">{parsedAnalysisData.parsedData.workHistory.length} positions</span>
+                      </div>
+                      <div className="space-y-4">
+                        {parsedAnalysisData.parsedData.workHistory.map((job, index) => (
+                          <div key={index} className="border rounded-md p-4 hover:bg-gray-50">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="font-medium">{job.title}</div>
+                                <div className="text-gray-600">{job.company}</div>
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {job.startDate} - {job.endDate === "current" || job.endDate === "Present" ? "Present" : job.endDate}
+                              </div>
+                            </div>
+                            {job.description && (
+                              <div className="mt-2 text-sm text-gray-600">{job.description}</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="py-8 text-center text-gray-500">
+                      <p>No work history data available for this resume</p>
+                    </div>
+                  )}
                 </TabsContent>
                 
                 <TabsContent value="raw-text">
@@ -666,22 +700,29 @@ export default function ResumeProfilePage() {
                 </TabsContent>
 
                 <TabsContent value="red-flags">
-                  {/* Red flags component */}
-                  <ResumeRedFlagsTab 
-                    redFlags={
-                      // Try multiple possible locations for red flags data, prioritizing parsed fields
-                      (analysis && Array.isArray(analysis) && analysis[0]?.parsedRedFlags) ? 
-                        analysis[0].parsedRedFlags : 
-                      ((analysis as any)?.parsedRedFlags as any[] | undefined) || 
-                      (redFlagData?.analysis?.redFlags as any[] | undefined) ||
-                      ((redFlagData?.analysis as any)?.red_flags as any[] | undefined) || 
-                      []
-                    }
-                    isLoading={analysisLoading || isAnalysisLoading || isRedFlagLoading}
-                    dataSource={
-                      (analysis && Array.isArray(analysis) && analysis[0]?.parsedRedFlags) ?
-                        "Database Parsed Fields" :
-                      (analysis as any)?.parsedRedFlags ? 
+                  {isParsedAnalysisLoading ? (
+                    <div className="flex justify-center items-center p-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    </div>
+                  ) : parsedAnalysisData?.status === "success" && parsedAnalysisData.parsedData.redFlags.length > 0 ? (
+                    <div className="space-y-6">
+                      <div className="flex justify-between">
+                        <h3 className="text-lg font-medium">Potential Red Flags</h3>
+                        <span className="text-sm text-gray-500">{parsedAnalysisData.parsedData.redFlags.length} items identified</span>
+                      </div>
+                      <ul className="space-y-2 list-disc pl-5">
+                        {parsedAnalysisData.parsedData.redFlags.map((flag, index) => (
+                          <li key={index} className="text-red-600">
+                            {flag}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <div className="py-8 text-center text-gray-500">
+                      <p>No red flags identified for this resume</p>
+                    </div>
+                  )}
                         "Parsed LLM Response" : 
                       (redFlagData?.analysis?.redFlags || (redFlagData?.analysis as any)?.red_flags) ? 
                         "Red Flag Analysis API" : "No data available"
