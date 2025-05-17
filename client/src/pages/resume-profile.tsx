@@ -679,17 +679,17 @@ export default function ResumeProfilePage() {
                 </TabsContent>
                 
                 <TabsContent value="raw-text">
-                  {resume && resume.extractedText ? (
+                  {resume?.resume?.extractedText ? (
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <h3 className="text-lg font-medium">Extracted Resume Text</h3>
                         <div className="flex items-center text-sm text-gray-500">
                           <FileText className="h-4 w-4 mr-1" />
-                          <span>{(resume.extractedText.length / 1000).toFixed(1)}K characters</span>
+                          <span>{(resume.resume.extractedText.length / 1000).toFixed(1)}K characters</span>
                         </div>
                       </div>
                       <div className="border rounded-md p-4 bg-gray-50 overflow-auto max-h-[500px]">
-                        <pre className="text-sm whitespace-pre-wrap font-mono">{resume.extractedText}</pre>
+                        <pre className="text-sm whitespace-pre-wrap font-mono">{resume.resume.extractedText}</pre>
                       </div>
                     </div>
                   ) : (
