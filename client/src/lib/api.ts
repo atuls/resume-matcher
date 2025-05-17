@@ -366,7 +366,16 @@ export async function getAnalysisResults(jobDescriptionId: string): Promise<Enri
 }
 
 // Helper function to process score data with date conversion
-function processScoreData(data: any): { [resumeId: string]: { score: number, matchedAt: Date } } {
+function processScoreData(data: any): { 
+  [resumeId: string]: { 
+    score: number, 
+    matchedAt: Date,
+    skills?: string[],
+    currentPosition?: { title: string, company: string } | null,
+    redFlags?: string[],
+    parsingStatus?: string
+  } 
+} {
   // Check if data is valid
   if (!data || typeof data !== 'object') {
     console.error('Invalid score data received:', data);
@@ -374,18 +383,35 @@ function processScoreData(data: any): { [resumeId: string]: { score: number, mat
   }
   
   // Convert strings to Date objects
-  const processed: { [resumeId: string]: { score: number, matchedAt: Date } } = {};
+  const processed: { 
+    [resumeId: string]: { 
+      score: number, 
+      matchedAt: Date,
+      skills?: string[],
+      currentPosition?: { title: string, company: string } | null,
+      redFlags?: string[],
+      parsingStatus?: string
+    } 
+  } = {};
   
   console.log("Processing score data:", data);
+  const sampleScore = data.scores && data.scores[0];
+  if (sampleScore) {
+    console.log("Sample score for debugging:", sampleScore);
+  }
   
-  // Handle the new format where scores is an array in the response
+  // Handle the enhanced data format where scores is an array in the response
   if (data.scores && Array.isArray(data.scores)) {
     // Process the scores array format (new API format)
     for (const score of data.scores) {
       if (score && score.resumeId && score.score !== undefined) {
         processed[score.resumeId] = {
           score: typeof score.score === 'number' ? score.score : parseInt(score.score),
-          matchedAt: score.matchedAt ? new Date(score.matchedAt) : new Date()
+          matchedAt: score.matchedAt ? new Date(score.matchedAt) : new Date(),
+          skills: Array.isArray(score.skills) ? score.skills : [],
+          currentPosition: score.currentPosition || null,
+          redFlags: Array.isArray(score.redFlags) ? score.redFlags : [],
+          parsingStatus: score.parsingStatus || 'pending'
         };
       }
     }
@@ -400,6 +426,9 @@ function processScoreData(data: any): { [resumeId: string]: { score: number, mat
       }
     }
   }
+  
+  console.log("Scores for current set of resumes:", processed);
+  console.log("Loaded", Object.keys(processed).length, "scores for job", data.scores?.[0]?.jobDescriptionId);
   
   return processed;
 }
