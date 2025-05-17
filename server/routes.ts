@@ -94,11 +94,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const jobId = req.params.id;
       
       // Query the analysis_results table to get scores
-      const scores = await db.select()
-        .from(analysisResults)
-        .where(eq(analysisResults.jobDescriptionId, jobId));
+      const results = await db.select({
+        id: analysisResults.id,
+        resumeId: analysisResults.resumeId,
+        jobDescriptionId: analysisResults.jobDescriptionId,
+        score: analysisResults.overallScore,
+        matchedAt: analysisResults.createdAt
+      })
+      .from(analysisResults)
+      .where(eq(analysisResults.jobDescriptionId, jobId));
       
-      res.json({ scores });
+      // Format response to match client expectations
+      res.json({ 
+        scores: results.map(result => ({
+          resumeId: result.resumeId,
+          jobDescriptionId: result.jobDescriptionId,
+          score: result.score,
+          matchedAt: result.matchedAt
+        })) 
+      });
     } catch (error) {
       console.error("Error fetching resume scores:", error);
       res.status(500).json({ message: "Failed to fetch resume scores", error: String(error) });

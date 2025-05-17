@@ -378,12 +378,26 @@ function processScoreData(data: any): { [resumeId: string]: { score: number, mat
   
   console.log("Processing score data:", data);
   
-  for (const [resumeId, scoreData] of Object.entries(data)) {
-    if (scoreData && typeof scoreData === 'object' && 'score' in scoreData && 'matchedAt' in scoreData) {
-      processed[resumeId] = {
-        score: (scoreData as any).score,
-        matchedAt: new Date((scoreData as any).matchedAt)
-      };
+  // Handle the new format where scores is an array in the response
+  if (data.scores && Array.isArray(data.scores)) {
+    // Process the scores array format (new API format)
+    for (const score of data.scores) {
+      if (score && score.resumeId && score.score !== undefined) {
+        processed[score.resumeId] = {
+          score: typeof score.score === 'number' ? score.score : parseInt(score.score),
+          matchedAt: score.matchedAt ? new Date(score.matchedAt) : new Date()
+        };
+      }
+    }
+  } else {
+    // Handle the old format for backward compatibility
+    for (const [resumeId, scoreData] of Object.entries(data)) {
+      if (scoreData && typeof scoreData === 'object' && 'score' in scoreData && 'matchedAt' in scoreData) {
+        processed[resumeId] = {
+          score: (scoreData as any).score,
+          matchedAt: new Date((scoreData as any).matchedAt)
+        };
+      }
     }
   }
   
@@ -412,16 +426,10 @@ export async function getResumeScores(
       console.log(`Getting only existing scores for job ${jobDescriptionId}`);
       console.time('getExistingScores');
       
+      // Use GET for the existing scores endpoint
       const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        method: "GET",
         credentials: "include",
-        body: JSON.stringify({
-          resumeIds: [], // Empty array tells server to return all existing scores
-          startProcessing: false
-        }),
       });
       
       console.timeEnd('getExistingScores');
