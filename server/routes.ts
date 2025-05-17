@@ -193,6 +193,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to process resume scores", error: String(error) });
     }
   });
+  
+  // Get parsed analysis data for a specific resume (from the database)
+  app.get("/api/resumes/:id/parsed-analysis", async (req: Request, res: Response) => {
+    try {
+      const resumeId = req.params.id;
+      const jobId = req.query.jobId as string | undefined;
+      
+      // Query for getting all analysis results for this resume
+      const query = db
+        .select()
+        .from(analysisResults)
+        .where(eq(analysisResults.resumeId, resumeId));
+      
+      // If a job ID is provided, filter by that job
+      if (jobId) {
+        query.where(eq(analysisResults.jobDescriptionId, jobId));
+      }
+      
+      // Get results ordered by date (newest first)
+      const results = await query.orderBy(desc(analysisResults.createdAt));
+      
+      if (results.length === 0) {
+        return res.json({ 
+          status: "no_data",
+          message: "No analysis data available for this resume"
+        });
+      }
+      
+      // Get the most recent analysis result
+      const latestResult = results[0];
+      
+      // Extract current position from work history (if available)
+      let currentPosition = null;
+      if (latestResult.parsedWorkHistory && Array.isArray(latestResult.parsedWorkHistory)) {
+        const sortedWorkHistory = [...latestResult.parsedWorkHistory].sort((a, b) => {
+          // Sort by end date (most recent first)
+          const dateA = a.endDate ? new Date(a.endDate).getTime() : Date.now();
+          const dateB = b.endDate ? new Date(b.endDate).getTime() : Date.now();
+          return dateB - dateA;
+        });
+        
+        if (sortedWorkHistory.length > 0) {
+          const mostRecent = sortedWorkHistory[0];
+          currentPosition = {
+            title: mostRecent.title || 'Unknown',
+            company: mostRecent.company || 'Unknown',
+            current: !mostRecent.endDate || mostRecent.endDate === 'Present'
+          };
+        }
+      }
+      
+      // Return all the parsed data in a structured format
+      res.json({
+        status: "success",
+        parsingStatus: latestResult.parsingStatus,
+        parsedData: {
+          skills: latestResult.parsedSkills || [],
+          workHistory: latestResult.parsedWorkHistory || [],
+          redFlags: latestResult.parsedRedFlags || [],
+          education: latestResult.parsedEducation || [],
+          summary: latestResult.parsedSummary || "",
+          currentPosition
+        },
+        // Include score information if available
+        scoreData: {
+          score: latestResult.overallScore,
+          jobDescriptionId: latestResult.jobDescriptionId,
+          matchedAt: latestResult.createdAt
+        }
+      });
+    } catch (error) {
+      console.error("Error getting parsed analysis data:", error);
+      res.status(500).json({ 
+        status: "error",
+        message: "Failed to get parsed analysis data" 
+      });
+    }
+  });
 
   // Create HTTP server
   const httpServer = new Server(app);
