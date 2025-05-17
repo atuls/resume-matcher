@@ -52,7 +52,7 @@ export default function ResumeProfilePage() {
     enabled: !!resumeId,
   });
 
-  // Analysis query
+  // Analysis query (legacy - kept for backward compatibility)
   const { 
     data: analysis, 
     error: analysisError, 
@@ -63,7 +63,7 @@ export default function ResumeProfilePage() {
     enabled: !!resumeId,
   });
   
-  // Red flag analysis query
+  // Red flag analysis query (legacy - kept for backward compatibility)
   const { 
     data: redFlagData, 
     error: redFlagError, 
@@ -71,6 +71,17 @@ export default function ResumeProfilePage() {
   } = useQuery({
     queryKey: [`/api/resumes/${resumeId}/red-flag-analysis`],
     queryFn: () => getResumeRedFlagAnalysis(resumeId!),
+    enabled: !!resumeId,
+  });
+  
+  // New parsed analysis data query - uses the same data source as the candidates table
+  const {
+    data: parsedAnalysisData,
+    error: parsedAnalysisError,
+    isLoading: isParsedAnalysisLoading
+  } = useQuery({
+    queryKey: [`/api/resumes/${resumeId}/parsed-analysis`, selectedJobId],
+    queryFn: () => getParsedAnalysisData(resumeId!, selectedJobId || undefined),
     enabled: !!resumeId,
   });
   
@@ -597,17 +608,21 @@ export default function ResumeProfilePage() {
                 <TabsContent value="skills">
                   <ResumeSkillsTab
                     analysis={analysis}
-                    analysisLoading={analysisLoading || isAnalysisLoading}
-                    analysisError={analysisError}
+                    analysisLoading={analysisLoading || isAnalysisLoading || isParsedAnalysisLoading}
+                    analysisError={parsedAnalysisError || analysisError}
                     resumeId={resumeId!}
                     runSkillsAnalysis={runSkillsAnalysis}
                     setAnalysisLoading={setAnalysisLoading}
                     parsedData={
-                      analysis && Array.isArray(analysis) && analysis[0] && analysis[0].parsingStatus === 'success' ? {
-                        skills: analysis[0].parsedSkills || []
-                      } : undefined
+                      parsedAnalysisData?.status === "success" ? {
+                        skills: parsedAnalysisData.parsedData.skills || []
+                      } : (
+                        analysis && Array.isArray(analysis) && analysis[0] && analysis[0].parsingStatus === 'success' ? {
+                          skills: analysis[0].parsedSkills || []
+                        } : undefined
+                      )
                     }
-                    dataSource={analysis && Array.isArray(analysis) && analysis[0] && analysis[0].parsingStatus === 'success' ? 'database_parsed_fields' : undefined}
+                    dataSource={parsedAnalysisData?.status === "success" ? 'database_parsed_fields' : undefined}
                   />
                 </TabsContent>
                 

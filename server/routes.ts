@@ -252,7 +252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           skills: latestResult.parsedSkills || [],
           workHistory: latestResult.parsedWorkHistory || [],
           redFlags: latestResult.parsedRedFlags || [],
-          education: latestResult.parsedEducation || [],
+          education: [], // Note: parsedEducation isn't available in the schema
           summary: latestResult.parsedSummary || "",
           currentPosition
         },
