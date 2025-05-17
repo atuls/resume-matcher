@@ -149,10 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create HTTP server
-  const httpServer = app.listen(3000, () => {
-    console.log("Server is running on port 3000");
-  });
-
+  // Create HTTP server without actually listening yet
+  const httpServer = require('http').createServer(app);
   return httpServer;
 }
