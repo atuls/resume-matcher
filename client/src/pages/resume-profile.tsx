@@ -10,7 +10,8 @@ import {
   updateResumeContactedStatus, 
   getResumeRedFlagAnalysis,
   downloadResume,
-  analyzeResumes
+  analyzeResumes,
+  getParsedAnalysisData
 } from "@/lib/api";
 import { 
   User, FileText, Calendar, ArrowLeft, Mail, MapPin, Phone, Award, 
@@ -44,6 +45,9 @@ export default function ResumeProfilePage() {
   const [redFlagLoading, setRedFlagLoading] = useState(false);
   const [isContactingCandidate, setIsContactingCandidate] = useState(false);
   const [isRunningJobAnalysis, setIsRunningJobAnalysis] = useState(false);
+  
+  // State for selected job description for analysis
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   
   // Resume query
   const { data: resume, error: resumeError, isLoading: resumeLoading } = useQuery({
@@ -97,9 +101,6 @@ export default function ResumeProfilePage() {
     queryFn: () => getResumeScores(resumeId!),
     enabled: !!resumeId,
   });
-  
-  // State for selected job description for analysis
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   
   // State for WebSocket progress tracking
   const [analysisProgress, setAnalysisProgress] = useState({
