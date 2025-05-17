@@ -9,7 +9,7 @@ import {
   resumes,
   candidateJobConnections
 } from "@shared/schema";
-import { count, desc, eq, and, not, like, gt, lt, isNull, sql, asc } from "drizzle-orm";
+import { count, desc, eq, and, not, like, gt, lt, isNull, sql, asc, inArray } from "drizzle-orm";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -100,11 +100,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         jobDescriptionId: analysisResults.jobDescriptionId,
         score: analysisResults.overallScore,
         matchedAt: analysisResults.createdAt,
-        parsedSkills: analysisResults.parsed_skills,
-        parsedWorkHistory: analysisResults.parsed_work_history,
-        parsedRedFlags: analysisResults.parsed_red_flags,
-        parsedSummary: analysisResults.parsed_summary,
-        parsingStatus: analysisResults.parsing_status
+        parsedSkills: analysisResults.parsedSkills,
+        parsedWorkHistory: analysisResults.parsedWorkHistory,
+        parsedRedFlags: analysisResults.parsedRedFlags,
+        parsedSummary: analysisResults.parsedSummary,
+        parsingStatus: analysisResults.parsingStatus
       })
       .from(analysisResults)
       .where(eq(analysisResults.jobDescriptionId, jobId))
