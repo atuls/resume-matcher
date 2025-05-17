@@ -542,6 +542,40 @@ export async function submitCustomPrompt(
   return response.json();
 }
 
+/**
+ * Get parsed analysis data for a resume from the database
+ * This uses the same data source as the candidates table view
+ * 
+ * @param resumeId The resume ID to get analysis data for
+ * @param jobId Optional job ID to get job-specific analysis
+ * @returns The parsed analysis data including skills, work history, red flags, etc.
+ */
+export async function getParsedAnalysisData(resumeId: string, jobId?: string): Promise<any> {
+  let url = `/api/resumes/${resumeId}/parsed-analysis`;
+  
+  // Add job ID as a query parameter if provided
+  if (jobId) {
+    url += `?jobId=${jobId}`;
+  }
+  
+  const response = await fetch(url, {
+    method: "GET",
+    credentials: "include",
+    // Add cache control headers to prevent caching
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error fetching parsed analysis data: ${response.status}`);
+  }
+
+  return response.json();
+}
+
 // AI Status API
 export async function checkAIStatus(): Promise<{ available: boolean, message: string }> {
   try {

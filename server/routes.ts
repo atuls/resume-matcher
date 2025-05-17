@@ -200,15 +200,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const resumeId = req.params.id;
       const jobId = req.query.jobId as string | undefined;
       
-      // Query for getting all analysis results for this resume
-      const query = db
+      // Build query for getting analysis results for this resume
+      let query = db
         .select()
         .from(analysisResults)
         .where(eq(analysisResults.resumeId, resumeId));
       
-      // If a job ID is provided, filter by that job
+      // If a job ID is provided, add a filter for that job
       if (jobId) {
-        query.where(eq(analysisResults.jobDescriptionId, jobId));
+        query = query.where(eq(analysisResults.jobDescriptionId, jobId));
       }
       
       // Get results ordered by date (newest first)
