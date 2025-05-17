@@ -723,31 +723,33 @@ export default function ResumeProfilePage() {
                       <p>No red flags identified for this resume</p>
                     </div>
                   )}
-                        "Parsed LLM Response" : 
-                      (redFlagData?.analysis?.redFlags || (redFlagData?.analysis as any)?.red_flags) ? 
-                        "Red Flag Analysis API" : "No data available"
-                    }
-                  />
-                  
-                  {/* Debug data info */}
-                  <div className="mt-4 p-4 bg-gray-50 rounded-md">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-sm font-medium">Red Flag Data:</h3>
-                      <Badge variant="outline" className="text-xs">
-                        Source: {
-                          (analysis as any)?.parsedRedFlags ? "Parsed from LLM response" :
-                          (redFlagData?.analysis?.redFlags) ? "Red Flag API" : 
-                          "No data available"
-                        }
-                      </Badge>
-                    </div>
-                    <pre className="text-xs overflow-auto max-h-40 p-3 bg-gray-100 rounded-md">
-                      {JSON.stringify(redFlagData, null, 2) || "No red flag data available"}
-                    </pre>
-                  </div>
                 </TabsContent>
                 
                 <TabsContent value="debug">
+                  <div className="mt-4 p-4 bg-gray-50 rounded-md">
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="text-sm font-medium">Data Sources:</h3>
+                    </div>
+                    {parsedAnalysisData && (
+                      <div className="mb-4">
+                        <h4 className="text-sm font-medium mb-2">Parsed Analysis Data:</h4>
+                        <pre className="text-xs overflow-auto max-h-40 p-3 bg-gray-100 rounded-md">
+                          {JSON.stringify(parsedAnalysisData, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                    {redFlagData && (
+                      <div>
+                        <h4 className="text-sm font-medium mb-2">Red Flag Data:</h4>
+                        <pre className="text-xs overflow-auto max-h-40 p-3 bg-gray-100 rounded-md">
+                          {JSON.stringify(redFlagData, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="debug-raw">
                   <DebugPanel
                     resumeId={resumeId!}
                     analysis={analysis}
