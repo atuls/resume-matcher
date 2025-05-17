@@ -304,13 +304,25 @@ export default function CandidatesPage() {
     return nameMatch;
   });
   
+  // Debug the scores before sorting
+  if (sortField === 'score') {
+    console.log('Resume scores available for sorting:', Object.keys(resumeScores).length);
+    // Log a few example scores for debugging
+    const resumeIds = Object.keys(resumeScores).slice(0, 3);
+    resumeIds.forEach(id => {
+      console.log(`Resume ${id} score:`, resumeScores[id]?.score);
+    });
+  }
+  
   // Sort resumes if sorting is enabled
   const sortedResumes = [...filteredResumes].sort((a, b) => {
     if (!sortField) return 0;
     
     if (sortField === 'score') {
+      // Log the actual scores used for comparison
       const scoreA = resumeScores[a.id]?.score || 0;
       const scoreB = resumeScores[b.id]?.score || 0;
+      console.log(`Comparing scores: ${a.id}=${scoreA} vs ${b.id}=${scoreB}`);
       return sortDirection === 'asc' ? scoreA - scoreB : scoreB - scoreA;
     }
     
