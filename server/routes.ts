@@ -88,30 +88,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get red flag analysis for a resume
   app.get("/api/resumes/:id/red-flag-analysis", handleRedFlagAnalysis);
 
-  // Get resume scores for a job description
+  // Get resume scores for a job description with enhanced data
   app.get("/api/job-descriptions/:id/resume-scores", async (req: Request, res: Response) => {
     try {
       const jobId = req.params.id;
       
-      // Query the analysis_results table to get scores
+      // Query the analysis_results table with all the parsed fields
       const results = await db.select({
         id: analysisResults.id,
         resumeId: analysisResults.resumeId,
         jobDescriptionId: analysisResults.jobDescriptionId,
         score: analysisResults.overallScore,
-        matchedAt: analysisResults.createdAt
+        matchedAt: analysisResults.createdAt,
+        parsedSkills: analysisResults.parsed_skills,
+        parsedWorkHistory: analysisResults.parsed_work_history,
+        parsedRedFlags: analysisResults.parsed_red_flags,
+        parsedSummary: analysisResults.parsed_summary,
+        parsingStatus: analysisResults.parsing_status
       })
       .from(analysisResults)
-      .where(eq(analysisResults.jobDescriptionId, jobId));
+      .where(eq(analysisResults.jobDescriptionId, jobId))
+      .orderBy(desc(analysisResults.overallScore));
       
-      // Format response to match client expectations
+      // Get related resume data for candidate names
+      const resumeIds = results.map(result => result.resumeId);
+      
+      // Only fetch resumes if we have results
+      let resumeMap: Record<string, { candidateName: string | null, fileName: string }> = {};
+      
+      if (resumeIds.length > 0) {
+        const resumeData = await db.select({
+          id: resumes.id,
+          candidateName: resumes.candidateName,
+          fileName: resumes.fileName
+        })
+        .from(resumes)
+        .where(inArray(resumes.id, resumeIds));
+        
+        // Create a map for quick lookup
+        resumeMap = resumeData.reduce((acc, resume) => {
+          acc[resume.id] = {
+            candidateName: resume.candidateName,
+            fileName: resume.fileName
+          };
+          return acc;
+        }, {} as Record<string, { candidateName: string | null, fileName: string }>);
+      }
+      
+      // Format response with all the enhanced data
       res.json({ 
-        scores: results.map(result => ({
-          resumeId: result.resumeId,
-          jobDescriptionId: result.jobDescriptionId,
-          score: result.score,
-          matchedAt: result.matchedAt
-        })) 
+        scores: results.map(result => {
+          // Get candidate name from the resume data
+          const resumeData = resumeMap[result.resumeId] || { candidateName: null, fileName: "Unknown file" };
+          
+          // Extract current position from work history (if available)
+          let currentPosition = null;
+          if (result.parsedWorkHistory && Array.isArray(result.parsedWorkHistory)) {
+            const sortedWorkHistory = [...result.parsedWorkHistory].sort((a, b) => {
+              // Sort by end date (most recent first)
+              const dateA = a.endDate ? new Date(a.endDate).getTime() : Date.now();
+              const dateB = b.endDate ? new Date(b.endDate).getTime() : Date.now();
+              return dateB - dateA;
+            });
+            
+            if (sortedWorkHistory.length > 0) {
+              const mostRecent = sortedWorkHistory[0];
+              currentPosition = {
+                title: mostRecent.title || 'Unknown',
+                company: mostRecent.company || 'Unknown',
+                current: !mostRecent.endDate || mostRecent.endDate === 'Present'
+              };
+            }
+          }
+          
+          return {
+            resumeId: result.resumeId,
+            jobDescriptionId: result.jobDescriptionId,
+            score: result.score,
+            matchedAt: result.matchedAt,
+            candidateName: resumeData.candidateName || resumeData.fileName,
+            skills: result.parsedSkills || [],
+            workHistory: result.parsedWorkHistory || [],
+            currentPosition,
+            redFlags: result.parsedRedFlags || [],
+            summary: result.parsedSummary || '',
+            parsingStatus: result.parsingStatus || 'pending'
+          };
+        })
       });
     } catch (error) {
       console.error("Error fetching resume scores:", error);
