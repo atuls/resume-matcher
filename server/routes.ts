@@ -542,6 +542,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get the job description ID from the query, if any
       const jobDescriptionId = req.query.jobDescriptionId?.toString() || null;
       
+      // Query the database for analysis results
+      const analysisQuery = jobDescriptionId 
         ? await db
             .select()
             .from(analysisResults)
