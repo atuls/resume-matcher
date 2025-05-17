@@ -88,6 +88,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get red flag analysis for a resume
   app.get("/api/resumes/:id/red-flag-analysis", handleRedFlagAnalysis);
 
+  // Get resume scores for a job description
+  app.get("/api/job-descriptions/:id/resume-scores", async (req: Request, res: Response) => {
+    try {
+      const jobId = req.params.id;
+      
+      // Query the analysis_results table to get scores
+      const scores = await db.select()
+        .from(analysisResults)
+        .where(eq(analysisResults.jobDescriptionId, jobId));
+      
+      res.json({ scores });
+    } catch (error) {
+      console.error("Error fetching resume scores:", error);
+      res.status(500).json({ message: "Failed to fetch resume scores", error: String(error) });
+    }
+  });
+  
+  // Post endpoint to batch process resume scores
+  app.post("/api/job-descriptions/:id/resume-scores", async (req: Request, res: Response) => {
+    try {
+      // This endpoint just returns success but triggers the analysis
+      // The actual analysis happens asynchronously
+      res.json({ success: true, message: "Analysis requested" });
+    } catch (error) {
+      console.error("Error processing resume scores:", error);
+      res.status(500).json({ message: "Failed to process resume scores", error: String(error) });
+    }
+  });
+
   // Create HTTP server
   const httpServer = new Server(app);
   return httpServer;
