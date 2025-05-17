@@ -70,6 +70,9 @@ export default function CandidatesPage() {
   useEffect(() => {
     if (jobId) {
       setSelectedJobId(jobId);
+      // Set default sort by score when viewing candidates for a specific job
+      setSortField('score');
+      setSortDirection('desc');
     }
   }, [jobId]);
 
