@@ -596,7 +596,7 @@ export default function CandidatesPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setLocation(`/resumes/${resume.id}`)}
+                          onClick={() => setLocation(`/resume-profile/${resume.id}`)}
                         >
                           View
                         </Button>
