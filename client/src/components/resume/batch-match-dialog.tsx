@@ -5,7 +5,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Briefcase, ChevronRight, Search, FileText, X, Users, Loader2, AlertTriangle, Info } from "lucide-react";
-import { getJobDescriptions, analyzeResumes, checkAIStatus, getResumeScoresForJob } from "@/lib/api";
+import { getJobDescriptions, analyzeResumes, checkAIStatus, getResumeScoresForJob, analyzeUnanalyzedResumes } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -93,47 +93,95 @@ export default function BatchMatchDialog({
         const alreadyAnalyzed = resumeIds.filter(id => analyzedResumeIds.includes(id)).length;
         setAlreadyAnalyzedCount(alreadyAnalyzed);
         
-        // Calculate how many will be processed
-        const toProcess = resumeIds.length - alreadyAnalyzed;
-        setTotalToProcess(toProcess);
-        
-        // Show progress at 50% after checking existing scores
+        // Clear the progress interval
         clearInterval(progressInterval);
-        setProgress(50);
         
-        // Process resumes, skipping those already analyzed
-        const result = await analyzeResumes(selectedJobId, resumeIds, false, true);
-        
-        // If we skipped all resumes, simulate completion
-        if (result.results.length === 0 && alreadyAnalyzed > 0) {
-          setProgress(100);
+        // If all resumes on the current page are already analyzed, find and process the next batch
+        if (alreadyAnalyzed === resumeIds.length) {
+          // Set progress to show we're moving to next step
+          setProgress(60);
+          
+          // Find the next batch of unanalyzed resumes (limit to 10)
+          const batchResult = await analyzeUnanalyzedResumes(selectedJobId, 10);
+          
+          // If there are no unanalyzed resumes left in the system
+          if (batchResult.resumeIds.length === 0) {
+            setProgress(100);
+            return {
+              results: [],
+              skippedCount: alreadyAnalyzed,
+              message: "No unanalyzed resumes found in the system"
+            };
+          }
+          
+          // Set the number of resumes being processed
+          setTotalToProcess(batchResult.resumeIds.length);
+          setProgress(70);
+          
+          // Analyze the batch of unanalyzed resumes
+          const result = await analyzeResumes(selectedJobId, batchResult.resumeIds);
+          
+          return {
+            ...result,
+            foundNewBatch: true,
+            newBatchSize: batchResult.resumeIds.length,
+            alreadyAnalyzedCount: alreadyAnalyzed,
+            totalToProcess: batchResult.resumeIds.length
+          };
+        } else {
+          // Handle the case when there are unanalyzed resumes on the current page
+          const toProcess = resumeIds.length - alreadyAnalyzed;
+          setTotalToProcess(toProcess);
+          
+          // Show progress at 50% after checking existing scores
+          setProgress(50);
+          
+          // Process resumes from current page, skipping those already analyzed
+          const result = await analyzeResumes(selectedJobId, resumeIds, false, true);
+          
+          // If we skipped all resumes, simulate completion
+          if (result.results.length === 0 && alreadyAnalyzed > 0) {
+            setProgress(100);
+          }
+          
+          return { 
+            ...result, 
+            alreadyAnalyzedCount: alreadyAnalyzed,
+            totalToProcess: toProcess 
+          };
         }
-        
-        return { 
-          ...result, 
-          alreadyAnalyzedCount: alreadyAnalyzed,
-          totalToProcess: toProcess 
-        };
       } catch (error) {
         clearInterval(progressInterval);
-        console.error("Error fetching scores:", error);
+        console.error("Error in batch matching:", error);
         throw error;
       }
     },
     onSuccess: (data) => {
       setProgress(100);
       const resultCount = data.results.length;
-      const skippedCount = data.alreadyAnalyzedCount || 0;
+      const skippedCount = data.skippedCount || 0;
+      const foundNewBatch = data.foundNewBatch;
+      const newBatchSize = data.newBatchSize || 0;
       
-      // Create a more detailed success message including skipped resumes
+      // Create a more detailed success message including skipped resumes and new batch info
       let description = "";
-      if (resultCount > 0 && skippedCount > 0) {
+      if (foundNewBatch && resultCount > 0) {
+        // When we found and processed a new batch of previously unanalyzed resumes
+        description = `Found and analyzed ${resultCount} new ${resultCount === 1 ? 'resume' : 'resumes'} that hadn't been analyzed for this job yet.`;
+      } else if (resultCount > 0 && skippedCount > 0) {
+        // When processing current page with some skipped
         description = `${resultCount} ${resultCount === 1 ? 'resume has' : 'resumes have'} been matched with the selected job. ${skippedCount} ${skippedCount === 1 ? 'resume was' : 'resumes were'} skipped (already analyzed).`;
       } else if (resultCount > 0) {
+        // When processing current page with no skipped
         description = `${resultCount} ${resultCount === 1 ? 'resume has' : 'resumes have'} been matched with the selected job description.`;
+      } else if (skippedCount > 0 && data.message === "No unanalyzed resumes found in the system") {
+        // When all resumes in the system are already analyzed for this job
+        description = `No new resumes to analyze. All resumes in the system have already been analyzed for this job.`;
       } else if (skippedCount > 0) {
+        // When all selected resumes are already analyzed
         description = `No new resumes to analyze. ${skippedCount} ${skippedCount === 1 ? 'resume was' : 'resumes were'} already analyzed for this job.`;
       } else {
+        // Fallback
         description = "Batch analysis complete, but no resumes were processed.";
       }
       

@@ -316,16 +316,17 @@ export async function analyzeResumes(
   resumeIds: string[],
   force: boolean = false,
   skipExisting: boolean = false
-): Promise<{results: AnalysisResult[]}> {
+): Promise<{results: AnalysisResult[], skippedCount?: number, alreadyAnalyzedIds?: string[]}> {
   // If skipExisting is true, we need to filter out resumeIds that already have analysis
   let resumesToProcess = [...resumeIds];
+  let analyzedResumeIds: string[] = [];
   
   if (skipExisting && !force) {
     // Get existing scores for this job
     const existingScores = await getResumeScoresForJob(jobDescriptionId);
     if (existingScores?.scores?.length > 0) {
       // Get the IDs of resumes that already have scores
-      const analyzedResumeIds = existingScores.scores.map(score => score.resumeId);
+      analyzedResumeIds = existingScores.scores.map(score => score.resumeId);
       // Filter out resumes that already have scores
       resumesToProcess = resumeIds.filter(id => !analyzedResumeIds.includes(id));
     }
@@ -333,7 +334,11 @@ export async function analyzeResumes(
   
   // If all resumes have been analyzed, return an empty result
   if (resumesToProcess.length === 0) {
-    return { results: [] };
+    return { 
+      results: [],
+      skippedCount: analyzedResumeIds.length,
+      alreadyAnalyzedIds: analyzedResumeIds
+    };
   }
   
   const response = await apiRequest("POST", "/api/analyze", {
@@ -343,7 +348,12 @@ export async function analyzeResumes(
     startProcessing: true  // Explicitly start batch processing
   });
   
-  return response.json();
+  const data = await response.json();
+  return {
+    ...data,
+    skippedCount: resumeIds.length - resumesToProcess.length,
+    alreadyAnalyzedIds: analyzedResumeIds
+  };
 }
 
 // Get resume scores for a specific job (used to check which resumes already have analysis)
