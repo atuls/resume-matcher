@@ -250,7 +250,8 @@ export default function BatchMatchDialog({
         <DialogHeader>
           <DialogTitle>Batch Match Resumes with Job</DialogTitle>
           <DialogDescription>
-            Match {resumeCount} {resumeCount === 1 ? 'resume' : 'resumes'} with a job description
+            Match {resumeCount} {resumeCount === 1 ? 'resume' : 'resumes'} with a job description.
+            Already analyzed resumes will be skipped.
           </DialogDescription>
         </DialogHeader>
         
@@ -328,6 +329,16 @@ export default function BatchMatchDialog({
             </div>
           )}
           
+          {/* Display info about analyzed vs total resumes */}
+          {selectedJobId && alreadyAnalyzedCount > 0 && !matchMutation.isPending && (
+            <Alert className="bg-blue-50 border-blue-200">
+              <Info className="h-4 w-4 mr-2 text-blue-500" />
+              <AlertDescription className="text-sm text-blue-700">
+                {alreadyAnalyzedCount} out of {resumeCount} {resumeCount === 1 ? 'resume has' : 'resumes have'} already been analyzed for this job and will be skipped.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           {matchMutation.isPending && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
@@ -335,6 +346,13 @@ export default function BatchMatchDialog({
                 <span>{progress}%</span>
               </div>
               <Progress value={progress} className="h-2" />
+              
+              {alreadyAnalyzedCount > 0 && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Skipping {alreadyAnalyzedCount} already analyzed {alreadyAnalyzedCount === 1 ? 'resume' : 'resumes'}. 
+                  Processing {totalToProcess} new {totalToProcess === 1 ? 'resume' : 'resumes'}.
+                </p>
+              )}
             </div>
           )}
         </div>
