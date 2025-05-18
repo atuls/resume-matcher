@@ -21,6 +21,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api", (_req: Request, res: Response) => {
     res.json({ message: "API is running" });
   });
+  
+  // AI Status endpoint - Check if OpenAI API is properly configured
+  app.get("/api/ai-status", async (_req: Request, res: Response) => {
+    try {
+      const apiKey = process.env.OPENAI_API_KEY;
+      
+      if (!apiKey) {
+        return res.json({ 
+          available: false, 
+          message: "OpenAI API key is not configured. Please add your API key in the settings." 
+        });
+      }
+      
+      // Return success response
+      return res.json({ 
+        available: true, 
+        message: "AI service is available" 
+      });
+    } catch (error) {
+      console.error("Error checking AI status:", error);
+      return res.status(500).json({ 
+        available: false, 
+        message: "Error checking AI service status" 
+      });
+    }
+  });
 
   // Job descriptions endpoints
   app.get("/api/job-descriptions", async (req: Request, res: Response) => {
