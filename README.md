@@ -61,7 +61,7 @@ The application requires the following environment variables:
 2. **Upload Resumes**: Upload one or multiple candidate resumes
 3. **Match Resumes with Jobs**: Use the "Match with Job" feature to score candidates
 4. **Batch Matching**: Use "Match All with Job" to process multiple resumes at once
-5. **Batch Processing**: Use "Analyze Next 50 Unanalyzed" to process batches of unanalyzed resumes with real-time progress tracking
+5. **Batch Processing**: Process unanalyzed resumes either in small batches or all at once with "Run on All Unanalyzed" feature
 6. **View Matches**: Browse candidates with their match scores, sort by score to find best matches
 7. **On-demand Analysis**: Click the "Analyze" button for any candidate to view their position details, highlights, and red flags
 8. **Efficient Processing**: Analyze only the candidates you're interested in to reduce API usage and speed up processing

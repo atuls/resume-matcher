@@ -7,11 +7,14 @@ All notable changes to the Resume Analyzer project will be documented in this fi
 ### Added
 - Job context preservation when navigating from job candidates to resume profiles
 - Case-insensitive field handling for better display consistency across different data formats
+- "Run on All Unanalyzed" feature for processing all unanalyzed resumes at once
+- Enhanced batch processing with accurate count display and confirmation dialog
 
 ### Fixed
 - Fixed database query in parsed analysis endpoint to correctly filter by both resume ID and job ID
 - Fixed missing company names in work history display due to case sensitivity in field names
 - Resolved data discrepancy between database records and UI display
+- Fixed batch processing to correctly handle and display the total number of unanalyzed resumes
 
 ## [1.8.0] - 2025-05-15
 
