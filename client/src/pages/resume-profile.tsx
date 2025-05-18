@@ -657,8 +657,8 @@ export default function ResumeProfilePage() {
                           <div key={index} className="border rounded-md p-4 hover:bg-gray-50">
                             <div className="flex justify-between items-start">
                               <div>
-                                <div className="font-medium">{job.title}</div>
-                                <div className="text-gray-600">{job.company}</div>
+                                <div className="font-medium">{job.title || job.Title}</div>
+                                <div className="text-gray-600">{job.company || job.Company}</div>
                               </div>
                               <div className="text-sm text-gray-500">
                                 {job.startDate} - {job.endDate === "current" || job.endDate === "Present" ? "Present" : job.endDate}
