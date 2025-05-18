@@ -342,13 +342,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Insert the analysis result into the database
         const analysisResult = await storage.createAnalysisResult({
-          id: crypto.randomUUID(),
           resumeId,
           jobDescriptionId,
           overallScore: score,
-          rawContent: "Analysis completed by OpenAI",
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          skillMatches: {}, // Required field as JSON object
           parsingStatus: "complete",
           parsedSummary: "This is a mock analysis summary",
           parsedSkills: ["JavaScript", "React", "TypeScript"],
@@ -361,7 +358,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               description: "Developed web applications"
             }
           ],
-          parsedRedFlags: ["Example red flag"]
+          parsedRedFlags: ["Example red flag"],
+          aiModel: "OpenAI GPT-4"
         });
         
         results.push(analysisResult);
