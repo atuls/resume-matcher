@@ -480,7 +480,8 @@ export default function BatchMatchDialog({
                   if (selectedJobId) {
                     setLoadingUnanalyzed(true);
                     // Use process all flag when checking for unanalyzed resumes
-                    analyzeUnanalyzedResumes(selectedJobId, 10, true)
+                    // Set the batch size to something large to get all unanalyzed resumes
+                    analyzeUnanalyzedResumes(selectedJobId, 500, true)
                       .then(result => {
                         if (result.resumeIds.length > 0) {
                           // For "Run on All Unanalyzed", we want to show the total count in the confirmation
