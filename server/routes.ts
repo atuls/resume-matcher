@@ -309,6 +309,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint to find and process unanalyzed resumes for a job description
+  app.post("/api/admin/batch-process-unprocessed", async (req: Request, res: Response) => {
+    try {
+      const { jobDescriptionId, batchSize = 10, startProcessing = false } = req.body;
+      
+      if (!jobDescriptionId) {
+        return res.status(400).json({ error: "Job description ID is required" });
+      }
+      
+      // Get all resumes
+      const allResumesResult = await storage.getAllResumes(1, 1000); // Get a large batch of resumes
+      
+      if (!allResumesResult.resumes || allResumesResult.resumes.length === 0) {
+        return res.json({
+          message: "No resumes found in the system",
+          pendingCount: 0,
+          processingCount: 0,
+          resumeIds: []
+        });
+      }
+      
+      // Get existing analysis results for this job
+      const existingResults = await db.select({
+        resumeId: analysisResults.resumeId
+      })
+      .from(analysisResults)
+      .where(eq(analysisResults.jobDescriptionId, jobDescriptionId));
+      
+      const analyzedResumeIds = existingResults.map(result => result.resumeId);
+      
+      // Find resumes that don't have analysis for this job
+      const unanalyzedResumes = allResumesResult.resumes
+        .filter(resume => !analyzedResumeIds.includes(resume.id))
+        .slice(0, batchSize);
+      
+      const unanalyzedResumeIds = unanalyzedResumes.map(resume => resume.id);
+      
+      // Return information about the unanalyzed resumes
+      return res.json({
+        message: `Found ${unanalyzedResumeIds.length} unanalyzed resumes for job ${jobDescriptionId}`,
+        pendingCount: 0,
+        processingCount: unanalyzedResumeIds.length,
+        resumeIds: unanalyzedResumeIds
+      });
+    } catch (error) {
+      console.error("Error processing unanalyzed resumes:", error);
+      res.status(500).json({ error: "Failed to process unanalyzed resumes" });
+    }
+  });
+  
   // Create HTTP server
   const httpServer = new Server(app);
   return httpServer;
