@@ -479,12 +479,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
       console.log(`Found ${unanalyzedResumes.length} unanalyzed resumes out of ${allResumesResult.resumes.length} total`);
       
-      // If processAll is true, process all unanalyzed resumes
+      // If processAll is true, return all unanalyzed resumes
       // Otherwise, take just the requested batch size
-      const batchToProcess = processAll 
-        ? unanalyzedResumes 
-        : unanalyzedResumes.slice(0, batchSize);
-      const unanalyzedResumeIds = batchToProcess.map(resume => resume.id);
+      let resumesToProcess;
+      if (processAll) {
+        // When processing all, return all unanalyzed resumes
+        resumesToProcess = unanalyzedResumes;
+      } else {
+        // Otherwise limit to batch size
+        resumesToProcess = unanalyzedResumes.slice(0, batchSize);
+      }
+      const unanalyzedResumeIds = resumesToProcess.map(resume => resume.id);
       
       const totalUnanalyzed = unanalyzedResumes.length;
       const processingCount = unanalyzedResumeIds.length;
