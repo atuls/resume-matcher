@@ -485,9 +485,14 @@ export default function BatchMatchDialog({
                     analyzeUnanalyzedResumes(selectedJobId, 10, true)
                       .then(result => {
                         if (result.resumeIds.length > 0) {
+                          // For "Run on All Unanalyzed", we want to show the total count in the confirmation
                           setUnanalyzedResumes(result.resumeIds);
-                          setUnanalyzedCount(result.resumeIds.length);
-                          setTotalUnanalyzedCount(result.totalUnanalyzed || result.resumeIds.length);
+                          
+                          // When processing all, set unanalyzed count to total available
+                          // This is what's displayed in the confirmation dialog
+                          const totalCount = result.totalUnanalyzed || result.resumeIds.length;
+                          setUnanalyzedCount(totalCount);
+                          setTotalUnanalyzedCount(totalCount);
                           setProcessAll(true);
                           setShowConfirmDialog(true);
                         } else {
