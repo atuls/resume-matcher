@@ -171,21 +171,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Extract current position from work history (if available)
           let currentPosition = null;
-          if (result.parsedWorkHistory && Array.isArray(result.parsedWorkHistory)) {
-            const sortedWorkHistory = [...result.parsedWorkHistory].sort((a, b) => {
-              // Sort by end date (most recent first)
-              const dateA = a.endDate ? new Date(a.endDate).getTime() : Date.now();
-              const dateB = b.endDate ? new Date(b.endDate).getTime() : Date.now();
-              return dateB - dateA;
-            });
+          if (result.parsedWorkHistory) {
+            // Ensure we're working with an array
+            const workHistory = Array.isArray(result.parsedWorkHistory) 
+              ? result.parsedWorkHistory 
+              : typeof result.parsedWorkHistory === 'string'
+                ? JSON.parse(result.parsedWorkHistory)
+                : (result.parsedWorkHistory || []);
             
-            if (sortedWorkHistory.length > 0) {
-              const mostRecent = sortedWorkHistory[0];
-              currentPosition = {
-                title: mostRecent.title || 'Unknown',
-                company: mostRecent.company || 'Unknown',
-                current: !mostRecent.endDate || mostRecent.endDate === 'Present'
-              };
+            if (Array.isArray(workHistory) && workHistory.length > 0) {
+              // First look for a position marked as current
+              const current = workHistory.find(job => 
+                job.isCurrentRole === true || 
+                job.isCurrentRole === "true" || 
+                job.endDate === "Present" || 
+                !job.endDate
+              );
+              
+              if (current) {
+                currentPosition = {
+                  title: current.title || 'Unknown Position',
+                  company: current.company || 'Unknown Company',
+                  current: true
+                };
+              } else {
+                // If no current position, use the most recent by end date
+                const sortedWorkHistory = [...workHistory].sort((a, b) => {
+                  // Sort by end date (most recent first)
+                  const dateA = a.endDate ? new Date(a.endDate).getTime() : Date.now();
+                  const dateB = b.endDate ? new Date(b.endDate).getTime() : Date.now();
+                  return dateB - dateA;
+                });
+                
+                if (sortedWorkHistory.length > 0) {
+                  const mostRecent = sortedWorkHistory[0];
+                  currentPosition = {
+                    title: mostRecent.title || 'Unknown Position',
+                    company: mostRecent.company || 'Unknown Company',
+                    current: !mostRecent.endDate || mostRecent.endDate === 'Present'
+                  };
+                }
+              }
             }
           }
           
@@ -221,6 +247,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to process resume scores", error: String(error) });
     }
   });
+  
+  // Process raw analysis for a specific job description
+  app.post("/api/job-descriptions/:id/process-raw-analysis", handleProcessRawAnalysis);
   
   // Get parsed analysis data for a specific resume (from the database)
   app.get("/api/resumes/:id/parsed-analysis", async (req: Request, res: Response) => {

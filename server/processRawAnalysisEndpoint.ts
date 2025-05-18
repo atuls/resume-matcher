@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { db } from "./db";
 import { analysisResults } from "../shared/schema";
-import { eq, and, isNotNull } from "drizzle-orm";
+import { eq, and, isNotNull, sql } from "drizzle-orm";
 
 // Helper functions for extracting data from a variety of response formats
 function extractSkills(rawResponse: any): string[] {
