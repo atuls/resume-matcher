@@ -314,15 +314,41 @@ export async function downloadResume(id: string): Promise<Blob> {
 export async function analyzeResumes(
   jobDescriptionId: string, 
   resumeIds: string[],
-  force: boolean = false
+  force: boolean = false,
+  skipExisting: boolean = false
 ): Promise<{results: AnalysisResult[]}> {
+  // If skipExisting is true, we need to filter out resumeIds that already have analysis
+  let resumesToProcess = [...resumeIds];
+  
+  if (skipExisting && !force) {
+    // Get existing scores for this job
+    const existingScores = await getResumeScoresForJob(jobDescriptionId);
+    if (existingScores?.scores?.length > 0) {
+      // Get the IDs of resumes that already have scores
+      const analyzedResumeIds = existingScores.scores.map(score => score.resumeId);
+      // Filter out resumes that already have scores
+      resumesToProcess = resumeIds.filter(id => !analyzedResumeIds.includes(id));
+    }
+  }
+  
+  // If all resumes have been analyzed, return an empty result
+  if (resumesToProcess.length === 0) {
+    return { results: [] };
+  }
+  
   const response = await apiRequest("POST", "/api/analyze", {
     jobDescriptionId,
-    resumeIds,
+    resumeIds: resumesToProcess,
     force,
     startProcessing: true  // Explicitly start batch processing
   });
   
+  return response.json();
+}
+
+// Get resume scores for a specific job (used to check which resumes already have analysis)
+export async function getResumeScoresForJob(jobDescriptionId: string): Promise<{scores: Array<{resumeId: string, score: number}>}> {
+  const response = await apiRequest("GET", `/api/job-descriptions/${jobDescriptionId}/resume-scores`);
   return response.json();
 }
 

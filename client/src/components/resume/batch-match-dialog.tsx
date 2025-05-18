@@ -4,8 +4,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription 
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Briefcase, ChevronRight, Search, FileText, X, Users, Loader2, AlertTriangle } from "lucide-react";
-import { getJobDescriptions, analyzeResumes, checkAIStatus } from "@/lib/api";
+import { Briefcase, ChevronRight, Search, FileText, X, Users, Loader2, AlertTriangle, Info } from "lucide-react";
+import { getJobDescriptions, analyzeResumes, checkAIStatus, getResumeScoresForJob } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -63,25 +63,57 @@ export default function BatchMatchDialog({
     queryFn: getJobDescriptions
   });
   
+  // State for tracking analyzed resumes
+  const [alreadyAnalyzedCount, setAlreadyAnalyzedCount] = useState(0);
+  const [totalToProcess, setTotalToProcess] = useState(resumeCount);
+  
   // Mutation for batch matching
   const matchMutation = useMutation({
     mutationFn: async () => {
       if (!selectedJobId) throw new Error("No job selected");
       setProgress(0);
+      setAlreadyAnalyzedCount(0);
+      setTotalToProcess(resumeCount);
       
       // For UX, simulate progress during the initial API call
       const progressInterval = setInterval(() => {
         setProgress(prev => {
-          // Only increment up to 80% to leave room for actual completion
-          const next = prev + Math.floor(Math.random() * 5);
-          return Math.min(next, 80);
+          // Only increment up to 40% to leave room for actual completion
+          const next = prev + Math.floor(Math.random() * 3);
+          return Math.min(next, 40);
         });
       }, 600);
       
       try {
-        const result = await analyzeResumes(selectedJobId, resumeIds);
+        // First get the existing scores to determine which resumes to skip
+        const existingScores = await getResumeScoresForJob(selectedJobId);
+        const analyzedResumeIds = existingScores?.scores?.map(score => score.resumeId) || [];
+        
+        // Count how many are already analyzed
+        const alreadyAnalyzed = resumeIds.filter(id => analyzedResumeIds.includes(id)).length;
+        setAlreadyAnalyzedCount(alreadyAnalyzed);
+        
+        // Calculate how many will be processed
+        const toProcess = resumeIds.length - alreadyAnalyzed;
+        setTotalToProcess(toProcess);
+        
+        // Show progress at 50% after checking existing scores
         clearInterval(progressInterval);
-        return result;
+        setProgress(50);
+        
+        // Process resumes, skipping those already analyzed
+        const result = await analyzeResumes(selectedJobId, resumeIds, false, true);
+        
+        // If we skipped all resumes, simulate completion
+        if (result.results.length === 0 && alreadyAnalyzed > 0) {
+          setProgress(100);
+        }
+        
+        return { 
+          ...result, 
+          alreadyAnalyzedCount: alreadyAnalyzed,
+          totalToProcess: toProcess 
+        };
       } catch (error) {
         clearInterval(progressInterval);
         console.error("Error fetching scores:", error);
@@ -91,9 +123,23 @@ export default function BatchMatchDialog({
     onSuccess: (data) => {
       setProgress(100);
       const resultCount = data.results.length;
+      const skippedCount = data.alreadyAnalyzedCount || 0;
+      
+      // Create a more detailed success message including skipped resumes
+      let description = "";
+      if (resultCount > 0 && skippedCount > 0) {
+        description = `${resultCount} ${resultCount === 1 ? 'resume has' : 'resumes have'} been matched with the selected job. ${skippedCount} ${skippedCount === 1 ? 'resume was' : 'resumes were'} skipped (already analyzed).`;
+      } else if (resultCount > 0) {
+        description = `${resultCount} ${resultCount === 1 ? 'resume has' : 'resumes have'} been matched with the selected job description.`;
+      } else if (skippedCount > 0) {
+        description = `No new resumes to analyze. ${skippedCount} ${skippedCount === 1 ? 'resume was' : 'resumes were'} already analyzed for this job.`;
+      } else {
+        description = "Batch analysis complete, but no resumes were processed.";
+      }
+      
       toast({
         title: "Batch analysis complete",
-        description: `${resultCount} ${resultCount === 1 ? 'resume has' : 'resumes have'} been matched with the selected job description.`
+        description
       });
       
       // Invalidate queries to refresh the data
