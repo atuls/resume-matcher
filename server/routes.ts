@@ -200,7 +200,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const resumeId = req.params.id;
       const jobId = req.query.jobId as string | undefined;
       
+      console.log(`Getting parsed analysis for resume ${resumeId} with job ${jobId || 'none'}`);
+      
       // Build query for getting analysis results for this resume
+      console.log(`Building query for resume: '${resumeId}' and jobId: '${jobId || "none"}'`);
+      
+      // Direct SQL query to verify exact data being retrieved
+      try {
+        const directResults = await db.execute(
+          sql`SELECT id, job_description_id, resume_id FROM analysis_results 
+              WHERE resume_id = ${resumeId} 
+              ${jobId ? sql`AND job_description_id = ${jobId}` : sql``}
+              ORDER BY created_at DESC LIMIT 10`
+        );
+        console.log(`Direct SQL query results:`, JSON.stringify(directResults.rows, null, 2));
+      } catch (err) {
+        console.log(`Error in direct SQL: ${err}`);
+      }
+      
+      // Continue with the original query
       let query = db
         .select()
         .from(analysisResults)
@@ -208,21 +226,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If a job ID is provided, add a filter for that job
       if (jobId) {
-        query = query.where(eq(analysisResults.jobDescriptionId, jobId));
+        // In drizzle-orm, we need to add additional where conditions using the .where() method
+        // This might be where the issue occurs
+        query = db
+          .select()
+          .from(analysisResults)
+          .where(
+            and(
+              eq(analysisResults.resumeId, resumeId),
+              eq(analysisResults.jobDescriptionId, jobId)
+            )
+          );
       }
       
       // Get results ordered by date (newest first)
       const results = await query.orderBy(desc(analysisResults.createdAt));
       
       if (results.length === 0) {
+        console.log(`No analysis results found for resume ${resumeId}`);
         return res.json({ 
           status: "no_data",
           message: "No analysis data available for this resume"
         });
       }
       
+      console.log(`Found ${results.length} analysis results for resume ${resumeId}`);
+      
       // Get the most recent analysis result
       const latestResult = results[0];
+      console.log(`Latest analysis result ID: ${latestResult.id}, job: ${latestResult.jobDescriptionId}`);
+      
+      // Check if first work history item is available
+      if (latestResult.parsedWorkHistory && Array.isArray(latestResult.parsedWorkHistory) && latestResult.parsedWorkHistory.length > 0) {
+        console.log(`First company in parsed work history: ${latestResult.parsedWorkHistory[0].company}`);
+        
+        // Log the first few entries of parsed work history for debugging
+        console.log(`Parsed work history from database (first 2 entries):`, 
+          JSON.stringify(latestResult.parsedWorkHistory.slice(0, 2), null, 2));
+      }
       
       // Extract current position from work history (if available)
       let currentPosition = null;
