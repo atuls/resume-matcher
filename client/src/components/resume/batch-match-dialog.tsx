@@ -318,10 +318,20 @@ export default function BatchMatchDialog({
           <AlertDialogHeader>
             <AlertDialogTitle>Analyze {unanalyzedCount} Resumes</AlertDialogTitle>
             <AlertDialogDescription>
-              {unanalyzedCount === 1 
-                ? "We found 1 resume that hasn't been analyzed for this job yet."
-                : `We found ${unanalyzedCount} resumes that haven't been analyzed for this job yet.`
-              }
+              {processAll && totalUnanalyzedCount > unanalyzedCount ? (
+                <>
+                  We found a total of {totalUnanalyzedCount} resumes that haven't been analyzed for this job yet.
+                  {unanalyzedCount === totalUnanalyzedCount ? (
+                    " We'll analyze all of them in one batch."
+                  ) : (
+                    ` We'll analyze all ${unanalyzedCount} of them in one batch.`
+                  )}
+                </>
+              ) : (
+                unanalyzedCount === 1 
+                  ? "We found 1 resume that hasn't been analyzed for this job yet."
+                  : `We found ${unanalyzedCount} resumes that haven't been analyzed for this job yet.`
+              )}
               <br /><br />
               Do you want to run the analysis on {unanalyzedCount === 1 ? "this resume" : "these resumes"}?
               This will use your AI credits.
@@ -454,27 +464,74 @@ export default function BatchMatchDialog({
             )}
           </div>
           
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row w-full gap-2">
             <Button 
               type="button" 
               variant="outline" 
               onClick={() => setOpen(false)}
               disabled={matchMutation.isPending || loadingUnanalyzed}
+              className="mt-2 sm:mt-0"
             >
               Cancel
             </Button>
-            <Button 
-              type="button"
-              onClick={handleBatchMatch}
-              disabled={!selectedJobId || resumeIds.length === 0 || matchMutation.isPending || loadingUnanalyzed}
-              className="min-w-[120px]"
-            >
-              {matchMutation.isPending || loadingUnanalyzed ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</>
-              ) : (
-                `Match ${resumeIds.length} ${resumeIds.length === 1 ? 'Resume' : 'Resumes'}`
-              )}
-            </Button>
+            <div className="flex flex-1 flex-col sm:flex-row gap-2 justify-end">
+              <Button 
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  if (selectedJobId) {
+                    setLoadingUnanalyzed(true);
+                    // Use process all flag when checking for unanalyzed resumes
+                    analyzeUnanalyzedResumes(selectedJobId, 10, true)
+                      .then(result => {
+                        if (result.resumeIds.length > 0) {
+                          setUnanalyzedResumes(result.resumeIds);
+                          setUnanalyzedCount(result.resumeIds.length);
+                          setTotalUnanalyzedCount(result.totalUnanalyzed || result.resumeIds.length);
+                          setProcessAll(true);
+                          setShowConfirmDialog(true);
+                        } else {
+                          toast({
+                            title: "No unanalyzed resumes",
+                            description: "All resumes have already been analyzed for this job description.",
+                          });
+                        }
+                      })
+                      .catch(error => {
+                        console.error("Error finding all unanalyzed resumes:", error);
+                        toast({
+                          title: "Error",
+                          description: "Failed to find unanalyzed resumes. Please try again.",
+                          variant: "destructive"
+                        });
+                      })
+                      .finally(() => {
+                        setLoadingUnanalyzed(false);
+                      });
+                  }
+                }}
+                disabled={!selectedJobId || matchMutation.isPending || loadingUnanalyzed}
+                className="min-w-[150px]"
+              >
+                {loadingUnanalyzed ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</>
+                ) : (
+                  "Run on All Unanalyzed"
+                )}
+              </Button>
+              <Button 
+                type="button"
+                onClick={handleBatchMatch}
+                disabled={!selectedJobId || resumeIds.length === 0 || matchMutation.isPending || loadingUnanalyzed}
+                className="min-w-[120px]"
+              >
+                {matchMutation.isPending || loadingUnanalyzed ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</>
+                ) : (
+                  `Match ${resumeIds.length} ${resumeIds.length === 1 ? 'Resume' : 'Resumes'}`
+                )}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
