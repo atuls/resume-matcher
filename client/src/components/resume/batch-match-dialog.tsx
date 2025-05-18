@@ -47,7 +47,9 @@ export default function BatchMatchDialog({
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [unanalyzedResumes, setUnanalyzedResumes] = useState<string[]>([]);
   const [unanalyzedCount, setUnanalyzedCount] = useState(0);
+  const [totalUnanalyzedCount, setTotalUnanalyzedCount] = useState(0);
   const [loadingUnanalyzed, setLoadingUnanalyzed] = useState(false);
+  const [processAll, setProcessAll] = useState(false);
   
   const queryClient = useQueryClient();
   const { toast } = useToast();

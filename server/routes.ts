@@ -443,7 +443,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoint to find and process unanalyzed resumes for a job description
   app.post("/api/admin/batch-process-unprocessed", async (req: Request, res: Response) => {
     try {
-      const { jobDescriptionId, batchSize = 10, startProcessing = false } = req.body;
+      const { jobDescriptionId, batchSize = 10, startProcessing = false, processAll = false } = req.body;
       
       if (!jobDescriptionId) {
         return res.status(400).json({ error: "Job description ID is required" });
@@ -479,16 +479,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
       console.log(`Found ${unanalyzedResumes.length} unanalyzed resumes out of ${allResumesResult.resumes.length} total`);
       
-      // Take just the requested batch size
-      const batchToProcess = unanalyzedResumes.slice(0, batchSize);
+      // If processAll is true, process all unanalyzed resumes
+      // Otherwise, take just the requested batch size
+      const batchToProcess = processAll 
+        ? unanalyzedResumes 
+        : unanalyzedResumes.slice(0, batchSize);
       const unanalyzedResumeIds = batchToProcess.map(resume => resume.id);
+      
+      const totalUnanalyzed = unanalyzedResumes.length;
+      const processingCount = unanalyzedResumeIds.length;
       
       // Return information about the unanalyzed resumes
       res.json({
-        message: `Found ${unanalyzedResumeIds.length} unanalyzed resumes for job ${jobDescriptionId}`,
-        pendingCount: 0,
-        processingCount: unanalyzedResumeIds.length,
-        resumeIds: unanalyzedResumeIds
+        message: processAll 
+          ? `Processing all ${processingCount} unanalyzed resumes for job ${jobDescriptionId}` 
+          : `Found ${processingCount} unanalyzed resumes for job ${jobDescriptionId} (${totalUnanalyzed} total)`,
+        pendingCount: totalUnanalyzed - processingCount,
+        processingCount: processingCount,
+        resumeIds: unanalyzedResumeIds,
+        totalUnanalyzed: totalUnanalyzed
       });
     } catch (error) {
       console.error("Error processing unanalyzed resumes:", error);

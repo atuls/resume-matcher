@@ -373,17 +373,20 @@ export async function getResumeScoresForJob(jobDescriptionId: string): Promise<{
  */
 export async function analyzeUnanalyzedResumes(
   jobDescriptionId: string, 
-  batchSize: number = 50
+  batchSize: number = 50,
+  processAll: boolean = false
 ): Promise<{
   message: string;
   pendingCount: number;
   processingCount: number;
   resumeIds: string[];
+  totalUnanalyzed?: number;
 }> {
   try {
     const response = await apiRequest("POST", "/api/admin/batch-process-unprocessed", {
       jobDescriptionId,
       batchSize,
+      processAll,
       startProcessing: true  // Explicitly start batch processing
     });
     
