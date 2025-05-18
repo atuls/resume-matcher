@@ -101,33 +101,44 @@ export default function BatchMatchDialog({
           // Set progress to show we're moving to next step
           setProgress(60);
           
-          // Find the next batch of unanalyzed resumes (limit to 10)
-          const batchResult = await analyzeUnanalyzedResumes(selectedJobId, 10);
+          try {
+            // Find the next batch of unanalyzed resumes (limit to 10)
+            const batchResult = await analyzeUnanalyzedResumes(selectedJobId, 10);
+            
+            // If there are no unanalyzed resumes left in the system
+            if (!batchResult || batchResult.resumeIds.length === 0) {
+              setProgress(100);
+              return {
+                results: [],
+                skippedCount: alreadyAnalyzed,
+                message: "No unanalyzed resumes found in the system"
+              };
+            }
+            
+            // Set the number of resumes being processed
+            setTotalToProcess(batchResult.resumeIds.length);
+            setProgress(70);
+            
+            // Analyze the batch of unanalyzed resumes
+            const result = await analyzeResumes(selectedJobId, batchResult.resumeIds);
           
-          // If there are no unanalyzed resumes left in the system
-          if (batchResult.resumeIds.length === 0) {
+            return {
+              ...result,
+              foundNewBatch: true,
+              newBatchSize: batchResult.resumeIds.length,
+              alreadyAnalyzedCount: alreadyAnalyzed,
+              totalToProcess: batchResult.resumeIds.length
+            };
+          } catch (error) {
+            console.error("Error finding or analyzing unanalyzed resumes:", error);
             setProgress(100);
             return {
               results: [],
               skippedCount: alreadyAnalyzed,
-              message: "No unanalyzed resumes found in the system"
+              error: true,
+              message: "Error finding unanalyzed resumes"
             };
           }
-          
-          // Set the number of resumes being processed
-          setTotalToProcess(batchResult.resumeIds.length);
-          setProgress(70);
-          
-          // Analyze the batch of unanalyzed resumes
-          const result = await analyzeResumes(selectedJobId, batchResult.resumeIds);
-          
-          return {
-            ...result,
-            foundNewBatch: true,
-            newBatchSize: batchResult.resumeIds.length,
-            alreadyAnalyzedCount: alreadyAnalyzed,
-            totalToProcess: batchResult.resumeIds.length
-          };
         } else {
           // Handle the case when there are unanalyzed resumes on the current page
           const toProcess = resumeIds.length - alreadyAnalyzed;
@@ -158,9 +169,11 @@ export default function BatchMatchDialog({
     },
     onSuccess: (data) => {
       setProgress(100);
-      const resultCount = data.results.length;
+      // Safely access results array
+      const resultCount = data.results ? data.results.length : 0;
       const skippedCount = data.skippedCount || 0;
-      const foundNewBatch = data.foundNewBatch;
+      // Check if foundNewBatch property exists
+      const foundNewBatch = data.foundNewBatch || false;
       const newBatchSize = data.newBatchSize || 0;
       
       // Create a more detailed success message including skipped resumes and new batch info
