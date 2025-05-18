@@ -316,16 +316,12 @@ export default function BatchMatchDialog({
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Analyze {unanalyzedCount} Resumes</AlertDialogTitle>
+            <AlertDialogTitle>Analyze {processAll ? totalUnanalyzedCount : unanalyzedCount} Resumes</AlertDialogTitle>
             <AlertDialogDescription>
-              {processAll && totalUnanalyzedCount > unanalyzedCount ? (
+              {processAll ? (
                 <>
                   We found a total of {totalUnanalyzedCount} resumes that haven't been analyzed for this job yet.
-                  {unanalyzedCount === totalUnanalyzedCount ? (
-                    " We'll analyze all of them in one batch."
-                  ) : (
-                    ` We'll analyze all ${unanalyzedCount} of them in one batch.`
-                  )}
+                  We'll analyze all of them in one batch.
                 </>
               ) : (
                 unanalyzedCount === 1 
@@ -340,7 +336,9 @@ export default function BatchMatchDialog({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={processBatch}>
-              Yes, Analyze {unanalyzedCount === 1 ? "1 Resume" : `${unanalyzedCount} Resumes`}
+              Yes, Analyze {processAll 
+                ? (totalUnanalyzedCount === 1 ? "1 Resume" : `${totalUnanalyzedCount} Resumes`) 
+                : (unanalyzedCount === 1 ? "1 Resume" : `${unanalyzedCount} Resumes`)}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
