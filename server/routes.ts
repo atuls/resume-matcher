@@ -16,6 +16,7 @@ import fs from "fs";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import { handleRedFlagAnalysis } from "./redFlagAnalysis";
+import { handleProcessRawAnalysis } from "./processRawAnalysisEndpoint";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register all API routes
