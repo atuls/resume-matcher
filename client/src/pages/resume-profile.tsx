@@ -46,8 +46,12 @@ export default function ResumeProfilePage() {
   const [isContactingCandidate, setIsContactingCandidate] = useState(false);
   const [isRunningJobAnalysis, setIsRunningJobAnalysis] = useState(false);
   
+  // Get the job ID from URL query parameters if available
+  const urlParams = new URLSearchParams(window.location.search);
+  const jobIdFromUrl = urlParams.get('jobId');
+  
   // State for selected job description for analysis
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(jobIdFromUrl);
   
   // Resume query
   const { data: resume, error: resumeError, isLoading: resumeLoading } = useQuery({

@@ -596,7 +596,7 @@ export default function CandidatesPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setLocation(`/resume/${resume.id}`)}
+                          onClick={() => setLocation(`/resume/${resume.id}${selectedJobId ? `?jobId=${selectedJobId}` : ''}`)}
                         >
                           View
                         </Button>
