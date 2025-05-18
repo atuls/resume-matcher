@@ -24,6 +24,8 @@ An AI-powered resume analysis platform that efficiently matches candidate resume
 - **Versatile Data Extraction**: Extract work history, skills, and red flags from multiple response structures
 - **Consistent Data Display**: All UI tabs show data from the same parsed source for consistency
 - **Job Matching Interface**: Interactive job selection with score display in candidate profiles
+- **Job Context Preservation**: Preserves job selection when navigating between pages
+- **Case-Insensitive Field Handling**: Displays data correctly regardless of field name casing
 - **Re-run Analysis**: Ability to re-analyze candidates against specific jobs on demand
 - **Database Persistence**: Parsed analysis fields are stored in the database for reliable access
 

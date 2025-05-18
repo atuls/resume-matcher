@@ -4,6 +4,15 @@ All notable changes to the Resume Analyzer project will be documented in this fi
 
 ## [Unreleased]
 
+### Added
+- Job context preservation when navigating from job candidates to resume profiles
+- Case-insensitive field handling for better display consistency across different data formats
+
+### Fixed
+- Fixed database query in parsed analysis endpoint to correctly filter by both resume ID and job ID
+- Fixed missing company names in work history display due to case sensitivity in field names
+- Resolved data discrepancy between database records and UI display
+
 ## [1.8.0] - 2025-05-15
 
 ### Added
