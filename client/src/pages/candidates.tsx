@@ -292,13 +292,12 @@ export default function CandidatesPage() {
         <h1 className="text-2xl font-bold">Candidates</h1>
         
         <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            onClick={() => setLocation("/job-match")}
-          >
-            <Briefcase className="mr-2 h-4 w-4" /> 
-            Match All with Job
-          </Button>
+          {/* Use the BatchMatchDialog component we updated instead of redirecting */}
+          <BatchMatchDialog 
+            resumes={resumes} 
+            buttonVariant="outline"
+            preselectedJobId={selectedJobId} 
+          />
           <Button onClick={() => setShowUploader(true)}>
             <Plus className="mr-2 h-4 w-4" /> Add Candidate
           </Button>
