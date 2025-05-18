@@ -380,13 +380,28 @@ export async function analyzeUnanalyzedResumes(
   processingCount: number;
   resumeIds: string[];
 }> {
-  const response = await apiRequest("POST", "/api/admin/batch-process-unprocessed", {
-    jobDescriptionId,
-    batchSize,
-    startProcessing: true  // Explicitly start batch processing
-  });
-  
-  return response.json();
+  try {
+    const response = await apiRequest("POST", "/api/admin/batch-process-unprocessed", {
+      jobDescriptionId,
+      batchSize,
+      startProcessing: true  // Explicitly start batch processing
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error finding unanalyzed resumes: ${response.statusText}`);
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error("Error in analyzeUnanalyzedResumes:", error);
+    // Return a safe fallback
+    return {
+      message: "Failed to find unanalyzed resumes",
+      pendingCount: 0,
+      processingCount: 0,
+      resumeIds: []
+    };
+  }
 }
 
 export async function getAnalysisResults(jobDescriptionId: string): Promise<EnrichedAnalysisResult[]> {

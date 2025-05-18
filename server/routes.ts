@@ -318,8 +318,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Job description ID is required" });
       }
       
-      // Get all resumes
-      const allResumesResult = await storage.getAllResumes(1, 1000); // Get a large batch of resumes
+      // Get all resumes - limit to a reasonable number to prevent memory issues
+      const allResumesResult = await storage.getAllResumes(1, 500); 
       
       if (!allResumesResult.resumes || allResumesResult.resumes.length === 0) {
         return res.json({
@@ -330,24 +330,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Get existing analysis results for this job
+      // Get existing analysis results for this job directly from the database for efficiency
       const existingResults = await db.select({
         resumeId: analysisResults.resumeId
       })
       .from(analysisResults)
       .where(eq(analysisResults.jobDescriptionId, jobDescriptionId));
       
+      // Extract just the resume IDs that already have analysis for this job
       const analyzedResumeIds = existingResults.map(result => result.resumeId);
       
-      // Find resumes that don't have analysis for this job
-      const unanalyzedResumes = allResumesResult.resumes
-        .filter(resume => !analyzedResumeIds.includes(resume.id))
-        .slice(0, batchSize);
+      console.log(`Found ${analyzedResumeIds.length} already analyzed resumes for job ${jobDescriptionId}`);
       
-      const unanalyzedResumeIds = unanalyzedResumes.map(resume => resume.id);
+      // Filter out resumes that already have analysis results
+      const unanalyzedResumes = allResumesResult.resumes
+        .filter(resume => !analyzedResumeIds.includes(resume.id));
+        
+      console.log(`Found ${unanalyzedResumes.length} unanalyzed resumes out of ${allResumesResult.resumes.length} total`);
+      
+      // Take just the requested batch size
+      const batchToProcess = unanalyzedResumes.slice(0, batchSize);
+      const unanalyzedResumeIds = batchToProcess.map(resume => resume.id);
       
       // Return information about the unanalyzed resumes
-      return res.json({
+      res.json({
         message: `Found ${unanalyzedResumeIds.length} unanalyzed resumes for job ${jobDescriptionId}`,
         pendingCount: 0,
         processingCount: unanalyzedResumeIds.length,
@@ -355,7 +361,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Error processing unanalyzed resumes:", error);
-      res.status(500).json({ error: "Failed to process unanalyzed resumes" });
+      // Return proper JSON error instead of HTML
+      res.status(500).json({ 
+        error: "Failed to process unanalyzed resumes", 
+        message: error instanceof Error ? error.message : String(error),
+        pendingCount: 0,
+        processingCount: 0,
+        resumeIds: []
+      });
     }
   });
   
