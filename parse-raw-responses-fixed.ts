@@ -130,13 +130,12 @@ function extractSummary(rawResponse: any): string {
   }
 }
 
-interface ProcessOptions {
+// Main function to process raw responses
+async function processRawResponses(options: {
   jobDescriptionId?: string;
   forceReprocess?: boolean;
   limit?: number;
-}
-
-async function processRawResponses(options: ProcessOptions = {}) {
+} = {}) {
   const { jobDescriptionId, forceReprocess = false, limit } = options;
   const startTime = Date.now();
   
@@ -151,28 +150,37 @@ async function processRawResponses(options: ProcessOptions = {}) {
   }
   
   try {
-    // Build the query condition based on options
-    let whereCondition = isNotNull(analysisResults.rawResponse);
+    // Build the where conditions for our query
+    let conditions = [];
     
+    // Always require raw_response to not be null
+    conditions.push(isNotNull(analysisResults.rawResponse));
+    
+    // Add job ID filter if provided
     if (jobDescriptionId) {
-      whereCondition = and(whereCondition, eq(analysisResults.jobDescriptionId, jobDescriptionId));
+      conditions.push(eq(analysisResults.jobDescriptionId, jobDescriptionId));
     }
     
+    // Add parsing status filter if not forcing reprocess
     if (!forceReprocess) {
-      whereCondition = and(whereCondition, eq(analysisResults.parsingStatus, "pending"));
+      conditions.push(eq(analysisResults.parsingStatus, "pending"));
     }
     
-    // Get analysis results based on the conditions
+    // Combine conditions with AND
+    const whereCondition = conditions.length === 1 
+      ? conditions[0] 
+      : and(...conditions);
+    
+    // Get all analysis results that match our conditions
     let query = db
       .select()
       .from(analysisResults)
       .where(whereCondition);
     
-    if (limit) {
-      query = query.limit(limit);
-    }
-    
-    const results = await query;
+    // Apply limit if provided
+    const results = limit 
+      ? await query.limit(limit) 
+      : await query;
     
     console.log(`Found ${results.length} raw responses to process`);
     
@@ -249,7 +257,11 @@ Processing complete:
 async function main() {
   // Parse command line arguments
   const args = process.argv.slice(2);
-  const options: ProcessOptions = {};
+  const options: {
+    jobDescriptionId?: string;
+    forceReprocess?: boolean;
+    limit?: number;
+  } = {};
   
   // Parse arguments
   for (let i = 0; i < args.length; i++) {
@@ -269,7 +281,7 @@ async function main() {
       case '--help':
       case '-h':
         console.log(`
-Usage: npx tsx parse-raw-responses.ts [options]
+Usage: npx tsx parse-raw-responses-fixed.ts [options]
 
 Options:
   --job-id, -j ID     Process only records for a specific job ID
