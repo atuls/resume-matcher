@@ -342,157 +342,140 @@ export default function BatchMatchDialog({
             Match All with Job
           </Button>
         </DialogTrigger>
-      <DialogContent className="sm:max-w-[525px]">
-        <DialogHeader>
-          <DialogTitle>Batch Match Resumes with Job</DialogTitle>
-          <DialogDescription>
-            Match {resumeCount} {resumeCount === 1 ? 'resume' : 'resumes'} with a job description.
-            Already analyzed resumes will be skipped.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="mt-4 space-y-4">
-          {/* AI Service Status Alert */}
-          {aiStatus && !aiStatus.available && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertTriangle className="h-4 w-4 mr-2" />
-              <AlertDescription>
-                {aiStatus.message || "OpenAI API key is not configured. Resume matching will not work properly."}
-              </AlertDescription>
-            </Alert>
-          )}
+        <DialogContent className="sm:max-w-[525px]">
+          <DialogHeader>
+            <DialogTitle>Batch Match Resumes with Job</DialogTitle>
+            <DialogDescription>
+              Match {resumeCount} {resumeCount === 1 ? 'resume' : 'resumes'} with a job description.
+              Already analyzed resumes will be skipped.
+            </DialogDescription>
+          </DialogHeader>
           
-          {checkingAiStatus && (
-            <div className="text-center py-2">
-              <Loader2 className="h-4 w-4 animate-spin mx-auto mb-1" />
-              <p className="text-xs text-gray-500">Checking AI service status...</p>
+          <div className="mt-4 space-y-4">
+            {/* AI Service Status Alert */}
+            {aiStatus && !aiStatus.available && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                <AlertDescription>
+                  {aiStatus.message || "OpenAI API key is not configured. Resume matching will not work properly."}
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {checkingAiStatus && (
+              <div className="text-center py-2">
+                <Loader2 className="h-4 w-4 animate-spin mx-auto mb-1" />
+                <p className="text-xs text-gray-500">Checking AI service status...</p>
+              </div>
+            )}
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input 
+                placeholder="Search job descriptions..." 
+                className="pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-          )}
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-            <Input 
-              placeholder="Search job descriptions..." 
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            
+            {isLoading ? (
+              <div className="text-center py-4">
+                <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
+                <p className="text-sm text-gray-500 mt-2">Loading job descriptions...</p>
+              </div>
+            ) : filteredJobs.length > 0 ? (
+              <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1">
+                {filteredJobs.map(job => (
+                  <Card 
+                    key={job.id}
+                    className={`p-3 cursor-pointer border ${selectedJobId === job.id ? 'border-primary' : 'border-gray-200'}`}
+                    onClick={() => setSelectedJobId(job.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className={`p-1.5 rounded-md ${selectedJobId === job.id ? 'bg-primary text-white' : 'bg-primary/10 text-primary'}`}>
+                          <FileText className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <div className="font-medium">{job.title}</div>
+                          <div className="text-xs text-gray-500">{job.company || 'No company'}</div>
+                        </div>
+                      </div>
+                      <ChevronRight className={`h-4 w-4 ${selectedJobId === job.id ? 'text-primary' : 'text-gray-400'}`} />
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 border rounded-md border-dashed">
+                <p className="text-gray-500">No job descriptions found</p>
+                {searchQuery && (
+                  <div className="mt-2 flex justify-center">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setSearchQuery("")}
+                      className="text-xs"
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Clear search
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Display info about analyzed vs total resumes */}
+            {selectedJobId && alreadyAnalyzedCount > 0 && !matchMutation.isPending && (
+              <Alert className="bg-blue-50 border-blue-200">
+                <Info className="h-4 w-4 text-blue-600 mr-2" />
+                <AlertDescription className="text-sm text-blue-600">
+                  {alreadyAnalyzedCount} of {resumeCount} {resumeCount === 1 ? 'resume has' : 'resumes have'} already been analyzed for this job.
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {/* Progress bar for batch analysis */}
+            {(progress > 0 || matchMutation.isPending || loadingUnanalyzed) && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>Analyzing resumes...</span>
+                  <span>{progress}%</span>
+                </div>
+                <Progress value={progress} className="h-2" />
+                <p className="text-xs text-gray-500 text-center">
+                  {loadingUnanalyzed 
+                    ? "Finding unanalyzed resumes..." 
+                    : `Processing ${totalToProcess} ${totalToProcess === 1 ? 'resume' : 'resumes'}`}
+                </p>
+              </div>
+            )}
           </div>
           
-          {isLoading ? (
-            <div className="text-center py-4">
-              <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
-              <p className="text-sm text-gray-500 mt-2">Loading job descriptions...</p>
-            </div>
-          ) : filteredJobs.length > 0 ? (
-            <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1">
-              {filteredJobs.map(job => (
-                <Card 
-                  key={job.id}
-                  className={`p-3 cursor-pointer border ${selectedJobId === job.id ? 'border-primary' : 'border-gray-200'}`}
-                  onClick={() => setSelectedJobId(job.id)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className={`p-1.5 rounded-md ${selectedJobId === job.id ? 'bg-primary text-white' : 'bg-primary/10 text-primary'}`}>
-                        <FileText className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <div className="font-medium">{job.title}</div>
-                        <div className="text-xs text-gray-500">{job.company || 'No company'}</div>
-                      </div>
-                    </div>
-                    <ChevronRight className={`h-4 w-4 ${selectedJobId === job.id ? 'text-primary' : 'text-gray-400'}`} />
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 border rounded-md border-dashed">
-              <p className="text-gray-500">No job descriptions found</p>
-              {searchQuery && (
-                <div className="mt-2 flex justify-center">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => setSearchQuery("")}
-                    className="text-xs"
-                  >
-                    <X className="h-3 w-3 mr-1" />
-                    Clear search
-                  </Button>
-                </div>
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setOpen(false)}
+              disabled={matchMutation.isPending || loadingUnanalyzed}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button"
+              onClick={handleBatchMatch}
+              disabled={!selectedJobId || resumeIds.length === 0 || matchMutation.isPending || loadingUnanalyzed}
+              className="min-w-[120px]"
+            >
+              {matchMutation.isPending || loadingUnanalyzed ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</>
+              ) : (
+                `Match ${resumeIds.length} ${resumeIds.length === 1 ? 'Resume' : 'Resumes'}`
               )}
-            </div>
-          )}
-          
-          {/* Display info about analyzed vs total resumes */}
-          {selectedJobId && alreadyAnalyzedCount > 0 && !matchMutation.isPending && (
-            <Alert className="bg-blue-50 border-blue-200">
-              <Info className="h-4 w-4 mr-2 text-blue-500" />
-              <AlertDescription className="text-sm text-blue-700">
-                {alreadyAnalyzedCount} out of {resumeCount} {resumeCount === 1 ? 'resume has' : 'resumes have'} already been analyzed for this job and will be skipped.
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          {matchMutation.isPending && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span>Processing...</span>
-                <span>{progress}%</span>
-              </div>
-              <Progress value={progress} className="h-2" />
-              
-              {alreadyAnalyzedCount > 0 && (
-                <p className="text-xs text-gray-500 mt-1">
-                  Skipping {alreadyAnalyzedCount} already analyzed {alreadyAnalyzedCount === 1 ? 'resume' : 'resumes'}. 
-                  Processing {totalToProcess} new {totalToProcess === 1 ? 'resume' : 'resumes'}.
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-        
-        <DialogFooter className="flex justify-between">
-          <Button 
-            variant="outline" 
-            onClick={() => {
-              if (matchMutation.isPending) {
-                // If a mutation is in progress, this will act as a cancel button
-                matchMutation.reset();
-                setProgress(0);
-                toast({
-                  title: "Operation cancelled",
-                  description: "The batch matching process was cancelled."
-                });
-              } else {
-                setOpen(false);
-              }
-            }} 
-          >
-            {matchMutation.isPending ? "Stop Processing" : "Cancel"}
-          </Button>
-          <Button 
-            onClick={handleBatchMatch}
-            disabled={
-              !selectedJobId || 
-              matchMutation.isPending || 
-              resumeIds.length === 0 || 
-              checkingAiStatus || 
-              (aiStatus && !aiStatus.available)
-            }
-          >
-            {matchMutation.isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing {progress}%
-              </>
-            ) : (
-              `Match ${resumeIds.length} ${resumeIds.length === 1 ? 'Resume' : 'Resumes'}`
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
