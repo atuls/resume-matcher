@@ -310,7 +310,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Endpoint to analyze resumes with the OpenAI API
+  // Endpoint to analyze resumes with the AI services
   app.post("/api/analyze", async (req: Request, res: Response) => {
     try {
       const { jobDescriptionId, resumeIds, force = false } = req.body;
@@ -329,40 +329,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Job description not found" });
       }
       
+      // Get job requirements for this job
+      const requirements = await db
+        .select()
+        .from(jobRequirements)
+        .where(eq(jobRequirements.jobDescriptionId, jobDescriptionId))
+        .orderBy(desc(jobRequirements.createdAt));
+      
       console.log(`Starting analysis of ${resumeIds.length} resumes for job ${jobDescriptionId}`);
       
+      // Import the AI service functions
+      const { analyzeResume } = await import("./services/aiService");
+      
       // For each resume in the batch, start an analysis
-      // Note: In a real implementation, this would be handled asynchronously
-      // But for this prototype, we'll fake the analysis completion
       const results = [];
       
       for (const resumeId of resumeIds) {
-        // Create a mock analysis result with a random score
-        const score = Math.floor(Math.random() * 100);
-        
-        // Insert the analysis result into the database
-        const analysisResult = await storage.createAnalysisResult({
-          resumeId,
-          jobDescriptionId,
-          overallScore: score,
-          skillMatches: {}, // Required field as JSON object
-          parsingStatus: "complete",
-          parsedSummary: "This is a mock analysis summary",
-          parsedSkills: ["JavaScript", "React", "TypeScript"],
-          parsedWorkHistory: [
-            {
-              title: "Software Engineer",
-              company: "Example Corp",
-              startDate: "2020-01",
-              endDate: "Present",
-              description: "Developed web applications"
+        try {
+          // Get the resume content
+          const resume = await storage.getResume(resumeId);
+          if (!resume) {
+            console.error(`Resume with ID ${resumeId} not found, skipping`);
+            continue;
+          }
+          
+          // Use the AI service to analyze this resume
+          const analysisResult = await analyzeResume(
+            resume.extractedText, 
+            jobDescription.description,
+            requirements.map(req => ({
+              requirement: req.requirement,
+              importance: req.importance,
+              tags: req.tags || []
+            }))
+          );
+          
+          // Extract skills from the analysis result
+          let parsedSkills = [];
+          try {
+            if (analysisResult.skillMatches && Array.isArray(analysisResult.skillMatches)) {
+              // Extract skills that had a full or partial match
+              parsedSkills = analysisResult.skillMatches
+                .filter(match => match.match === 'full' || match.match === 'partial')
+                .map(match => match.requirement);
             }
-          ],
-          parsedRedFlags: ["Example red flag"],
-          aiModel: "OpenAI GPT-4"
-        });
-        
-        results.push(analysisResult);
+          } catch (e) {
+            console.error("Error extracting skills from analysis:", e);
+          }
+          
+          // Create mock work history if not available
+          const workHistory = [
+            {
+              title: analysisResult.candidateTitle || "Unknown Position",
+              company: "Current Company",
+              startDate: "Unknown",
+              endDate: "Present",
+              description: "Current position"
+            }
+          ];
+          
+          // Create a record of this analysis
+          const createdAnalysis = await storage.createAnalysisResult({
+            resumeId,
+            jobDescriptionId,
+            overallScore: analysisResult.overallScore,
+            skillMatches: analysisResult.skillMatches || {},
+            parsedSkills,
+            parsedWorkHistory: workHistory,
+            parsedSummary: `Match score: ${analysisResult.overallScore}`,
+            parsedRedFlags: [],
+            rawResponse: analysisResult.rawResponse,
+            aiModel: analysisResult.aiModel,
+            parsingStatus: "complete"
+          });
+          
+          results.push({
+            resumeId,
+            jobDescriptionId,
+            score: analysisResult.overallScore,
+            skills: parsedSkills,
+            candidateName: resume.candidateName || analysisResult.candidateName || "Unknown",
+            matchedAt: createdAnalysis.createdAt,
+            analysis: createdAnalysis
+          });
+          
+          // Update the resume record with the candidate name if it's blank and we found one
+          if (!resume.candidateName && analysisResult.candidateName) {
+            await storage.updateResume(resumeId, {
+              candidateName: analysisResult.candidateName
+            });
+          }
+          
+          // Update the resume record with the candidate title if it's blank and we found one
+          if (!resume.candidateTitle && analysisResult.candidateTitle) {
+            await storage.updateResume(resumeId, {
+              candidateTitle: analysisResult.candidateTitle
+            });
+          }
+        } catch (error) {
+          console.error(`Error analyzing resume ${resumeId}:`, error);
+          // Continue with the next resume instead of failing the entire batch
+        }
       }
       
       // Return the analysis results

@@ -3,6 +3,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription 
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Briefcase, ChevronRight, Search, FileText, X, Users, Loader2, AlertTriangle, Info } from "lucide-react";
 import { getJobDescriptions, analyzeResumes, checkAIStatus, getResumeScoresForJob, analyzeUnanalyzedResumes } from "@/lib/api";
@@ -32,6 +42,13 @@ export default function BatchMatchDialog({
   const [progress, setProgress] = useState(0);
   const [aiStatus, setAiStatus] = useState<{available: boolean, message: string} | null>(null);
   const [checkingAiStatus, setCheckingAiStatus] = useState(false);
+  
+  // States for confirmation dialog
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [unanalyzedResumes, setUnanalyzedResumes] = useState<string[]>([]);
+  const [unanalyzedCount, setUnanalyzedCount] = useState(0);
+  const [loadingUnanalyzed, setLoadingUnanalyzed] = useState(false);
+  
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
@@ -238,8 +255,8 @@ export default function BatchMatchDialog({
     job.company?.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
   
-  // Handle match button click
-  const handleBatchMatch = async () => {
+  // Find unanalyzed resumes and show confirmation dialog
+  const findUnanalyzedResumes = async () => {
     if (!selectedJobId) {
       toast({
         title: "No job selected",
@@ -258,7 +275,7 @@ export default function BatchMatchDialog({
       return;
     }
     
-    // Check AI service status before starting the batch match process
+    // First check AI service status
     if (!aiStatus) {
       try {
         setCheckingAiStatus(true);
@@ -294,7 +311,60 @@ export default function BatchMatchDialog({
       return;
     }
     
-    // All checks passed, start the batch match process
+    try {
+      setLoadingUnanalyzed(true);
+      
+      // First check if any resumes on the current page need analysis
+      const existingScores = await getResumeScoresForJob(selectedJobId);
+      const analyzedResumeIds = existingScores?.scores?.map(score => score.resumeId) || [];
+      const currentPageUnanalyzed = resumeIds.filter(id => !analyzedResumeIds.includes(id));
+      
+      if (currentPageUnanalyzed.length > 0) {
+        // If there are unanalyzed resumes on the current page, use those
+        setUnanalyzedResumes(currentPageUnanalyzed);
+        setUnanalyzedCount(currentPageUnanalyzed.length);
+        setShowConfirmDialog(true);
+      } else {
+        // Otherwise, find unanalyzed resumes in the entire database
+        const batchResult = await analyzeUnanalyzedResumes(selectedJobId, 10);
+        
+        if (!batchResult || batchResult.resumeIds.length === 0) {
+          toast({
+            title: "No resumes to analyze",
+            description: "All resumes in the system have already been analyzed for this job.",
+          });
+          return;
+        }
+        
+        setUnanalyzedResumes(batchResult.resumeIds);
+        setUnanalyzedCount(batchResult.resumeIds.length);
+        setShowConfirmDialog(true);
+      }
+    } catch (error) {
+      console.error("Error finding unanalyzed resumes:", error);
+      toast({
+        title: "Error",
+        description: "Failed to find unanalyzed resumes. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingUnanalyzed(false);
+    }
+  };
+  
+  // Handle match button click - now just finds unanalyzed resumes
+  const handleBatchMatch = async () => {
+    await findUnanalyzedResumes();
+  };
+  
+  // Process confirmed batch of unanalyzed resumes
+  const processBatch = () => {
+    if (unanalyzedResumes.length === 0) return;
+    
+    // Close the confirmation dialog
+    setShowConfirmDialog(false);
+    
+    // Process the unanalyzed resumes
     matchMutation.mutate();
   };
   
