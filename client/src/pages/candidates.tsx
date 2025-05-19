@@ -300,7 +300,7 @@ export default function CandidatesPage() {
   });
   
   // Sort resumes if sorting is enabled
-  const sortedResumes = [...filteredResumes].sort((a, b) => {
+  const sortedAllResumes = [...filteredResumes].sort((a, b) => {
     if (!sortField) return 0;
     
     if (sortField === 'score') {
@@ -325,6 +325,12 @@ export default function CandidatesPage() {
     
     return 0;
   });
+  
+  // Apply pagination to the sorted results
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const sortedResumes = sortedAllResumes.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(sortedAllResumes.length / pageSize);
 
   return (
     <div className="container mx-auto px-4 py-8">
