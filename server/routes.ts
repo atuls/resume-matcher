@@ -251,6 +251,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Process raw analysis for a specific job description
   app.post("/api/job-descriptions/:id/process-raw-analysis", handleProcessRawAnalysis);
   
+  // Reprocess specific analysis results with nested data structures
+  app.post("/api/reprocess/:analysisId", async (req: Request, res: Response) => {
+    try {
+      const { analysisId } = req.params;
+      const { reset = true } = req.body;
+      
+      console.log(`Reprocessing analysis ID: ${analysisId} (reset=${reset})`);
+      
+      // Import the parser functions
+      const { resetAndReprocessAnalysisResult, processAnalysisResult } = await import("./processProblemRecords");
+      
+      // Use the reset function if requested, otherwise just process
+      const success = reset
+        ? await resetAndReprocessAnalysisResult(analysisId)
+        : await processAnalysisResult(analysisId);
+      
+      if (success) {
+        res.json({ success: true, message: 'Analysis result processed successfully' });
+      } else {
+        res.status(400).json({ success: false, message: 'Failed to process analysis result' });
+      }
+    } catch (error) {
+      console.error('Error in reprocess endpoint:', error);
+      res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+  });
+  
+  // Reprocess multiple analysis results by job ID
+  app.post("/api/reprocess-job/:jobId", async (req: Request, res: Response) => {
+    try {
+      const { jobId } = req.params;
+      const { limit = 10, reset = true } = req.body;
+      
+      console.log(`Reprocessing analysis results for job ID: ${jobId} (limit=${limit}, reset=${reset})`);
+      
+      // Import function on demand
+      const { processAnalysisResultsByJob } = await import("./processProblemRecords");
+      
+      const result = await processAnalysisResultsByJob(jobId, limit, reset);
+      
+      res.json({
+        success: true,
+        message: `Processing complete. ${result.success} successful, ${result.failed} failed out of ${result.total} total.`,
+        result
+      });
+    } catch (error) {
+      console.error('Error in reprocess-job endpoint:', error);
+      res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+  });
+  
   // Get parsed analysis data for a specific resume (from the database)
   app.get("/api/resumes/:id/parsed-analysis", async (req: Request, res: Response) => {
     try {
