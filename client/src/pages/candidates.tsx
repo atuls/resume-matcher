@@ -32,6 +32,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useRoute, Link, useLocation } from "wouter";
+import AnalysisSummaryStats from "@/components/resume/analysis-summary-stats";
 
 export default function CandidatesPage() {
   const [showUploader, setShowUploader] = useState(false);
@@ -348,27 +349,32 @@ export default function CandidatesPage() {
         </div>
         
         {selectedJobId && (
-          <div className="flex justify-end mb-4">
-            <Button 
-              variant="outline"
-              size="sm"
-              className="flex items-center"
-              onClick={handleProcessRawAnalysis}
-              disabled={processingRawAnalysis}
-            >
-              {processingRawAnalysis ? (
-                <>
-                  <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full mr-2"></div>
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-1.5" />
-                  Reprocess Analysis Data
-                </>
-              )}
-            </Button>
-          </div>
+          <>
+            <div className="flex justify-end mb-4">
+              <Button 
+                variant="outline"
+                size="sm"
+                className="flex items-center"
+                onClick={handleProcessRawAnalysis}
+                disabled={processingRawAnalysis}
+              >
+                {processingRawAnalysis ? (
+                  <>
+                    <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full mr-2"></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-1.5" />
+                    Reprocess Analysis Data
+                  </>
+                )}
+              </Button>
+            </div>
+            
+            {/* Analysis summary statistics */}
+            <AnalysisSummaryStats scores={resumeScores} />
+          </>
         )}
       </div>
 

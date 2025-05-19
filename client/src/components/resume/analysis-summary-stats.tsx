@@ -18,11 +18,8 @@ interface AnalysisSummaryStatsProps {
 export default function AnalysisSummaryStats({ scores }: AnalysisSummaryStatsProps) {
   // Calculate stats
   const resumeCount = Object.keys(scores).length;
-  const hasRawResponseCount = Object.values(scores).filter(score => 
-    // Can't directly check rawResponse as it's not returned to the client
-    // Instead checking if parsingStatus exists, which indicates analysis was performed
-    score.parsingStatus
-  ).length;
+  // Analysis was performed if score exists (we can't directly check rawResponse as it's not returned to the client)
+  const hasAnalysisCount = resumeCount;
   const parsedCompleteCount = Object.values(scores).filter(score => 
     score.parsingStatus === 'complete'
   ).length;
@@ -46,14 +43,14 @@ export default function AnalysisSummaryStats({ scores }: AnalysisSummaryStatsPro
             Raw responses available
           </span>
           <div className="flex items-baseline">
-            <span className="text-2xl font-bold text-gray-800 mr-2">{rawResponseCount}</span>
+            <span className="text-2xl font-bold text-gray-800 mr-2">{hasAnalysisCount}</span>
             <span className="text-sm text-gray-500">/ {resumeCount}</span>
             {resumeCount > 0 && (
               <Badge 
-                variant={rawResponseCount === resumeCount ? "default" : "outline"}
+                variant={hasAnalysisCount === resumeCount ? "default" : "outline"}
                 className="ml-auto"
               >
-                {Math.round((rawResponseCount / resumeCount) * 100)}%
+                {Math.round((hasAnalysisCount / resumeCount) * 100)}%
               </Badge>
             )}
           </div>
