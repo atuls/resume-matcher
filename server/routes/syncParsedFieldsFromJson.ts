@@ -47,40 +47,26 @@ router.post('/sync-parsed-fields', async (req: Request, res: Response) => {
           continue;
         }
         
-        // Fields to update
-        const updates: Record<string, any> = {};
-        
-        // Extract skills from parsedJson if they exist
-        if (parsedJson.skills && Array.isArray(parsedJson.skills) && parsedJson.skills.length > 0) {
-          updates.parsedSkills = parsedJson.skills;
-        }
-        
-        // Extract work history from parsedJson if it exists
-        if (parsedJson.workHistory && Array.isArray(parsedJson.workHistory) && parsedJson.workHistory.length > 0) {
-          updates.parsedWorkHistory = parsedJson.workHistory;
-        }
-        
-        // Extract red flags from parsedJson if they exist
-        if (parsedJson.redFlags && Array.isArray(parsedJson.redFlags) && parsedJson.redFlags.length > 0) {
-          updates.parsedRedFlags = parsedJson.redFlags;
-        }
-        
-        // Extract summary from parsedJson if it exists
-        if (parsedJson.summary) {
-          updates.parsedSummary = parsedJson.summary;
-        }
-        
-        // If we have updates to make, update the record
-        if (Object.keys(updates).length > 0) {
-          await db
-            .update(analysisResults)
-            .set(updates)
-            .where(eq(analysisResults.id, result.id));
+        // Always update all fields, even if empty - ensures consistent state
+        const updates: Record<string, any> = {
+          // Always provide arrays instead of null values
+          parsedSkills: (parsedJson.skills && Array.isArray(parsedJson.skills)) ? parsedJson.skills : [],
+          parsedWorkHistory: (parsedJson.workHistory && Array.isArray(parsedJson.workHistory)) ? parsedJson.workHistory : [],
+          parsedRedFlags: (parsedJson.redFlags && Array.isArray(parsedJson.redFlags)) ? parsedJson.redFlags : [],
+          parsedSummary: parsedJson.summary || '',
           
-          updated++;
-        } else {
-          skipped++;
-        }
+          // Mark record as complete
+          parsingStatus: "complete",
+          updatedAt: new Date()
+        };
+        
+        // Update the record with consistent data
+        await db
+          .update(analysisResults)
+          .set(updates)
+          .where(eq(analysisResults.id, result.id));
+        
+        updated++;
       } catch (error) {
         console.error(`Error syncing fields for record ${result.id}:`, error);
         skipped++;
@@ -135,40 +121,26 @@ router.post('/sync-parsed-fields/:jobId', async (req: Request, res: Response) =>
           continue;
         }
         
-        // Fields to update
-        const updates: Record<string, any> = {};
-        
-        // Extract skills from parsedJson if they exist
-        if (parsedJson.skills && Array.isArray(parsedJson.skills) && parsedJson.skills.length > 0) {
-          updates.parsedSkills = parsedJson.skills;
-        }
-        
-        // Extract work history from parsedJson if it exists
-        if (parsedJson.workHistory && Array.isArray(parsedJson.workHistory) && parsedJson.workHistory.length > 0) {
-          updates.parsedWorkHistory = parsedJson.workHistory;
-        }
-        
-        // Extract red flags from parsedJson if they exist
-        if (parsedJson.redFlags && Array.isArray(parsedJson.redFlags) && parsedJson.redFlags.length > 0) {
-          updates.parsedRedFlags = parsedJson.redFlags;
-        }
-        
-        // Extract summary from parsedJson if it exists
-        if (parsedJson.summary) {
-          updates.parsedSummary = parsedJson.summary;
-        }
-        
-        // If we have updates to make, update the record
-        if (Object.keys(updates).length > 0) {
-          await db
-            .update(analysisResults)
-            .set(updates)
-            .where(eq(analysisResults.id, result.id));
+        // Always update all fields, even if empty - ensures consistent state
+        const updates: Record<string, any> = {
+          // Always provide arrays instead of null values
+          parsedSkills: (parsedJson.skills && Array.isArray(parsedJson.skills)) ? parsedJson.skills : [],
+          parsedWorkHistory: (parsedJson.workHistory && Array.isArray(parsedJson.workHistory)) ? parsedJson.workHistory : [],
+          parsedRedFlags: (parsedJson.redFlags && Array.isArray(parsedJson.redFlags)) ? parsedJson.redFlags : [],
+          parsedSummary: parsedJson.summary || '',
           
-          updated++;
-        } else {
-          skipped++;
-        }
+          // Mark record as complete
+          parsingStatus: "complete",
+          updatedAt: new Date()
+        };
+        
+        // Update the record with consistent data
+        await db
+          .update(analysisResults)
+          .set(updates)
+          .where(eq(analysisResults.id, result.id));
+        
+        updated++;
       } catch (error) {
         console.error(`Error syncing fields for record ${result.id}:`, error);
         skipped++;
