@@ -146,13 +146,44 @@ export function ParsedDataViewer() {
                 />
               </div>
               
-              <div className="flex space-x-2">
+              <div className="flex flex-wrap gap-2">
                 <Button onClick={handleParseJson}>
                   Parse JSON
                 </Button>
                 <Button variant="outline" onClick={loadExampleData}>
                   Load Example
                 </Button>
+                
+                {parsedResponse && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="flex items-center gap-2">
+                        <Download className="h-4 w-4" />
+                        Export
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => exportAsJSON(parsedResponse, 'resume-analysis')}>
+                        <FileJson className="h-4 w-4 mr-2" />
+                        Export as JSON
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => exportAsCSV(parsedResponse.parsedData || parsedResponse, 'resume-analysis')}>
+                        <FileText className="h-4 w-4 mr-2" />
+                        Export as CSV
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+                
+                {parsedResponse && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowComparison(!showComparison)}
+                    className={showComparison ? "bg-blue-50" : ""}
+                  >
+                    {showComparison ? "Hide Comparison" : "Show Comparison"}
+                  </Button>
+                )}
               </div>
               
               {error && (
@@ -166,8 +197,65 @@ export function ParsedDataViewer() {
         
         <div>
           <h2 className="text-lg font-semibold mb-4">Parsed Output</h2>
+          
           {parsedResponse ? (
-            <RawResponseViewer rawResponse={parsedResponse} title="Parsed Data" />
+            <div className="space-y-4">
+              {/* Filter input */}
+              <div className="relative">
+                <Label htmlFor="filter-input">Filter</Label>
+                <input 
+                  id="filter-input"
+                  type="text" 
+                  value={filterText} 
+                  onChange={(e) => setFilterText(e.target.value)}
+                  placeholder="Filter by skills, job titles, or keywords..." 
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+                {filterText && (
+                  <button 
+                    onClick={() => setFilterText('')}
+                    className="absolute right-2 top-8 text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              
+              {/* Comparison view */}
+              {showComparison ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle>Raw JSON</CardTitle>
+                    </CardHeader>
+                    <CardContent className="max-h-[500px] overflow-auto">
+                      <pre className="text-xs font-mono whitespace-pre-wrap break-all">
+                        {JSON.stringify(parsedResponse, null, 2)}
+                      </pre>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle>Structured Data</CardTitle>
+                    </CardHeader>
+                    <CardContent className="max-h-[500px] overflow-auto">
+                      <RawResponseViewer 
+                        rawResponse={parsedResponse} 
+                        title="Structured View"
+                        filterText={filterText} 
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : (
+                <RawResponseViewer 
+                  rawResponse={parsedResponse} 
+                  title="Parsed Data"
+                  filterText={filterText} 
+                />
+              )}
+            </div>
           ) : (
             <Card className="bg-gray-50">
               <CardContent className="p-6 text-center text-gray-500">

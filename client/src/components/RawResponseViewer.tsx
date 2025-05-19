@@ -10,9 +10,10 @@ import { ParsedJsonDisplay } from './ParsedJsonDisplay';
 interface RawResponseViewerProps {
   rawResponse: any;
   title?: string;
+  filterText?: string;
 }
 
-export function RawResponseViewer({ rawResponse, title = "Response Analysis" }: RawResponseViewerProps) {
+export function RawResponseViewer({ rawResponse, title = "Response Analysis", filterText = "" }: RawResponseViewerProps) {
   const [activeTab, setActiveTab] = useState("structured");
   
   // If no raw response provided
