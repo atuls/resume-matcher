@@ -18,6 +18,9 @@ An AI-powered resume analysis platform that efficiently matches candidate resume
 - **Advanced Debugging**: Debug Info tab shows raw AI responses for troubleshooting with overall score display
 - **On-demand Resume Analysis**: Analyze resumes only when needed to reduce API usage
 - **Performance Optimization**: Efficient handling of large candidate pools with optimized API usage
+- **Analysis Summary Statistics**: View processing metrics and completion percentages for all candidates
+- **Unlimited Results Display**: Show all candidate results at once without pagination limitations
+- **Load Raw Responses**: Load and display all available analysis data with a single click
 - **Flexible AI Response Parsing**: Robust extraction of data from various LLM response formats
 - **Single-Prompt Analysis**: Unified prompt system for comprehensive resume evaluation
 - **Score Normalization**: Automatic conversion of different scoring scales (0-1, 0-10, 0-100)
@@ -73,6 +76,8 @@ The application requires the following environment variables:
 10. **Job-specific Matching**: Use the job selection dropdown in candidate profiles to compare match scores against different job positions
 11. **Re-run Analysis**: Update match scores for specific job-candidate combinations using the Re-run Analysis button
 12. **Candidate Tracking**: Mark candidates as contacted with a simple checkbox to track outreach efforts
+13. **Analysis Statistics**: View processing status with the Analysis Summary panel showing completion percentages
+14. **Load All Data**: Use the "Load Raw Responses" button to display all analyzed resumes for a selected job
 
 ## Data Flow
 

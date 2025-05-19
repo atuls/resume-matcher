@@ -12,11 +12,16 @@ All notable changes to the Resume Analyzer project will be documented in this fi
 - Case-insensitive field handling for better display consistency across different data formats
 - "Run on All Unanalyzed" feature for processing all unanalyzed resumes at once
 - Enhanced batch processing with accurate count display and confirmation dialog
+- Analysis Summary Statistics panel showing processing status metrics for all candidates
+- "Load Raw Responses" button to fetch and display all resume analysis data at once
+- Visual progress indicators in statistics panel showing completion percentages
 
 ### Changed
 - Enhanced current position detection with multiple fallback strategies
 - Improved work history extraction with better sorting and identification of current roles
 - More robust JSON parsing with graceful error handling for malformed responses
+- Simplified candidate display to show all resumes at once without pagination
+- Increased default page size limits to accommodate large candidate pools
 
 ### Fixed
 - Fixed issue with raw analysis processing API endpoint returning HTML instead of JSON
@@ -25,6 +30,8 @@ All notable changes to the Resume Analyzer project will be documented in this fi
 - Fixed missing company names in work history display due to case sensitivity in field names
 - Resolved data discrepancy between database records and UI display
 - Fixed batch processing to correctly handle and display the total number of unanalyzed resumes
+- Fixed pagination issues when loading all resume analysis data (now shows all 278 results)
+- Corrected API parameter naming mismatch between client and server (pageSize vs limit)
 
 ## [1.8.0] - 2025-05-15
 
