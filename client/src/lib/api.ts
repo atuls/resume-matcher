@@ -801,3 +801,42 @@ export async function syncParsedFieldsFromJson(jobDescriptionId: string): Promis
   const response = await apiRequest("POST", `/api/sync-parsed-fields/${jobDescriptionId}`, {});
   return response.json();
 }
+
+/**
+ * Use enhanced parser to handle multiple field name variations
+ * This uses an improved parser that can extract data from various field names:
+ * - Skills from: skills, Skills, skill_list, etc.
+ * - Work History from: workHistory, work_history, Work History, employment_history, etc.
+ * - Red Flags from: redFlags, red_flags, Red Flags, warnings, etc.
+ * - Summary from: summary, Summary, overview, etc.
+ */
+export async function useEnhancedParser(jobDescriptionId: string): Promise<{
+  extractedCount: number;
+  syncedCount: number;
+  message: string;
+}> {
+  // Step 1: Extract parsedJson with enhanced field name support
+  const extractResponse = await apiRequest("POST", `/api/enhanced-sync-parsed-json/job/${jobDescriptionId}`, {
+    limit: 100
+  });
+  
+  if (!extractResponse.ok) {
+    throw new Error('Failed to extract structured data with enhanced parser');
+  }
+  
+  // Step 2: Sync extracted data to individual fields 
+  const syncResponse = await apiRequest("POST", `/api/sync-parsed-fields/${jobDescriptionId}`, {});
+  
+  if (!syncResponse.ok) {
+    throw new Error('Failed to sync extracted structured data to individual fields');
+  }
+  
+  const extractResult = await extractResponse.json();
+  const syncResult = await syncResponse.json();
+  
+  return {
+    extractedCount: extractResult.successCount || 0,
+    syncedCount: syncResult.updated || 0,
+    message: `Enhanced parser processed ${extractResult.successCount || 0} records and synced ${syncResult.updated || 0} records`
+  };
+}

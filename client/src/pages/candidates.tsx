@@ -238,6 +238,48 @@ export default function CandidatesPage() {
     }
   };
   
+  // Handle enhanced parsing with improved field name detection
+  const handleEnhancedParsing = async () => {
+    if (!selectedJobId) return;
+    
+    try {
+      setProcessingRawAnalysis(true);
+      
+      toast({
+        title: "Enhanced parsing started",
+        description: "Using improved field detection to extract more data...",
+        variant: "default"
+      });
+      
+      // Use the enhanced parser that handles multiple field name variations
+      const result = await useEnhancedParser(selectedJobId);
+      
+      toast({
+        title: "Enhanced parsing complete",
+        description: result.message,
+        variant: "default"
+      });
+      
+      // Refresh the data after processing
+      if (result.extractedCount > 0 || result.syncedCount > 0) {
+        console.log("Enhanced parsing completed successfully, refreshing data...");
+        
+        // Fetch updated scores
+        const updatedScores = await getResumeScores(null, selectedJobId, true);
+        setResumeScores(updatedScores);
+      }
+    } catch (error) {
+      console.error("Error with enhanced parsing:", error);
+      toast({
+        title: "Enhanced parsing error",
+        description: "Failed to extract data. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setProcessingRawAnalysis(false);
+    }
+  };
+  
   // Handle loading all resumes with raw responses
   const handleLoadRawResponses = async () => {
     if (!selectedJobId) return;
