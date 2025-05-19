@@ -5,7 +5,9 @@ import { RawResponseViewer } from './RawResponseViewer';
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Info, Download, FileJson, FileText } from 'lucide-react';
+import { exportAsJSON, exportAsCSV } from '../utils/exportData';
 
 /**
  * A component that allows users to paste raw response JSON and view the parsed structured data
@@ -14,6 +16,8 @@ export function ParsedDataViewer() {
   const [jsonInput, setJsonInput] = useState('');
   const [parsedResponse, setParsedResponse] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showComparison, setShowComparison] = useState(false);
+  const [filterText, setFilterText] = useState('');
   
   // Handle the parsing of the input JSON
   const handleParseJson = () => {
