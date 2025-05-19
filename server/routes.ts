@@ -19,6 +19,7 @@ import { handleRedFlagAnalysis } from "./redFlagAnalysis";
 import { handleProcessRawAnalysis } from "./processRawAnalysisEndpoint";
 import syncParsedJsonRouter from "./routes/syncParsedJson";
 import syncParsedFieldsRouter from "./routes/syncParsedFieldsFromJson";
+import enhancedSyncParsedJsonRouter from "./routes/enhancedSyncParsedJson";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register all API routes
@@ -29,6 +30,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register the sync parsed JSON routes
   app.use("/api", syncParsedJsonRouter);
   app.use("/api", syncParsedFieldsRouter);
+  app.use("/api", enhancedSyncParsedJsonRouter); // Enhanced version with better field name support
   
   // AI Status endpoint - Check if OpenAI API is properly configured
   app.get("/api/ai-status", async (_req: Request, res: Response) => {
