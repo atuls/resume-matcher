@@ -321,20 +321,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/reprocess-job/:jobId", async (req: Request, res: Response) => {
     try {
       const { jobId } = req.params;
-      const { limit = 10, reset = true } = req.body;
+      const { limit = 10, reset = true, useEnhancedParser = false, force = false } = req.body;
       
-      console.log(`Reprocessing analysis results for job ID: ${jobId} (limit=${limit}, reset=${reset})`);
+      console.log(`Reprocessing analysis results for job ID: ${jobId} (limit=${limit}, reset=${reset}, useEnhancedParser=${useEnhancedParser})`);
       
-      // Import function on demand
-      const { processAnalysisResultsByJob } = await import("./processProblemRecords");
-      
-      const result = await processAnalysisResultsByJob(jobId, limit, reset);
-      
-      res.json({
-        success: true,
-        message: `Processing complete. ${result.success} successful, ${result.failed} failed out of ${result.total} total.`,
-        result
-      });
+      if (useEnhancedParser) {
+        // Use our enhanced parser with field name variation handling
+        console.log(`Using enhanced parser for job ${jobId}`);
+        
+        // First, get records for this job
+        const records = await db
+          .select({
+            id: analysisResults.id,
+            rawResponse: analysisResults.rawResponse
+          })
+          .from(analysisResults)
+          .where(eq(analysisResults.jobDescriptionId, jobId))
+          .limit(Number(limit));
+
+        console.log(`Found ${records.length} records with rawResponse for job ${jobId}`);
+        
+        // Process each record with enhanced parser
+        let processed = 0;
+        let successful = 0;
+        
+        // Import enhanced parser service
+        const { extractRawResponseContent, updateParsedJson } = await import("./services/enhancedResponseParserService");
+        
+        for (const record of records) {
+          processed++;
+          if (record.rawResponse) {
+            try {
+              const success = await updateParsedJson(record.id, record.rawResponse);
+              if (success) successful++;
+            } catch (err) {
+              console.error(`Error processing record ${record.id}:`, err);
+            }
+          }
+        }
+        
+        res.json({
+          success: true,
+          message: `Enhanced parsing complete. ${successful} successfully processed out of ${processed} total.`,
+          processed,
+          successful
+        });
+      } else {
+        // Use standard processing
+        // Import function on demand
+        const { processAnalysisResultsByJob } = await import("./processProblemRecords");
+        
+        const result = await processAnalysisResultsByJob(jobId, limit, reset);
+        
+        res.json({
+          success: true,
+          message: `Processing complete. ${result.success} successful, ${result.failed} failed out of ${result.total} total.`,
+          result
+        });
+      }
     } catch (error) {
       console.error('Error in reprocess-job endpoint:', error);
       res.status(500).json({ success: false, message: 'Internal server error' });

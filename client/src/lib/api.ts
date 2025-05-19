@@ -816,9 +816,9 @@ export async function useEnhancedParser(jobDescriptionId: string): Promise<{
   message: string;
 }> {
   try {
-    // Step 1: Extract parsedJson with enhanced field name support
+    // Step 1: Use the existing reprocess-job endpoint to extract data with field name variations
     console.log(`Using enhanced parser for job ${jobDescriptionId}`);
-    // Use fetch directly to avoid issues with apiRequest
+    
     const extractResponse = await fetch(`/api/reprocess-job/${jobDescriptionId}`, {
       method: "POST",
       credentials: "include",
@@ -826,7 +826,9 @@ export async function useEnhancedParser(jobDescriptionId: string): Promise<{
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        limit: 100
+        limit: 100,
+        force: true,
+        useEnhancedParser: true  // Add flag to use enhanced parser
       })
     });
     
@@ -854,9 +856,9 @@ export async function useEnhancedParser(jobDescriptionId: string): Promise<{
     const syncResult = await syncResponse.json();
     
     return {
-      extractedCount: extractResult.successCount || 0,
+      extractedCount: extractResult.processed || 0,
       syncedCount: syncResult.updated || 0,
-      message: `Enhanced parser processed ${extractResult.successCount || 0} records and synced ${syncResult.updated || 0} records`
+      message: `Enhanced parser processed ${extractResult.processed || 0} records and synced ${syncResult.updated || 0} records`
     };
   } catch (error) {
     console.error("Enhanced parser error:", error);
