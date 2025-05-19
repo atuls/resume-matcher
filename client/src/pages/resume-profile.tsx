@@ -23,6 +23,7 @@ import { DebugPanel } from "@/components/DebugPanel";
 import { ResumeRedFlagsTab } from "@/components/ResumeRedFlagsTab";
 import { ResumeSkillsTab } from "@/components/ResumeSkillsTab";
 import { ResumeWorkHistoryTab } from "@/components/ResumeWorkHistoryTab";
+import { ParsedDataViewer } from "@/components/ParsedDataViewer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
 import { formatDistance } from "date-fns";
