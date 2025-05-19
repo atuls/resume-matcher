@@ -1,5 +1,5 @@
 import React from 'react';
-import { CircleDashed, Database, ListChecks, ListTree, FileText, Download } from 'lucide-react';
+import { CircleDashed, Database, ListChecks, ListTree, FileText, Download, FileJson } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -11,7 +11,8 @@ interface AnalysisSummaryStatsProps {
       skills?: string[],
       redFlags?: string[],
       currentPosition?: { title: string, company: string } | null,
-      parsingStatus?: string
+      parsingStatus?: string,
+      parsedJson?: any
     }
   };
   jobId?: string;
@@ -36,6 +37,9 @@ export default function AnalysisSummaryStats({
   const hasWorkHistoryCount = Object.values(scores).filter(score => 
     score.currentPosition !== null && score.currentPosition !== undefined
   ).length;
+  const hasStructuredDataCount = Object.values(scores).filter(score => 
+    score.parsedJson !== null && score.parsedJson !== undefined
+  ).length;
 
   return (
     <div className="bg-gray-50 p-5 rounded-lg border border-gray-200 mb-5">
@@ -56,7 +60,7 @@ export default function AnalysisSummaryStats({
           </Button>
         )}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="flex flex-col">
           <span className="text-xs text-gray-500 flex items-center mb-1">
             <FileText className="h-3 w-3 mr-1" />
@@ -103,6 +107,32 @@ export default function AnalysisSummaryStats({
                 </div>
                 <span className="text-xs text-gray-500 mt-1">
                   {Math.round((parsedCompleteCount / resumeCount) * 100)}%
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className="flex flex-col">
+          <span className="text-xs text-gray-500 flex items-center mb-1">
+            <FileJson className="h-3 w-3 mr-1" />
+            Has structured data
+          </span>
+          <div className="flex flex-col">
+            <div className="flex items-baseline">
+              <span className="text-2xl font-bold text-gray-800 mr-2">{hasStructuredDataCount}</span>
+              <span className="text-sm text-gray-500">/ {resumeCount}</span>
+            </div>
+            {resumeCount > 0 && (
+              <div className="mt-1">
+                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                  <div 
+                    className={`${hasStructuredDataCount > 0 ? 'bg-green-500' : 'bg-blue-500'} h-1.5 rounded-full`}
+                    style={{ width: `${Math.round((hasStructuredDataCount / resumeCount) * 100)}%` }}
+                  ></div>
+                </div>
+                <span className="text-xs text-gray-500 mt-1">
+                  {Math.round((hasStructuredDataCount / resumeCount) * 100)}%
                 </span>
               </div>
             )}
