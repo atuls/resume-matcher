@@ -16,6 +16,7 @@ import {
   getJobDescription,
   getResumeRedFlagAnalysis,
   processRawAnalysisForJob,
+  syncParsedFieldsFromJson,
   RedFlagAnalysis
 } from "@/lib/api";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -203,17 +204,23 @@ export default function CandidatesPage() {
     try {
       setProcessingRawAnalysis(true);
       
+      // Step 1: Process raw responses to generate parsedJson
+      console.log("Step 1: Processing raw analysis to generate parsedJson...");
       const result = await processRawAnalysisForJob(selectedJobId);
+      
+      // Step 2: Sync data from parsedJson to individual fields
+      console.log("Step 2: Syncing data from parsedJson to individual parsed fields...");
+      const syncResult = await syncParsedFieldsFromJson(selectedJobId);
       
       toast({
         title: "Processing complete",
-        description: `${result.processed || 0} analyses processed successfully. ${result.skipped || 0} skipped. ${result.errors || 0} errors.`,
+        description: `Processed ${result.processed || 0} analyses and extracted structured data for ${syncResult.updated || 0} records.`,
         variant: "default"
       });
       
       // Refresh the data after processing
-      if (result.processed > 0) {
-        console.log("Raw analysis processing completed successfully, refreshing data...");
+      if (result.processed > 0 || syncResult.updated > 0) {
+        console.log("Raw analysis and field extraction completed successfully, refreshing data...");
         
         // Fetch updated scores
         const updatedScores = await getResumeScores(null, selectedJobId, true);

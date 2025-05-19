@@ -783,3 +783,21 @@ export async function processRawAnalysisForJob(jobDescriptionId: string, force: 
   });
   return response.json();
 }
+
+/**
+ * Sync individual parsed fields from parsedJson for a specific job
+ * This extracts data from the parsedJson field into individual fields:
+ * - parsedSkills from parsedJson.skills
+ * - parsedWorkHistory from parsedJson.workHistory
+ * - parsedRedFlags from parsedJson.redFlags
+ * - parsedSummary from parsedJson.summary
+ */
+export async function syncParsedFieldsFromJson(jobDescriptionId: string): Promise<{
+  updated: number;
+  skipped: number;
+  total: number;
+  message: string;
+}> {
+  const response = await apiRequest("POST", `/api/sync-parsed-fields/${jobDescriptionId}`, {});
+  return response.json();
+}
