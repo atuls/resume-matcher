@@ -131,7 +131,8 @@ function extractSummary(rawResponse: any): string {
  */
 export async function handleProcessRawAnalysis(req: Request, res: Response) {
   const { id: jobDescriptionId } = req.params;
-  console.log(`Processing raw analysis for job ID: ${jobDescriptionId}`);
+  const { force = false } = req.body;
+  console.log(`Processing raw analysis for job ID: ${jobDescriptionId}, force=${force}`);
   
   try {
     // Count the total number of raw responses for this job
@@ -167,13 +168,13 @@ export async function handleProcessRawAnalysis(req: Request, res: Response) {
     // Process each result
     for (const result of results) {
       try {
-        // Check if record is already processed and has parsedJson
-        if (result.parsingStatus === "complete" && result.parsedJson) {
+        // If not forcing reprocessing, skip records that are already processed and have parsedJson
+        if (!force && result.parsingStatus === "complete" && result.parsedJson) {
           skipped++;
           continue;
         }
         
-        // Process records that are either not complete OR don't have parsedJson
+        // Process records based on force parameter
         
         let rawResponseData: any;
         
