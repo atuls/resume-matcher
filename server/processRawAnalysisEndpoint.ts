@@ -167,11 +167,13 @@ export async function handleProcessRawAnalysis(req: Request, res: Response) {
     // Process each result
     for (const result of results) {
       try {
-        // Skip records that are already processed, unless we're forcing a reprocess
-        if (result.parsingStatus === "complete") {
+        // Check if record is already processed and has parsedJson
+        if (result.parsingStatus === "complete" && result.parsedJson) {
           skipped++;
           continue;
         }
+        
+        // Process records that are either not complete OR don't have parsedJson
         
         let rawResponseData: any;
         
