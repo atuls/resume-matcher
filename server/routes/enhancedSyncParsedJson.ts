@@ -9,6 +9,9 @@ import { extractRawResponseContent, updateParsedJson, processRawResponseBatch } 
 
 const router = Router();
 
+// Debug helper to log all routes being registered
+console.log("Registering enhanced sync parsed JSON routes");
+
 /**
  * POST /api/enhanced-sync-parsed-json
  * Process a batch of records to extract parsedJson with improved field variation handling

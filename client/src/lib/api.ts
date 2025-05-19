@@ -817,8 +817,9 @@ export async function useEnhancedParser(jobDescriptionId: string): Promise<{
 }> {
   try {
     // Step 1: Extract parsedJson with enhanced field name support
+    console.log(`Using enhanced parser for job ${jobDescriptionId}`);
     // Use fetch directly to avoid issues with apiRequest
-    const extractResponse = await fetch(`/api/enhanced-sync-parsed-json/job/${jobDescriptionId}`, {
+    const extractResponse = await fetch(`/api/reprocess-job/${jobDescriptionId}`, {
       method: "POST",
       credentials: "include",
       headers: {
