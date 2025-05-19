@@ -35,24 +35,82 @@ export function ParsedDataViewer() {
   
   // Load the example data
   const loadExampleData = () => {
-    fetch('/api_response.json')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to load example data');
+    try {
+      // Fallback to static example data if fetch fails
+      const exampleData = {
+        "parsedData": {
+          "skills": [
+            "B2B sales",
+            "Quota achievement",
+            "Full sales cycle management",
+            "Influencer marketing",
+            "Social media management",
+            "Martech solutions",
+            "Consumer insights",
+            "Social data analysis",
+            "Pipeline management",
+            "Client relationship building",
+            "Team leadership",
+            "Sales training",
+            "Product demonstrations",
+            "Outbound prospecting",
+            "Strategic selling"
+          ],
+          "workHistory": [
+            {
+              "title": "Sr Growth Account Executive",
+              "company": "Meltwater News, Inc",
+              "endDate": "current",
+              "location": "San Francisco, CA",
+              "startDate": "April 2024",
+              "description": "Team revenue lead in Q2 2024 after promotion. Organized team of 8 account managers to drive upsells across martech products. Led cross-functional workshops, managed end-to-end sales cycle, hit monthly quotas (110%+).",
+              "isCurrentRole": "true",
+              "durationMonths": 2
+            },
+            {
+              "title": "Account Executive",
+              "company": "Meltwater News, Inc",
+              "endDate": "March 2024",
+              "location": "San Francisco, CA",
+              "startDate": "July 2023",
+              "description": "Increased personal sales revenue 30% month over month. Attained 120% of monthly quota. Built sales pipe focused on net new logo across verticals. Led product demos and managed full sales cycle.",
+              "isCurrentRole": "false",
+              "durationMonths": 9
+            },
+            {
+              "title": "Account Executive",
+              "company": "Skeepers",
+              "endDate": "June 2023",
+              "location": "Remote",
+              "startDate": "May 2022",
+              "description": "Spearheaded sales strategy for new SAAS product. Increased client onboarding by 100% per quarter. Led SDR training sessions increasing demo bookings by 20%.",
+              "isCurrentRole": "false",
+              "durationMonths": 14
+            }
+          ],
+          "redFlags": [
+            "Employment gap from March 2020 to January 2021 (approximately 10 months) with no explanation provided",
+            "Current role at Meltwater starting in April 2024 is very recent (only 2 months)",
+            "No specific mention of experience with CRM systems as required in the job description"
+          ],
+          "summary": "This candidate is a strong match for the Brand Partnerships Manager position. With 6 years of quota-carrying sales experience in B2B revenue, they have consistently demonstrated high performance in sales roles related to influencer marketing, social media management, and martech solutions."
+        },
+        "scoreData": {
+          "score": 85,
+          "jobDescriptionId": "sample-job-id",
+          "matchedAt": "2025-05-15T18:30:29.247Z"
         }
-        return response.json();
-      })
-      .then(data => {
-        // Set the example data in the textarea
-        setJsonInput(JSON.stringify(data, null, 2));
-        // Also parse it right away
-        setParsedResponse(data);
-        // Clear any errors
-        setError(null);
-      })
-      .catch(error => {
-        setError(`Error loading example data: ${error.message}`);
-      });
+      };
+      
+      // Set the example data in the textarea
+      setJsonInput(JSON.stringify(exampleData, null, 2));
+      // Also parse it right away
+      setParsedResponse(exampleData);
+      // Clear any errors
+      setError(null);
+    } catch (error) {
+      setError(`Error loading example data: ${error.message}`);
+    }
   };
   
   return (

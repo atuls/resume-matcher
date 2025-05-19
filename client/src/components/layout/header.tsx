@@ -49,6 +49,11 @@ export default function Header() {
                   Settings
                 </span>
               </Link>
+              <Link href="/structured-data-parser">
+                <span className={`cursor-pointer ${isActive('/structured-data-parser') ? 'text-primary font-medium' : 'text-gray-500 hover:text-primary'}`}>
+                  Data Parser
+                </span>
+              </Link>
             </nav>
             
             <div className="flex items-center space-x-3">
