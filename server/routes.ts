@@ -192,30 +192,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 job.isCurrentRole === true || 
                 job.isCurrentRole === "true" || 
                 job.endDate === "Present" || 
+                job.endDate === "Current" ||
+                job.current === true ||
                 !job.endDate
               );
               
               if (current) {
+                // Get title from various possible field names
+                const title = current.title || current.Title || current.position || current.Position || current.jobTitle || current.JobTitle || 'Unknown Position';
+                
+                // Get company from various possible field names
+                const company = current.company || current.Company || current.employer || current.Employer || current.organization || current.Organization || 'Unknown Company';
+                
                 currentPosition = {
-                  title: current.title || 'Unknown Position',
-                  company: current.company || 'Unknown Company',
+                  title,
+                  company,
                   current: true
                 };
               } else {
-                // If no current position, use the most recent by end date
-                const sortedWorkHistory = [...workHistory].sort((a, b) => {
-                  // Sort by end date (most recent first)
-                  const dateA = a.endDate ? new Date(a.endDate).getTime() : Date.now();
-                  const dateB = b.endDate ? new Date(b.endDate).getTime() : Date.now();
-                  return dateB - dateA;
-                });
-                
-                if (sortedWorkHistory.length > 0) {
-                  const mostRecent = sortedWorkHistory[0];
+                // If no current position, use the most recent by end date or just take the first entry
+                try {
+                  const sortedWorkHistory = [...workHistory].sort((a, b) => {
+                    // Try to sort by end date (most recent first)
+                    const dateA = a.endDate ? new Date(a.endDate).getTime() : Date.now();
+                    const dateB = b.endDate ? new Date(b.endDate).getTime() : Date.now();
+                    return dateB - dateA;
+                  });
+                  
+                  const mostRecent = sortedWorkHistory[0] || workHistory[0];
+                  
+                  // Get title from various possible field names
+                  const title = mostRecent.title || mostRecent.Title || mostRecent.position || mostRecent.Position || mostRecent.jobTitle || mostRecent.JobTitle || 'Unknown Position';
+                  
+                  // Get company from various possible field names
+                  const company = mostRecent.company || mostRecent.Company || mostRecent.employer || mostRecent.Employer || mostRecent.organization || mostRecent.Organization || 'Unknown Company';
+                  
                   currentPosition = {
-                    title: mostRecent.title || 'Unknown Position',
-                    company: mostRecent.company || 'Unknown Company',
-                    current: !mostRecent.endDate || mostRecent.endDate === 'Present'
+                    title,
+                    company,
+                    current: !mostRecent.endDate || mostRecent.endDate === 'Present' || mostRecent.endDate === 'Current'
+                  };
+                } catch (err) {
+                  // If sorting fails, just use the first entry
+                  const firstEntry = workHistory[0];
+                  
+                  // Get title from various possible field names
+                  const title = firstEntry.title || firstEntry.Title || firstEntry.position || firstEntry.Position || firstEntry.jobTitle || firstEntry.JobTitle || 'Unknown Position';
+                  
+                  // Get company from various possible field names
+                  const company = firstEntry.company || firstEntry.Company || firstEntry.employer || firstEntry.Employer || firstEntry.organization || firstEntry.Organization || 'Unknown Company';
+                  
+                  currentPosition = {
+                    title,
+                    company,
+                    current: false
                   };
                 }
               }

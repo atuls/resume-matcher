@@ -10,6 +10,7 @@ interface AnalysisSummaryStatsProps {
       matchedAt: Date,
       skills?: string[],
       redFlags?: string[],
+      workHistory?: any[],
       currentPosition?: { title: string, company: string } | null,
       parsingStatus?: string,
       parsedJson?: any
@@ -34,11 +35,9 @@ export default function AnalysisSummaryStats({
   const hasSkillsCount = Object.values(scores).filter(score => 
     Array.isArray(score.skills) && score.skills.length > 0
   ).length;
-  // Count work history based on actual work history array or fallback to current position
+  // Count work history based on current position (which is derived from workHistory)
   const hasWorkHistoryCount = Object.values(scores).filter(score => 
-    (Array.isArray(score.skills) && score.skills.length > 0) && 
-    (score.currentPosition !== null || 
-     (Array.isArray(score.workHistory) && score.workHistory.length > 0))
+    score.currentPosition !== null && score.currentPosition !== undefined
   ).length;
   
   // Consider structured data present if we have at least skills, which is the most common field
