@@ -769,12 +769,14 @@ export async function deleteCandidateJobConnection(id: string): Promise<void> {
   return;
 }
 
-export async function processRawAnalysisForJob(jobDescriptionId: string): Promise<{
+export async function processRawAnalysisForJob(jobDescriptionId: string, force: boolean = true): Promise<{
   processed: number;
   skipped: number;
   errors: number;
   message: string;
 }> {
-  const response = await apiRequest("POST", `/api/job-descriptions/${jobDescriptionId}/process-raw-analysis`);
+  const response = await apiRequest("POST", `/api/job-descriptions/${jobDescriptionId}/process-raw-analysis`, {
+    force
+  });
   return response.json();
 }
