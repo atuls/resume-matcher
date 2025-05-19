@@ -66,9 +66,9 @@ export default function CandidatesPage() {
   const jobId = jobMatch ? jobParams.id : null;
   const [selectedJobId, setSelectedJobId] = useState<string | null>(jobId);
   
-  // Current page for pagination (1-based index)
+  // No pagination - show all results with large default values
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50); // Number of items per page
+  const [pageSize, setPageSize] = useState(1000); // Set a very large number to show all results
   
   // Set selected job and default sort when route changes
   useEffect(() => {
@@ -166,18 +166,7 @@ export default function CandidatesPage() {
     }
   };
   
-  // Handle pagination
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-  
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
+  // Removed pagination handling - show all results
   
   // Effect to fetch scores when job selection or resumes change
   useEffect(() => {
@@ -326,15 +315,8 @@ export default function CandidatesPage() {
     return 0;
   });
   
-  // Get actual count for total pages
+  // Display all results without pagination
   const totalFromSort = sortedAllResumes.length;
-  
-  // Apply pagination to the sorted results
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedResumes = sortedAllResumes.slice(startIndex, endIndex);
-  // Use total from API or counted from sorted results
-  const totalPagesCalculated = Math.ceil(totalFromSort / pageSize);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -460,34 +442,13 @@ export default function CandidatesPage() {
         </div>
       ) : null}
 
-      {/* Sorting and Pagination Controls */}
+      {/* Simple count display */}
       {totalResumes > 0 && (
-        <div className="flex flex-col md:flex-row justify-between items-center mb-4 text-sm text-gray-500 gap-3">
+        <div className="flex justify-between items-center mb-4 text-sm text-gray-500">
           <div className="flex items-center">
             <div className="mr-4">
-              Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalFromSort)} of {totalFromSort} candidates
+              Showing {totalResumes} candidates {selectedJobId && `(${Object.keys(resumeScores).length} with analysis)`}
             </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePrevPage}
-              disabled={currentPage <= 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleNextPage}
-              disabled={currentPage >= totalPagesCalculated}
-            >
-              Next
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
           </div>
         </div>
       )}
