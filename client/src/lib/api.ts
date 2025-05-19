@@ -815,28 +815,50 @@ export async function useEnhancedParser(jobDescriptionId: string): Promise<{
   syncedCount: number;
   message: string;
 }> {
-  // Step 1: Extract parsedJson with enhanced field name support
-  const extractResponse = await apiRequest("POST", `/api/enhanced-sync-parsed-json/job/${jobDescriptionId}`, {
-    limit: 100
-  });
-  
-  if (!extractResponse.ok) {
-    throw new Error('Failed to extract structured data with enhanced parser');
+  try {
+    // Step 1: Extract parsedJson with enhanced field name support
+    // Use fetch directly to avoid issues with apiRequest
+    const extractResponse = await fetch(`/api/enhanced-sync-parsed-json/job/${jobDescriptionId}`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        limit: 100
+      })
+    });
+    
+    if (!extractResponse.ok) {
+      console.error("Enhanced parser extraction failed:", await extractResponse.text());
+      throw new Error(`Failed to extract structured data with enhanced parser (${extractResponse.status})`);
+    }
+    
+    // Step 2: Sync extracted data to individual fields 
+    const syncResponse = await fetch(`/api/sync-parsed-fields/${jobDescriptionId}`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+    
+    if (!syncResponse.ok) {
+      console.error("Enhanced parser sync failed:", await syncResponse.text());
+      throw new Error(`Failed to sync extracted structured data to individual fields (${syncResponse.status})`);
+    }
+    
+    const extractResult = await extractResponse.json();
+    const syncResult = await syncResponse.json();
+    
+    return {
+      extractedCount: extractResult.successCount || 0,
+      syncedCount: syncResult.updated || 0,
+      message: `Enhanced parser processed ${extractResult.successCount || 0} records and synced ${syncResult.updated || 0} records`
+    };
+  } catch (error) {
+    console.error("Enhanced parser error:", error);
+    throw error;
   }
-  
-  // Step 2: Sync extracted data to individual fields 
-  const syncResponse = await apiRequest("POST", `/api/sync-parsed-fields/${jobDescriptionId}`, {});
-  
-  if (!syncResponse.ok) {
-    throw new Error('Failed to sync extracted structured data to individual fields');
-  }
-  
-  const extractResult = await extractResponse.json();
-  const syncResult = await syncResponse.json();
-  
-  return {
-    extractedCount: extractResult.successCount || 0,
-    syncedCount: syncResult.updated || 0,
-    message: `Enhanced parser processed ${extractResult.successCount || 0} records and synced ${syncResult.updated || 0} records`
-  };
 }
