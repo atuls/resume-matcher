@@ -597,6 +597,10 @@ export default function ResumeProfilePage() {
                     <Briefcase className="h-4 w-4 mr-2" />
                     Work History
                   </TabsTrigger>
+                  <TabsTrigger value="structured-data">
+                    <FileIcon className="h-4 w-4 mr-2" />
+                    Structured Data
+                  </TabsTrigger>
                   <TabsTrigger value="raw-text">
                     <FileSearch className="h-4 w-4 mr-2" />
                     Raw Text
@@ -684,22 +688,54 @@ export default function ResumeProfilePage() {
                 </TabsContent>
                 
                 <TabsContent value="raw-text">
-                  {resume?.resume?.extractedText ? (
+                  {resume?.extractedText ? (
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <h3 className="text-lg font-medium">Extracted Resume Text</h3>
                         <div className="flex items-center text-sm text-gray-500">
                           <FileText className="h-4 w-4 mr-1" />
-                          <span>{(resume.resume.extractedText.length / 1000).toFixed(1)}K characters</span>
+                          <span>{(resume.extractedText.length / 1000).toFixed(1)}K characters</span>
                         </div>
                       </div>
                       <div className="border rounded-md p-4 bg-gray-50 overflow-auto max-h-[500px]">
-                        <pre className="text-sm whitespace-pre-wrap font-mono">{resume.resume.extractedText}</pre>
+                        <pre className="text-sm whitespace-pre-wrap font-mono">{resume.extractedText}</pre>
                       </div>
                     </div>
                   ) : (
                     <div className="flex items-center justify-center h-40 text-gray-400">
                       <p>No extracted text found for this resume.</p>
+                    </div>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="structured-data">
+                  {isParsedAnalysisLoading ? (
+                    <div className="flex justify-center items-center p-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    </div>
+                  ) : parsedAnalysisData?.status === "success" ? (
+                    <ParsedDataViewer 
+                      data={{
+                        skills: parsedAnalysisData.parsedData.skills || [],
+                        workHistory: parsedAnalysisData.parsedData.workHistory || [],
+                        redFlags: parsedAnalysisData.parsedData.redFlags || [],
+                        summary: parsedAnalysisData.parsedData.summary || '',
+                        score: resumeScore && resumeScore.length > 0 && resumeScore[0].score ? 
+                          Number(resumeScore[0].score) : undefined
+                      }} 
+                    />
+                  ) : (
+                    <div className="py-8 text-center text-gray-500">
+                      <p>No structured data available for this resume</p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="mt-4"
+                        onClick={() => window.location.href = '/structured-data-parser'}
+                      >
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Go to Data Parser
+                      </Button>
                     </div>
                   )}
                 </TabsContent>
