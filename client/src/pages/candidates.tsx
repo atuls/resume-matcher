@@ -68,7 +68,7 @@ export default function CandidatesPage() {
   
   // Current page for pagination (1-based index)
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 50; // Number of items per page
+  const [pageSize, setPageSize] = useState(50); // Number of items per page
   
   // Set selected job and default sort when route changes
   useEffect(() => {
@@ -257,6 +257,10 @@ export default function CandidatesPage() {
       // Use the existing API to fetch scores but force it to process raw responses
       const updatedScores = await getResumeScores(null, selectedJobId, true);
       setResumeScores(updatedScores);
+      
+      // Increase page size to show more results
+      setPageSize(300); // Set to a larger number to see most/all resumes
+      setCurrentPage(1); // Reset to first page
       
       toast({
         title: "Raw responses loaded",
