@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { db } from "./db";
 import { analysisResults } from "../shared/schema";
 import { eq, and, isNotNull, sql } from "drizzle-orm";
+import { extractParsedJson } from "./services/syncParsedJsonService";
 
 // Helper functions for extracting data from a variety of response formats
 function extractSkills(rawResponse: any): string[] {
@@ -193,6 +194,9 @@ export async function handleProcessRawAnalysis(req: Request, res: Response) {
         const redFlags = extractRedFlags(rawResponseData);
         const summary = extractSummary(rawResponseData);
         
+        // Extract structured JSON data using the dedicated service
+        const parsedJson = extractParsedJson(rawResponseData);
+        
         // Update the record with parsed data
         await db
           .update(analysisResults)
@@ -201,6 +205,8 @@ export async function handleProcessRawAnalysis(req: Request, res: Response) {
             parsedWorkHistory: workHistory.length > 0 ? workHistory : null,
             parsedRedFlags: redFlags.length > 0 ? redFlags : null,
             parsedSummary: summary || null,
+            // Include the structured JSON data if available
+            parsedJson: parsedJson || null,
             parsingStatus: "complete",
             updatedAt: new Date()
           })
