@@ -100,6 +100,8 @@ export const analysisResults = pgTable("analysis_results", {
   parsedRedFlags: jsonb("parsed_red_flags"),
   parsedSummary: text("parsed_summary"),
   parsingStatus: text("parsing_status").default("pending"),
+  // Single parsed JSON field containing all structured data
+  parsedJson: jsonb("parsed_json"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
