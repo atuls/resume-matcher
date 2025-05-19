@@ -200,15 +200,50 @@ export async function handleProcessRawAnalysis(req: Request, res: Response) {
         // Extract structured JSON data using the dedicated service
         const parsedJson = extractParsedJson(rawResponseData);
         
+        // Variables for the individual parsed fields
+        let extractedSkills = skills.length > 0 ? skills : null;
+        let extractedWorkHistory = workHistory.length > 0 ? workHistory : null;
+        let extractedRedFlags = redFlags.length > 0 ? redFlags : null;
+        let extractedSummary = summary || null;
+        
+        // If we have parsedJson, extract data from it to fill individual fields if they're empty
+        if (parsedJson) {
+          console.log(`Extracted parsedJson for record ${result.id}, extracting individual fields`);
+          
+          // Extract skills from parsedJson if we didn't get any from the regular extraction
+          if (!extractedSkills && Array.isArray(parsedJson.skills) && parsedJson.skills.length > 0) {
+            console.log(`Using ${parsedJson.skills.length} skills from parsedJson`);
+            extractedSkills = parsedJson.skills;
+          }
+          
+          // Extract work history from parsedJson if we didn't get any from the regular extraction
+          if (!extractedWorkHistory && Array.isArray(parsedJson.workHistory) && parsedJson.workHistory.length > 0) {
+            console.log(`Using ${parsedJson.workHistory.length} work history items from parsedJson`);
+            extractedWorkHistory = parsedJson.workHistory;
+          }
+          
+          // Extract red flags from parsedJson if we didn't get any from the regular extraction
+          if (!extractedRedFlags && Array.isArray(parsedJson.redFlags) && parsedJson.redFlags.length > 0) {
+            console.log(`Using ${parsedJson.redFlags.length} red flags from parsedJson`);
+            extractedRedFlags = parsedJson.redFlags;
+          }
+          
+          // Extract summary from parsedJson if we didn't get any from the regular extraction
+          if (!extractedSummary && parsedJson.summary) {
+            console.log(`Using summary from parsedJson`);
+            extractedSummary = parsedJson.summary;
+          }
+        }
+        
         // Update the record with parsed data
         await db
           .update(analysisResults)
           .set({
-            parsedSkills: skills.length > 0 ? skills : null,
-            parsedWorkHistory: workHistory.length > 0 ? workHistory : null,
-            parsedRedFlags: redFlags.length > 0 ? redFlags : null,
-            parsedSummary: summary || null,
-            // Include the structured JSON data if available
+            parsedSkills: extractedSkills,
+            parsedWorkHistory: extractedWorkHistory,
+            parsedRedFlags: extractedRedFlags,
+            parsedSummary: extractedSummary,
+            // Include the structured JSON data
             parsedJson: parsedJson || null,
             parsingStatus: "complete",
             updatedAt: new Date()
