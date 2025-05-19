@@ -6,7 +6,7 @@ import {
   Plus, Calendar, FileText, Trash2, AlertCircle, Filter, Search, 
   Briefcase, BarChart3, CircleDashed, CheckCircle, XCircle,
   ChevronLeft, Award, AlertTriangle, ChevronRight, CircleAlert, CircleCheck, Activity,
-  RefreshCw
+  RefreshCw, Sparkles, Loader2
 } from "lucide-react";
 import { 
   getResumes, 
@@ -17,6 +17,7 @@ import {
   getResumeRedFlagAnalysis,
   processRawAnalysisForJob,
   syncParsedFieldsFromJson,
+  useEnhancedParser,
   RedFlagAnalysis
 } from "@/lib/api";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -440,13 +441,34 @@ export default function CandidatesPage() {
               >
                 {processingRawAnalysis ? (
                   <>
-                    <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full mr-2"></div>
+                    <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
                     Processing...
                   </>
                 ) : (
                   <>
                     <RefreshCw className="h-4 w-4 mr-1.5" />
                     Reprocess & Extract Structured Data
+                  </>
+                )}
+              </Button>
+              
+              <Button 
+                variant="outline"
+                size="sm"
+                className="flex items-center ml-2"
+                onClick={handleEnhancedParsing}
+                disabled={processingRawAnalysis}
+                title="Use improved field detection to extract more data"
+              >
+                {processingRawAnalysis ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-1.5" />
+                    Enhanced Data Extraction
                   </>
                 )}
               </Button>
