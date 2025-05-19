@@ -1,6 +1,6 @@
 /**
- * Endpoint to sync individual parsed fields from parsedJson data
- * Enhanced to handle multiple field name variations
+ * Enhanced endpoint to sync individual parsed fields from parsedJson data
+ * Handles multiple variations of field names (workHistory, work_history, etc.)
  */
 import { Router, Request, Response } from 'express';
 import { db } from '../db';
