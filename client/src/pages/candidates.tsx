@@ -326,11 +326,15 @@ export default function CandidatesPage() {
     return 0;
   });
   
+  // Get actual count for total pages
+  const totalFromSort = sortedAllResumes.length;
+  
   // Apply pagination to the sorted results
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const sortedResumes = sortedAllResumes.slice(startIndex, endIndex);
-  const totalPages = Math.ceil(sortedAllResumes.length / pageSize);
+  const paginatedResumes = sortedAllResumes.slice(startIndex, endIndex);
+  // Use total from API or counted from sorted results
+  const totalPagesCalculated = Math.ceil(totalFromSort / pageSize);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -342,7 +346,7 @@ export default function CandidatesPage() {
           <BatchMatchDialog 
             resumes={resumes} 
             buttonVariant="outline"
-            preselectedJobId={selectedJobId} 
+            preselectedJobId={selectedJobId || undefined} 
           />
           <Button onClick={() => setShowUploader(true)}>
             <Plus className="mr-2 h-4 w-4" /> Add Candidate
@@ -461,7 +465,7 @@ export default function CandidatesPage() {
         <div className="flex flex-col md:flex-row justify-between items-center mb-4 text-sm text-gray-500 gap-3">
           <div className="flex items-center">
             <div className="mr-4">
-              Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalResumes)} of {totalResumes} candidates
+              Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalFromSort)} of {totalFromSort} candidates
             </div>
           </div>
           
@@ -479,7 +483,7 @@ export default function CandidatesPage() {
               variant="outline"
               size="sm"
               onClick={handleNextPage}
-              disabled={currentPage >= totalPages}
+              disabled={currentPage >= totalPagesCalculated}
             >
               Next
               <ChevronRight className="h-4 w-4 ml-1" />
@@ -493,7 +497,7 @@ export default function CandidatesPage() {
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
           <p className="text-gray-500">Loading candidates...</p>
         </div>
-      ) : sortedResumes.length > 0 ? (
+      ) : paginatedResumes.length > 0 ? (
         <div className="overflow-x-auto bg-white rounded-lg shadow-sm">
           {/* Table layout for candidates */}
           <table className="w-full min-w-full divide-y divide-gray-200">
@@ -536,7 +540,7 @@ export default function CandidatesPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {sortedResumes.map(resume => {
+              {paginatedResumes.map((resume: any) => {
                 // Get resume score data and enhanced data from our API
                 const scoreData = resumeScores[resume.id];
                 const scoreValue = scoreData?.score || 0;
