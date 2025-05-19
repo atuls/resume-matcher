@@ -18,7 +18,11 @@ interface AnalysisSummaryStatsProps {
   onLoadRawResponses?: () => void;
 }
 
-export default function AnalysisSummaryStats({ scores, jobId, onLoadRawResponses }: AnalysisSummaryStatsProps) {
+export default function AnalysisSummaryStats({ 
+  scores, 
+  jobId, 
+  onLoadRawResponses 
+}: AnalysisSummaryStatsProps) {
   // Calculate stats
   const resumeCount = Object.keys(scores).length;
   // Analysis was performed if score exists (we can't directly check rawResponse as it's not returned to the client)

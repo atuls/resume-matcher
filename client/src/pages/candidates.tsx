@@ -410,7 +410,7 @@ export default function CandidatesPage() {
             {/* Analysis summary statistics */}
             <AnalysisSummaryStats 
               scores={resumeScores} 
-              jobId={selectedJobId}
+              jobId={selectedJobId || undefined}
               onLoadRawResponses={handleLoadRawResponses}
             />
           </>
