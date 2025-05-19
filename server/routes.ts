@@ -136,7 +136,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         parsedWorkHistory: analysisResults.parsedWorkHistory,
         parsedRedFlags: analysisResults.parsedRedFlags,
         parsedSummary: analysisResults.parsedSummary,
-        parsingStatus: analysisResults.parsingStatus
+        parsingStatus: analysisResults.parsingStatus,
+        parsedJson: analysisResults.parsedJson
       })
       .from(analysisResults)
       .where(eq(analysisResults.jobDescriptionId, jobId))

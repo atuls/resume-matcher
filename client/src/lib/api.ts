@@ -427,7 +427,8 @@ function processScoreData(data: any): {
     skills?: string[],
     currentPosition?: { title: string, company: string } | null,
     redFlags?: string[],
-    parsingStatus?: string
+    parsingStatus?: string,
+    parsedJson?: any
   } 
 } {
   // Check if data is valid
@@ -444,7 +445,8 @@ function processScoreData(data: any): {
       skills?: string[],
       currentPosition?: { title: string, company: string } | null,
       redFlags?: string[],
-      parsingStatus?: string
+      parsingStatus?: string,
+      parsedJson?: any
     } 
   } = {};
   
@@ -465,7 +467,8 @@ function processScoreData(data: any): {
           skills: Array.isArray(score.skills) ? score.skills : [],
           currentPosition: score.currentPosition || null,
           redFlags: Array.isArray(score.redFlags) ? score.redFlags : [],
-          parsingStatus: score.parsingStatus || 'pending'
+          parsingStatus: score.parsingStatus || 'pending',
+          parsedJson: score.parsedJson || null
         };
       }
     }
