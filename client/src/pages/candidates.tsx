@@ -458,7 +458,7 @@ export default function CandidatesPage() {
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
           <p className="text-gray-500">Loading candidates...</p>
         </div>
-      ) : paginatedResumes.length > 0 ? (
+      ) : sortedAllResumes.length > 0 ? (
         <div className="overflow-x-auto bg-white rounded-lg shadow-sm">
           {/* Table layout for candidates */}
           <table className="w-full min-w-full divide-y divide-gray-200">
@@ -501,7 +501,7 @@ export default function CandidatesPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedResumes.map((resume: any) => {
+              {sortedAllResumes.map((resume: any) => {
                 // Get resume score data and enhanced data from our API
                 const scoreData = resumeScores[resume.id];
                 const scoreValue = scoreData?.score || 0;
