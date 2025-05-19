@@ -28,6 +28,10 @@ An AI-powered resume analysis platform that efficiently matches candidate resume
 - **Case-Insensitive Field Handling**: Displays data correctly regardless of field name casing
 - **Re-run Analysis**: Ability to re-analyze candidates against specific jobs on demand
 - **Database Persistence**: Parsed analysis fields are stored in the database for reliable access
+- **Raw Response Processing**: Command-line tool for batch processing of raw analysis data
+- **Enhanced Current Position Detection**: Intelligent extraction of candidate's current role with multi-strategy fallback
+- **Robust Error Handling**: Graceful handling of JSON parsing errors in AI responses
+- **Admin Processing Interface**: API endpoint for re-processing analysis data on demand
 
 ## Tech Stack
 

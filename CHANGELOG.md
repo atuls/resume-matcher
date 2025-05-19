@@ -5,12 +5,22 @@ All notable changes to the Resume Analyzer project will be documented in this fi
 ## [Unreleased]
 
 ### Added
+- Raw response processing script for efficient batch processing of analysis data
+- Command-line interface for processing raw responses with options for job-specific filtering and forced reprocessing
+- Improved data extraction from various response formats with comprehensive fallback mechanisms
 - Job context preservation when navigating from job candidates to resume profiles
 - Case-insensitive field handling for better display consistency across different data formats
 - "Run on All Unanalyzed" feature for processing all unanalyzed resumes at once
 - Enhanced batch processing with accurate count display and confirmation dialog
 
+### Changed
+- Enhanced current position detection with multiple fallback strategies
+- Improved work history extraction with better sorting and identification of current roles
+- More robust JSON parsing with graceful error handling for malformed responses
+
 ### Fixed
+- Fixed issue with raw analysis processing API endpoint returning HTML instead of JSON
+- Resolved current position and red flags not displaying in the UI for some candidates
 - Fixed database query in parsed analysis endpoint to correctly filter by both resume ID and job ID
 - Fixed missing company names in work history display due to case sensitivity in field names
 - Resolved data discrepancy between database records and UI display
