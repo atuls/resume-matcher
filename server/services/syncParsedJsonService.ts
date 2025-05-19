@@ -4,7 +4,7 @@
  */
 import { db } from "../db";
 import { analysisResults } from "../../shared/schema";
-import { eq, isNotNull, isNull, and, sql } from "drizzle-orm";
+import { eq, isNotNull, isNull, and } from "drizzle-orm";
 
 /**
  * Extract the structured JSON data from the raw_response
@@ -262,20 +262,17 @@ export async function syncAllParsedJson(batchLimit?: number): Promise<{
       isNull(analysisResults.parsedJson)
     );
     
-    // Only process records with raw_response and without parsedJson
-    let results;
-    
-    if (batchLimit) {
-      results = await db
-        .select()
-        .from(analysisResults)
-        .where(whereCondition)
-        .limit(batchLimit);
-    } else {
-      results = await db
-        .select()
-        .from(analysisResults)
-        .where(whereCondition);
+    // Get results based on whether a limit is provided
+    const results = batchLimit
+      ? await db
+          .select()
+          .from(analysisResults)
+          .where(whereCondition)
+          .limit(batchLimit)
+      : await db
+          .select()
+          .from(analysisResults)
+          .where(whereCondition);
     
     console.log(`Found ${results.length} analysis results that need parsedJson sync`);
     

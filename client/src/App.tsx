@@ -13,6 +13,7 @@ import ResumeProfilePage from "@/pages/resume-profile";
 import AnalysisTestPage from "@/pages/analysis-test";
 import DataExtractionTestPage from "@/pages/data-extraction-test";
 import AnalysisParserPage from "@/pages/analysis-parser";
+import StructuredDataParserPage from "@/pages/structured-data-parser";
 import AdminBatchProcessing from "@/pages/admin-batch-processing";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
@@ -39,6 +40,7 @@ function Router() {
       <Route path="/analysis-test" component={AnalysisTestPage} />
       <Route path="/data-extraction-test" component={DataExtractionTestPage} />
       <Route path="/analysis-parser" component={AnalysisParserPage} />
+      <Route path="/structured-data-parser" component={StructuredDataParserPage} />
       <Route path="/admin/batch-processing" component={AdminBatchProcessing} />
       
       {/* Fallback to 404 */}

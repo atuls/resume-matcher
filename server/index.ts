@@ -43,12 +43,10 @@ app.use((req, res, next) => {
   try {
     console.log("Running database migrations...");
     
-    // Add parsed fields 
-    console.log("Running migration: addParsedFieldsToAnalysisResults");
+    // Add parsed fields if needed
     await addParsedFieldsToAnalysisResults();
     
-    // Add parsed_json field
-    console.log("Running migration: addParsedJsonToAnalysisResults");
+    // Add parsed_json field if needed
     await addParsedJsonToAnalysisResults();
     
     console.log("Database migrations completed successfully");

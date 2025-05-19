@@ -17,12 +17,16 @@ import { z } from "zod";
 import { randomUUID } from "crypto";
 import { handleRedFlagAnalysis } from "./redFlagAnalysis";
 import { handleProcessRawAnalysis } from "./processRawAnalysisEndpoint";
+import syncParsedJsonRouter from "./routes/syncParsedJson";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register all API routes
   app.get("/api", (_req: Request, res: Response) => {
     res.json({ message: "API is running" });
   });
+  
+  // Register the sync parsed JSON routes
+  app.use("/api", syncParsedJsonRouter);
   
   // AI Status endpoint - Check if OpenAI API is properly configured
   app.get("/api/ai-status", async (_req: Request, res: Response) => {

@@ -1,1 +1,173 @@
-{"status":"success","parsingStatus":"success","parsedData":{"skills":["B2B sales","Quota achievement","Full sales cycle management","Influencer marketing","Social media management","Martech solutions","Consumer insights","Social data analysis","Pipeline management","Client relationship building","Team leadership","Sales training (SPICED and MEDDPICC)","Product demonstrations","Outbound prospecting","Strategic selling","Campaign budget optimization","KPI optimization","RFP response","New business development","Cross-functional collaboration"],"workHistory":[{"title":"Sr Growth Account Executive","company":"Meltwater News, Inc","endDate":"current","location":"","startDate":"April 2024","description":"Team revenue lead in Q2 2024 after promotion. Organized team of 8 account managers to drive upsells across martech products. Led cross-functional workshops, managed end-to-end sales cycle, hit monthly quotas (110%+), achieved sales training certifications, and led nonprofit event.","isCurrentRole":"true","durationMonths":2},{"title":"Account Executive","company":"Meltwater News, Inc","endDate":"March 2024","location":"","startDate":"July 2023","description":"Increased personal sales revenue 30% month over month. Attained 120% of monthly quota. Built sales pipe focused on net new logo across verticals. Led product demos and managed full sales cycle. Educated clients on influencer campaign optimization.","isCurrentRole":"false","durationMonths":9},{"title":"Account Executive","company":"Skeepers","endDate":"June 2023","location":"","startDate":"May 2022","description":"Spearheaded sales strategy for new SAAS product. Increased client onboarding by 100% per quarter. Led SDR training sessions increasing demo bookings by 20%. Led initiative with international marketing for new SAAS products. Ranked in top 20% of sales team.","isCurrentRole":"false","durationMonths":14},{"title":"Account Executive","company":"IZEA, Inc","endDate":"May 2022","location":"","startDate":"January 2021","description":"Ranked #1 out of 15 executives for prospecting metrics. Increased personal sales close rate by 110% quarter over quarter. Led outreach strategy sessions. Managed 250+ brand and agency accounts. Achieved award for influencer campaign. Average deal size of $50K-180K.","isCurrentRole":"false","durationMonths":17},{"title":"Influencer Sales Strategist","company":"RhythmOne","endDate":"March 2020","location":"","startDate":"June 2019","description":"Created influencer campaign strategies for RFPs ranging from $50K to multi-million dollars. Managed influencer talent sourcing, maximized client KPIs, and directed pre-sale process from RFP to onboarding.","isCurrentRole":"false","durationMonths":10}],"redFlags":["Employment gap from March 2020 to January 2021 (approximately 10 months) with no explanation provided","Current role at Meltwater starting in April 2024 is very recent (only 2 months), which might indicate instability or that she is actively looking to change jobs shortly after starting a new position","No specific mention of experience with HubSpot, Salesforce, or similar CRM systems as required in the job description","Average tenure at companies is relatively short (approximately 10-14 months per role), which could suggest job hopping tendencies"],"education":[],"summary":"Victoria Tignor is a strong match for the Brand Partnerships Manager position. With 6 years of quota-carrying sales experience in B2B revenue, she has consistently demonstrated high performance in sales roles related to influencer marketing, social media management, and martech solutions. Her experience at companies like Meltwater, Skeepers, IZEA, and RhythmOne has given her extensive knowledge of the influencer marketing space, which directly aligns with the job requirements. She has a proven track record of meeting and exceeding sales quotas, managing full sales cycles, and leading strategic initiatives. Victoria has experience in consultative selling, pipeline management, and building client relationships, which are crucial for this role. Her background in educating clients on influencer campaign optimization demonstrates the strategic thinking required. While she has the required 5+ years of sales experience in digital media and advertising, there could be more explicit mention of her experience with CRM systems like HubSpot or Salesforce. Overall, Victoria's resume indicates she would be a valuable asset for this position.","currentPosition":{"title":"Sr Growth Account Executive","company":"Meltwater News, Inc","current":false}},"scoreData":{"score":85,"jobDescriptionId":"f17e9b1c-9e63-4ed5-9cae-a307b37c95ff","matchedAt":"2025-05-15T18:30:29.247Z"}}
+[
+  {
+    "id": "sample-id",
+    "resumeId": "sample-resume-id",
+    "jobDescriptionId": "sample-job-id",
+    "parsedJson": {
+      "skills": [
+        "B2B sales",
+        "Quota achievement",
+        "Full sales cycle management",
+        "Influencer marketing",
+        "Social media management",
+        "Martech solutions",
+        "Consumer insights",
+        "Social data analysis",
+        "Pipeline management",
+        "Client relationship building",
+        "Team leadership",
+        "Sales training (SPICED and MEDDPICC)",
+        "Product demonstrations",
+        "Outbound prospecting",
+        "Strategic selling",
+        "Campaign budget optimization",
+        "KPI optimization",
+        "RFP response",
+        "New business development",
+        "Cross-functional collaboration"
+      ],
+      "workHistory": [
+        {
+          "title": "Sr Growth Account Executive",
+          "company": "Meltwater News, Inc",
+          "endDate": "current",
+          "location": "",
+          "startDate": "April 2024",
+          "description": "Team revenue lead in Q2 2024 after promotion. Organized team of 8 account managers to drive upsells across martech products. Led cross-functional workshops, managed end-to-end sales cycle, hit monthly quotas (110%+), achieved sales training certifications, and led nonprofit event.",
+          "isCurrentRole": "true",
+          "durationMonths": 2
+        },
+        {
+          "title": "Account Executive",
+          "company": "Meltwater News, Inc",
+          "endDate": "March 2024",
+          "location": "",
+          "startDate": "July 2023",
+          "description": "Increased personal sales revenue 30% month over month. Attained 120% of monthly quota. Built sales pipe focused on net new logo across verticals. Led product demos and managed full sales cycle. Educated clients on influencer campaign optimization.",
+          "isCurrentRole": "false",
+          "durationMonths": 9
+        },
+        {
+          "title": "Account Executive",
+          "company": "Skeepers",
+          "endDate": "June 2023",
+          "location": "",
+          "startDate": "May 2022",
+          "description": "Spearheaded sales strategy for new SAAS product. Increased client onboarding by 100% per quarter. Led SDR training sessions increasing demo bookings by 20%. Led initiative with international marketing for new SAAS products. Ranked in top 20% of sales team.",
+          "isCurrentRole": "false",
+          "durationMonths": 14
+        },
+        {
+          "title": "Account Executive",
+          "company": "IZEA, Inc",
+          "endDate": "May 2022",
+          "location": "",
+          "startDate": "January 2021",
+          "description": "Ranked #1 out of 15 executives for prospecting metrics. Increased personal sales close rate by 110% quarter over quarter. Led outreach strategy sessions. Managed 250+ brand and agency accounts. Achieved award for influencer campaign. Average deal size of $50K-180K.",
+          "isCurrentRole": "false",
+          "durationMonths": 17
+        },
+        {
+          "title": "Influencer Sales Strategist",
+          "company": "RhythmOne",
+          "endDate": "March 2020",
+          "location": "",
+          "startDate": "June 2019",
+          "description": "Created influencer campaign strategies for RFPs ranging from $50K to multi-million dollars. Managed influencer talent sourcing, maximized client KPIs, and directed pre-sale process from RFP to onboarding.",
+          "isCurrentRole": "false",
+          "durationMonths": 10
+        }
+      ],
+      "redFlags": [
+        "Employment gap from March 2020 to January 2021 (approximately 10 months) with no explanation provided",
+        "Current role at Meltwater starting in April 2024 is very recent (only 2 months), which might indicate instability or that she is actively looking to change jobs shortly after starting a new position",
+        "No specific mention of experience with HubSpot, Salesforce, or similar CRM systems as required in the job description",
+        "Average tenure at companies is relatively short (approximately 10-14 months per role), which could suggest job hopping tendencies"
+      ],
+      "summary": "Victoria Tignor is a strong match for the Brand Partnerships Manager position. With 6 years of quota-carrying sales experience in B2B revenue, she has consistently demonstrated high performance in sales roles related to influencer marketing, social media management, and martech solutions. Her experience at companies like Meltwater, Skeepers, IZEA, and RhythmOne has given her extensive knowledge of the influencer marketing space, which directly aligns with the job requirements. She has a proven track record of meeting and exceeding sales quotas, managing full sales cycles, and leading strategic initiatives. Victoria has experience in consultative selling, pipeline management, and building client relationships, which are crucial for this role. Her background in educating clients on influencer campaign optimization demonstrates the strategic thinking required. While she has the required 5+ years of sales experience in digital media and advertising, there could be more explicit mention of her experience with CRM systems like HubSpot or Salesforce. Overall, Victoria's resume indicates she would be a valuable asset for this position.",
+      "score": 85
+    },
+    "skills": [
+      "B2B sales",
+      "Quota achievement",
+      "Full sales cycle management",
+      "Influencer marketing",
+      "Social media management",
+      "Martech solutions",
+      "Consumer insights",
+      "Social data analysis",
+      "Pipeline management",
+      "Client relationship building",
+      "Team leadership",
+      "Sales training (SPICED and MEDDPICC)",
+      "Product demonstrations",
+      "Outbound prospecting",
+      "Strategic selling",
+      "Campaign budget optimization",
+      "KPI optimization",
+      "RFP response",
+      "New business development",
+      "Cross-functional collaboration"
+    ],
+    "workHistory": [
+      {
+        "title": "Sr Growth Account Executive",
+        "company": "Meltwater News, Inc",
+        "endDate": "current",
+        "location": "",
+        "startDate": "April 2024",
+        "description": "Team revenue lead in Q2 2024 after promotion. Organized team of 8 account managers to drive upsells across martech products. Led cross-functional workshops, managed end-to-end sales cycle, hit monthly quotas (110%+), achieved sales training certifications, and led nonprofit event.",
+        "isCurrentRole": "true",
+        "durationMonths": 2
+      },
+      {
+        "title": "Account Executive",
+        "company": "Meltwater News, Inc",
+        "endDate": "March 2024",
+        "location": "",
+        "startDate": "July 2023",
+        "description": "Increased personal sales revenue 30% month over month. Attained 120% of monthly quota. Built sales pipe focused on net new logo across verticals. Led product demos and managed full sales cycle. Educated clients on influencer campaign optimization.",
+        "isCurrentRole": "false",
+        "durationMonths": 9
+      },
+      {
+        "title": "Account Executive",
+        "company": "Skeepers",
+        "endDate": "June 2023",
+        "location": "",
+        "startDate": "May 2022",
+        "description": "Spearheaded sales strategy for new SAAS product. Increased client onboarding by 100% per quarter. Led SDR training sessions increasing demo bookings by 20%. Led initiative with international marketing for new SAAS products. Ranked in top 20% of sales team.",
+        "isCurrentRole": "false",
+        "durationMonths": 14
+      },
+      {
+        "title": "Account Executive",
+        "company": "IZEA, Inc",
+        "endDate": "May 2022",
+        "location": "",
+        "startDate": "January 2021",
+        "description": "Ranked #1 out of 15 executives for prospecting metrics. Increased personal sales close rate by 110% quarter over quarter. Led outreach strategy sessions. Managed 250+ brand and agency accounts. Achieved award for influencer campaign. Average deal size of $50K-180K.",
+        "isCurrentRole": "false",
+        "durationMonths": 17
+      },
+      {
+        "title": "Influencer Sales Strategist",
+        "company": "RhythmOne",
+        "endDate": "March 2020",
+        "location": "",
+        "startDate": "June 2019",
+        "description": "Created influencer campaign strategies for RFPs ranging from $50K to multi-million dollars. Managed influencer talent sourcing, maximized client KPIs, and directed pre-sale process from RFP to onboarding.",
+        "isCurrentRole": "false",
+        "durationMonths": 10
+      }
+    ],
+    "redFlags": [
+      "Employment gap from March 2020 to January 2021 (approximately 10 months) with no explanation provided",
+      "Current role at Meltwater starting in April 2024 is very recent (only 2 months), which might indicate instability or that she is actively looking to change jobs shortly after starting a new position",
+      "No specific mention of experience with HubSpot, Salesforce, or similar CRM systems as required in the job description",
+      "Average tenure at companies is relatively short (approximately 10-14 months per role), which could suggest job hopping tendencies"
+    ],
+    "summary": "Victoria Tignor is a strong match for the Brand Partnerships Manager position. With 6 years of quota-carrying sales experience in B2B revenue, she has consistently demonstrated high performance in sales roles related to influencer marketing, social media management, and martech solutions. Her experience at companies like Meltwater, Skeepers, IZEA, and RhythmOne has given her extensive knowledge of the influencer marketing space, which directly aligns with the job requirements. She has a proven track record of meeting and exceeding sales quotas, managing full sales cycles, and leading strategic initiatives. Victoria has experience in consultative selling, pipeline management, and building client relationships, which are crucial for this role. Her background in educating clients on influencer campaign optimization demonstrates the strategic thinking required. While she has the required 5+ years of sales experience in digital media and advertising, there could be more explicit mention of her experience with CRM systems like HubSpot or Salesforce. Overall, Victoria's resume indicates she would be a valuable asset for this position.",
+    "score": 85
+  }
+]

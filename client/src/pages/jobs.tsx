@@ -102,7 +102,7 @@ function JobDetail({ jobId }: { jobId: string }) {
   const [, navigate] = useRoute("/jobs/:id");
   
   // Fetch job details
-  const { data: job, isLoading: jobLoading } = useQuery({
+  const { data: job, isLoading: jobLoading, refetch: refetchJob } = useQuery({
     queryKey: [`/api/job-descriptions/${jobId}`],
     queryFn: () => getJobDescription(jobId),
     enabled: !!jobId
@@ -114,6 +114,9 @@ function JobDetail({ jobId }: { jobId: string }) {
     queryFn: () => getJobRequirements(jobId),
     enabled: !!jobId
   });
+  
+  // Import the sync button
+  const { SyncParsedJsonButton } = require('../components/SyncParsedJsonButton');
   
   if (jobLoading) {
     return (
