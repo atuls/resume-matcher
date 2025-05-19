@@ -1,6 +1,7 @@
 import React from 'react';
-import { CircleDashed, Database, ListChecks, ListTree, FileText } from 'lucide-react';
+import { CircleDashed, Database, ListChecks, ListTree, FileText, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface AnalysisSummaryStatsProps {
   scores: {
@@ -13,9 +14,11 @@ interface AnalysisSummaryStatsProps {
       parsingStatus?: string
     }
   };
+  jobId?: string;
+  onLoadRawResponses?: () => void;
 }
 
-export default function AnalysisSummaryStats({ scores }: AnalysisSummaryStatsProps) {
+export default function AnalysisSummaryStats({ scores, jobId, onLoadRawResponses }: AnalysisSummaryStatsProps) {
   // Calculate stats
   const resumeCount = Object.keys(scores).length;
   // Analysis was performed if score exists (we can't directly check rawResponse as it's not returned to the client)
@@ -32,26 +35,46 @@ export default function AnalysisSummaryStats({ scores }: AnalysisSummaryStatsPro
 
   return (
     <div className="bg-gray-50 p-5 rounded-lg border border-gray-200 mb-5">
-      <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
-        <Database className="h-4 w-4 mr-2" />
-        Analysis Summary
-      </h3>
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="text-sm font-medium text-gray-700 flex items-center">
+          <Database className="h-4 w-4 mr-2" />
+          Analysis Summary
+        </h3>
+        {jobId && onLoadRawResponses && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center text-xs"
+            onClick={onLoadRawResponses}
+          >
+            <Download className="h-3 w-3 mr-1.5" />
+            Load Raw Responses
+          </Button>
+        )}
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="flex flex-col">
           <span className="text-xs text-gray-500 flex items-center mb-1">
             <FileText className="h-3 w-3 mr-1" />
             Raw responses available
           </span>
-          <div className="flex items-baseline">
-            <span className="text-2xl font-bold text-gray-800 mr-2">{hasAnalysisCount}</span>
-            <span className="text-sm text-gray-500">/ {resumeCount}</span>
+          <div className="flex flex-col">
+            <div className="flex items-baseline">
+              <span className="text-2xl font-bold text-gray-800 mr-2">{hasAnalysisCount}</span>
+              <span className="text-sm text-gray-500">/ {resumeCount}</span>
+            </div>
             {resumeCount > 0 && (
-              <Badge 
-                variant={hasAnalysisCount === resumeCount ? "default" : "outline"}
-                className="ml-auto"
-              >
-                {Math.round((hasAnalysisCount / resumeCount) * 100)}%
-              </Badge>
+              <div className="mt-1">
+                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                  <div 
+                    className="bg-blue-500 h-1.5 rounded-full" 
+                    style={{ width: `${Math.round((hasAnalysisCount / resumeCount) * 100)}%` }}
+                  ></div>
+                </div>
+                <span className="text-xs text-gray-500 mt-1">
+                  {Math.round((hasAnalysisCount / resumeCount) * 100)}%
+                </span>
+              </div>
             )}
           </div>
         </div>
@@ -61,16 +84,23 @@ export default function AnalysisSummaryStats({ scores }: AnalysisSummaryStatsPro
             <CircleDashed className="h-3 w-3 mr-1" />
             Parsing status complete
           </span>
-          <div className="flex items-baseline">
-            <span className="text-2xl font-bold text-gray-800 mr-2">{parsedCompleteCount}</span>
-            <span className="text-sm text-gray-500">/ {resumeCount}</span>
+          <div className="flex flex-col">
+            <div className="flex items-baseline">
+              <span className="text-2xl font-bold text-gray-800 mr-2">{parsedCompleteCount}</span>
+              <span className="text-sm text-gray-500">/ {resumeCount}</span>
+            </div>
             {resumeCount > 0 && (
-              <Badge 
-                variant={parsedCompleteCount === resumeCount ? "default" : "outline"}
-                className="ml-auto"
-              >
-                {Math.round((parsedCompleteCount / resumeCount) * 100)}%
-              </Badge>
+              <div className="mt-1">
+                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                  <div 
+                    className="bg-blue-500 h-1.5 rounded-full" 
+                    style={{ width: `${Math.round((parsedCompleteCount / resumeCount) * 100)}%` }}
+                  ></div>
+                </div>
+                <span className="text-xs text-gray-500 mt-1">
+                  {Math.round((parsedCompleteCount / resumeCount) * 100)}%
+                </span>
+              </div>
             )}
           </div>
         </div>
@@ -80,16 +110,23 @@ export default function AnalysisSummaryStats({ scores }: AnalysisSummaryStatsPro
             <ListChecks className="h-3 w-3 mr-1" />
             Has parsed skills
           </span>
-          <div className="flex items-baseline">
-            <span className="text-2xl font-bold text-gray-800 mr-2">{hasSkillsCount}</span>
-            <span className="text-sm text-gray-500">/ {resumeCount}</span>
+          <div className="flex flex-col">
+            <div className="flex items-baseline">
+              <span className="text-2xl font-bold text-gray-800 mr-2">{hasSkillsCount}</span>
+              <span className="text-sm text-gray-500">/ {resumeCount}</span>
+            </div>
             {resumeCount > 0 && (
-              <Badge 
-                variant={hasSkillsCount === resumeCount ? "default" : "outline"}
-                className="ml-auto"
-              >
-                {Math.round((hasSkillsCount / resumeCount) * 100)}%
-              </Badge>
+              <div className="mt-1">
+                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                  <div 
+                    className="bg-blue-500 h-1.5 rounded-full" 
+                    style={{ width: `${Math.round((hasSkillsCount / resumeCount) * 100)}%` }}
+                  ></div>
+                </div>
+                <span className="text-xs text-gray-500 mt-1">
+                  {Math.round((hasSkillsCount / resumeCount) * 100)}%
+                </span>
+              </div>
             )}
           </div>
         </div>
@@ -99,16 +136,23 @@ export default function AnalysisSummaryStats({ scores }: AnalysisSummaryStatsPro
             <ListTree className="h-3 w-3 mr-1" />
             Has parsed work history
           </span>
-          <div className="flex items-baseline">
-            <span className="text-2xl font-bold text-gray-800 mr-2">{hasWorkHistoryCount}</span>
-            <span className="text-sm text-gray-500">/ {resumeCount}</span>
+          <div className="flex flex-col">
+            <div className="flex items-baseline">
+              <span className="text-2xl font-bold text-gray-800 mr-2">{hasWorkHistoryCount}</span>
+              <span className="text-sm text-gray-500">/ {resumeCount}</span>
+            </div>
             {resumeCount > 0 && (
-              <Badge 
-                variant={hasWorkHistoryCount === resumeCount ? "default" : "outline"}
-                className="ml-auto"
-              >
-                {Math.round((hasWorkHistoryCount / resumeCount) * 100)}%
-              </Badge>
+              <div className="mt-1">
+                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                  <div 
+                    className="bg-blue-500 h-1.5 rounded-full" 
+                    style={{ width: `${Math.round((hasWorkHistoryCount / resumeCount) * 100)}%` }}
+                  ></div>
+                </div>
+                <span className="text-xs text-gray-500 mt-1">
+                  {Math.round((hasWorkHistoryCount / resumeCount) * 100)}%
+                </span>
+              </div>
             )}
           </div>
         </div>

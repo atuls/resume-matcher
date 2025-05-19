@@ -204,6 +204,9 @@ export default function CandidatesPage() {
     fetchScores();
   }, [selectedJobId, resumes, toast, currentPage]);
 
+  // State for loading raw responses
+  const [loadingRawResponses, setLoadingRawResponses] = useState<boolean>(false);
+
   // Handle processing of raw analysis
   const handleProcessRawAnalysis = async () => {
     if (!selectedJobId) return;
@@ -236,6 +239,38 @@ export default function CandidatesPage() {
       });
     } finally {
       setProcessingRawAnalysis(false);
+    }
+  };
+  
+  // Handle loading all resumes with raw responses
+  const handleLoadRawResponses = async () => {
+    if (!selectedJobId) return;
+    
+    try {
+      setLoadingRawResponses(true);
+      
+      toast({
+        title: "Loading raw responses",
+        description: "Fetching all resumes with raw responses for this job...",
+      });
+      
+      // Use the existing API to fetch scores but force it to process raw responses
+      const updatedScores = await getResumeScores(null, selectedJobId, true);
+      setResumeScores(updatedScores);
+      
+      toast({
+        title: "Raw responses loaded",
+        description: `Successfully loaded data for ${Object.keys(updatedScores).length} resumes.`,
+      });
+    } catch (error) {
+      console.error("Error loading raw responses:", error);
+      toast({
+        title: "Loading error",
+        description: "Failed to load raw response data. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingRawResponses(false);
     }
   };
   
@@ -373,7 +408,11 @@ export default function CandidatesPage() {
             </div>
             
             {/* Analysis summary statistics */}
-            <AnalysisSummaryStats scores={resumeScores} />
+            <AnalysisSummaryStats 
+              scores={resumeScores} 
+              jobId={selectedJobId}
+              onLoadRawResponses={handleLoadRawResponses}
+            />
           </>
         )}
       </div>
