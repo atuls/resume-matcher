@@ -9,11 +9,17 @@ import { eq, isNotNull, isNull, and } from "drizzle-orm";
 /**
  * Extract the structured JSON data from the raw_response
  */
-function extractParsedJson(rawResponse: any): any {
+export function extractParsedJson(rawResponse: any): { 
+  skills: string[]; 
+  workHistory: any[]; 
+  redFlags: string[]; 
+  summary: string;
+  score: number;
+} | null {
   if (!rawResponse) return null;
   
-  // Initialize result object
-  const result: any = {
+  // Initialize the result object with default values
+  const result = {
     skills: [],
     workHistory: [],
     redFlags: [],
@@ -22,9 +28,12 @@ function extractParsedJson(rawResponse: any): any {
   };
   
   try {
-    // CASE 1: Direct parsedJson field
+    console.log("Processing raw response structure");
+    
+    // CASE 1: Extract from parsedJson at root level
     if (rawResponse.parsedJson && typeof rawResponse.parsedJson === 'object') {
-      // Extract from the parsedJson field
+      console.log("Found parsedJson at root level");
+      
       if (rawResponse.parsedJson.Skills && Array.isArray(rawResponse.parsedJson.Skills)) {
         result.skills = rawResponse.parsedJson.Skills;
       }
@@ -48,8 +57,10 @@ function extractParsedJson(rawResponse: any): any {
       return result;
     }
     
-    // CASE 2: Nested rawResponse.parsedJson
+    // CASE 2: Extract from nested rawResponse.parsedJson
     if (rawResponse.rawResponse && rawResponse.rawResponse.parsedJson) {
+      console.log("Found parsedJson in nested rawResponse");
+      
       const nestedParsedJson = rawResponse.rawResponse.parsedJson;
       
       if (nestedParsedJson.Skills && Array.isArray(nestedParsedJson.Skills)) {
@@ -75,10 +86,39 @@ function extractParsedJson(rawResponse: any): any {
       return result;
     }
     
-    // CASE 3: rawText to be parsed
+    // CASE 3: Extract from parsedData structure
+    if (rawResponse.parsedData) {
+      console.log("Found parsedData structure");
+      
+      if (rawResponse.parsedData.skills && Array.isArray(rawResponse.parsedData.skills)) {
+        result.skills = rawResponse.parsedData.skills;
+      }
+      
+      if (rawResponse.parsedData.workHistory && Array.isArray(rawResponse.parsedData.workHistory)) {
+        result.workHistory = rawResponse.parsedData.workHistory;
+      }
+      
+      if (rawResponse.parsedData.redFlags && Array.isArray(rawResponse.parsedData.redFlags)) {
+        result.redFlags = rawResponse.parsedData.redFlags;
+      }
+      
+      if (rawResponse.parsedData.summary) {
+        result.summary = rawResponse.parsedData.summary;
+      }
+      
+      if (rawResponse.scoreData && rawResponse.scoreData.score) {
+        result.score = rawResponse.scoreData.score;
+      }
+      
+      return result;
+    }
+    
+    // CASE 4: Extract from rawText field as JSON
     if (rawResponse.rawText && typeof rawResponse.rawText === 'string') {
+      console.log("Found rawText field, attempting to parse as JSON");
+      
       try {
-        // Find JSON object in the rawText
+        // Find JSON object pattern in string
         const jsonMatch = rawResponse.rawText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
@@ -106,16 +146,18 @@ function extractParsedJson(rawResponse: any): any {
           return result;
         }
       } catch (e) {
-        console.error("Error parsing rawText:", e);
+        console.error("Error parsing rawText as JSON:", e);
       }
     }
     
-    // CASE 4: Deeply nested structure
+    // CASE 5: Extract from nested rawText field
     if (rawResponse.rawResponse && 
         rawResponse.rawResponse.rawText && 
         typeof rawResponse.rawResponse.rawText === 'string') {
+      console.log("Found nested rawText field, attempting to parse as JSON");
+      
       try {
-        // Find JSON object in the nested rawText
+        // Find JSON object pattern in string
         const jsonMatch = rawResponse.rawResponse.rawText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
@@ -143,15 +185,109 @@ function extractParsedJson(rawResponse: any): any {
           return result;
         }
       } catch (e) {
-        console.error("Error parsing nested rawText:", e);
+        console.error("Error parsing nested rawText as JSON:", e);
       }
     }
     
-    // If no data found, return the empty result
-    return result;
+    // CASE 6: From field-specific parsedX columns
+    if (rawResponse.parsedSkills || rawResponse.parsedWorkHistory || rawResponse.parsedRedFlags || rawResponse.parsedSummary) {
+      console.log("Using existing parsed fields");
+      
+      if (rawResponse.parsedSkills && Array.isArray(rawResponse.parsedSkills)) {
+        result.skills = rawResponse.parsedSkills;
+      }
+      
+      if (rawResponse.parsedWorkHistory && Array.isArray(rawResponse.parsedWorkHistory)) {
+        result.workHistory = rawResponse.parsedWorkHistory;
+      }
+      
+      if (rawResponse.parsedRedFlags && Array.isArray(rawResponse.parsedRedFlags)) {
+        result.redFlags = rawResponse.parsedRedFlags;
+      }
+      
+      if (rawResponse.parsedSummary) {
+        result.summary = rawResponse.parsedSummary;
+      }
+      
+      // Score might be in a separate field or not present
+      if (rawResponse.score) {
+        result.score = rawResponse.score;
+      }
+      
+      // Return the result if we found at least one meaningful field
+      if (result.skills.length > 0 || result.workHistory.length > 0 || 
+          result.redFlags.length > 0 || result.summary) {
+        return result;
+      }
+    }
+    
+    // No valid data found
+    console.log("No valid data structure found in raw response");
+    return null;
   } catch (error) {
-    console.error("Error extracting parsed JSON:", error);
-    return result;
+    console.error("Error extracting parsedJson:", error);
+    return null;
+  }
+}
+
+/**
+ * Sync parsedJson for a single analysis result
+ */
+export async function syncSingleParsedJson(id: string): Promise<boolean> {
+  try {
+    // Get the record
+    const [result] = await db
+      .select()
+      .from(analysisResults)
+      .where(eq(analysisResults.id, id));
+    
+    if (!result) {
+      console.error(`Record ${id} not found`);
+      return false;
+    }
+    
+    if (!result.rawResponse) {
+      console.log(`Record ${id} has no rawResponse`);
+      return false;
+    }
+    
+    // Extract structured data
+    const parsedJson = extractParsedJson(result.rawResponse);
+    
+    // Skip if no meaningful data was extracted
+    if (!parsedJson || 
+        (parsedJson.skills.length === 0 && 
+         parsedJson.workHistory.length === 0 && 
+         parsedJson.redFlags.length === 0 && 
+         !parsedJson.summary)) {
+      console.log(`No meaningful data extracted for record ${id}`);
+      return false;
+    }
+    
+    // Update the record
+    await db
+      .update(analysisResults)
+      .set({
+        parsedJson,
+        parsedSkills: parsedJson.skills.length > 0 ? parsedJson.skills : null,
+        parsedWorkHistory: parsedJson.workHistory.length > 0 ? parsedJson.workHistory : null,
+        parsedRedFlags: parsedJson.redFlags.length > 0 ? parsedJson.redFlags : null,
+        parsedSummary: parsedJson.summary || null,
+        parsingStatus: "complete",
+        updatedAt: new Date()
+      })
+      .where(eq(analysisResults.id, id));
+    
+    console.log(`Successfully processed record ${id}`);
+    console.log(`- Skills: ${parsedJson.skills.length}`);
+    console.log(`- Work History: ${parsedJson.workHistory.length}`);
+    console.log(`- Red Flags: ${parsedJson.redFlags.length}`);
+    console.log(`- Summary: ${parsedJson.summary ? 'Found' : 'Not found'}`);
+    
+    return true;
+  } catch (error) {
+    console.error(`Error processing record ${id}:`, error);
+    return false;
   }
 }
 
@@ -214,36 +350,16 @@ export async function syncParsedJsonForJob(jobDescriptionId: string): Promise<{
           .where(eq(analysisResults.id, result.id));
         
         processed++;
-        
-        // Log progress every 50 records
-        if (processed % 50 === 0) {
-          console.log(`Processed ${processed} records so far`);
-        }
       } catch (error) {
         console.error(`Error processing record ${result.id}:`, error);
         skipped++;
       }
     }
     
-    console.log(`
-Processing complete for job ${jobDescriptionId}:
-- Total: ${results.length}
-- Processed: ${processed}
-- Skipped: ${skipped}
-    `);
-    
-    return {
-      processed,
-      skipped,
-      total: results.length
-    };
+    return { processed, skipped, total: results.length };
   } catch (error) {
-    console.error("Error syncing parsed JSON for job:", error);
-    return {
-      processed: 0,
-      skipped: 0,
-      total: 0
-    };
+    console.error(`Error syncing parsed JSON for job ${jobDescriptionId}:`, error);
+    return { processed: 0, skipped: 0, total: 0 };
   }
 }
 
@@ -302,7 +418,6 @@ export async function syncAllParsedJson(batchLimit?: number): Promise<{
           .update(analysisResults)
           .set({
             parsedJson,
-            // Also update the individual parsed fields for backward compatibility
             parsedSkills: parsedJson.skills.length > 0 ? parsedJson.skills : null,
             parsedWorkHistory: parsedJson.workHistory.length > 0 ? parsedJson.workHistory : null,
             parsedRedFlags: parsedJson.redFlags.length > 0 ? parsedJson.redFlags : null,
@@ -313,35 +428,15 @@ export async function syncAllParsedJson(batchLimit?: number): Promise<{
           .where(eq(analysisResults.id, result.id));
         
         processed++;
-        
-        // Log progress every 50 records
-        if (processed % 50 === 0) {
-          console.log(`Processed ${processed} records so far`);
-        }
       } catch (error) {
         console.error(`Error processing record ${result.id}:`, error);
         skipped++;
       }
     }
     
-    console.log(`
-Processing complete for all records:
-- Total: ${results.length}
-- Processed: ${processed}
-- Skipped: ${skipped}
-    `);
-    
-    return {
-      processed,
-      skipped,
-      total: results.length
-    };
+    return { processed, skipped, total: results.length };
   } catch (error) {
     console.error("Error syncing all parsed JSON:", error);
-    return {
-      processed: 0,
-      skipped: 0,
-      total: 0
-    };
+    return { processed: 0, skipped: 0, total: 0 };
   }
 }
