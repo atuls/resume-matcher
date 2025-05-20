@@ -727,6 +727,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Endpoint to reprocess and fix structured data for a specific analysis result
+  app.post('/api/analysis-results/:id/reprocess', async (req, res) => {
+    const { id } = req.params;
+    
+    try {
+      console.log(`Reprocessing analysis result: ${id}`);
+      const { syncSingleParsedJson } = await import('./services/syncParsedJsonService');
+      
+      const success = await syncSingleParsedJson(id);
+      
+      if (success) {
+        return res.json({ 
+          status: "success", 
+          message: "Analysis result successfully reprocessed"
+        });
+      } else {
+        return res.status(404).json({ 
+          status: "error", 
+          message: "Failed to reprocess analysis result - record not found or no meaningful data extracted" 
+        });
+      }
+    } catch (error) {
+      console.error(`Error reprocessing analysis result ${id}:`, error);
+      res.status(500).json({ 
+        status: "error", 
+        message: "Error during reprocessing"
+      });
+    }
+  });
+  
   // Create HTTP server
   const httpServer = new Server(app);
   return httpServer;

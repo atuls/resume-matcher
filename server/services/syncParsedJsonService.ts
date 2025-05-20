@@ -193,8 +193,11 @@ export function extractParsedJson(rawResponse: any): {
     if (rawResponse.extractedSections) {
       console.log("Found extractedSections at top level");
       
-      // Extract skills
-      if (rawResponse.extractedSections.skills && typeof rawResponse.extractedSections.skills === 'string') {
+      // Extract skills - Handle the case where skills is in the parent object
+      if (rawResponse.skills && Array.isArray(rawResponse.skills)) {
+        console.log("Using skills array from parent object");
+        result.skills = rawResponse.skills;
+      } else if (rawResponse.extractedSections.skills && typeof rawResponse.extractedSections.skills === 'string') {
         try {
           // Sometimes skills are stored as a comma-separated string
           const skillsText = rawResponse.extractedSections.skills.trim();
@@ -211,22 +214,36 @@ export function extractParsedJson(rawResponse: any): {
       // Extract work history
       if (rawResponse.extractedSections.workHistory && Array.isArray(rawResponse.extractedSections.workHistory)) {
         result.workHistory = rawResponse.extractedSections.workHistory;
+        console.log(`Found ${result.workHistory.length} work history items in extractedSections.workHistory`);
       }
       
       // Extract red flags
       if (rawResponse.extractedSections.redFlags && Array.isArray(rawResponse.extractedSections.redFlags)) {
         result.redFlags = rawResponse.extractedSections.redFlags;
+        console.log(`Found ${result.redFlags.length} red flags in extractedSections.redFlags`);
       }
       
       // Extract summary
       if (rawResponse.extractedSections.summary && typeof rawResponse.extractedSections.summary === 'string') {
         result.summary = rawResponse.extractedSections.summary;
+        console.log("Found summary in extractedSections.summary");
       }
       
       // Extract score if available
       if (rawResponse.extractedSections.score || rawResponse.extractedSections.matching_score) {
         result.score = rawResponse.extractedSections.score || rawResponse.extractedSections.matching_score;
+      } else if (rawResponse.score) {
+        result.score = rawResponse.score;
       }
+      
+      // If we successfully extracted at least one field, return the result
+      console.log("Extracted data:", {
+        skillsCount: result.skills.length,
+        workHistoryCount: result.workHistory.length,
+        redFlagsCount: result.redFlags.length,
+        hasSummary: !!result.summary,
+        score: result.score
+      });
       
       return result;
     }
@@ -237,8 +254,14 @@ export function extractParsedJson(rawResponse: any): {
       
       const nestedSections = rawResponse.rawResponse.extractedSections;
       
-      // Extract skills
-      if (nestedSections.skills && typeof nestedSections.skills === 'string') {
+      // Check skills at multiple levels
+      if (rawResponse.skills && Array.isArray(rawResponse.skills)) {
+        console.log("Using skills array from parent object");
+        result.skills = rawResponse.skills;
+      } else if (rawResponse.rawResponse.skills && Array.isArray(rawResponse.rawResponse.skills)) {
+        console.log("Using skills array from rawResponse.skills");
+        result.skills = rawResponse.rawResponse.skills;
+      } else if (nestedSections.skills && typeof nestedSections.skills === 'string') {
         try {
           // Sometimes skills are stored as a comma-separated string
           const skillsText = nestedSections.skills.trim();
@@ -255,22 +278,61 @@ export function extractParsedJson(rawResponse: any): {
       // Extract work history
       if (nestedSections.workHistory && Array.isArray(nestedSections.workHistory)) {
         result.workHistory = nestedSections.workHistory;
+        console.log(`Found ${result.workHistory.length} work history items in nestedSections.workHistory`);
+      } else if (rawResponse.rawResponse.work_history && Array.isArray(rawResponse.rawResponse.work_history)) {
+        result.workHistory = rawResponse.rawResponse.work_history;
+        console.log(`Found ${result.workHistory.length} work history items in rawResponse.rawResponse.work_history`);
+      } else if (rawResponse.rawResponse.parsedJson && rawResponse.rawResponse.parsedJson.work_history && 
+                 Array.isArray(rawResponse.rawResponse.parsedJson.work_history)) {
+        result.workHistory = rawResponse.rawResponse.parsedJson.work_history;
+        console.log(`Found ${result.workHistory.length} work history items in rawResponse.rawResponse.parsedJson.work_history`);
       }
       
       // Extract red flags
       if (nestedSections.redFlags && Array.isArray(nestedSections.redFlags)) {
         result.redFlags = nestedSections.redFlags;
+        console.log(`Found ${result.redFlags.length} red flags in nestedSections.redFlags`);
+      } else if (rawResponse.rawResponse.red_flags && Array.isArray(rawResponse.rawResponse.red_flags)) {
+        result.redFlags = rawResponse.rawResponse.red_flags;
+        console.log(`Found ${result.redFlags.length} red flags in rawResponse.rawResponse.red_flags`);
+      } else if (rawResponse.rawResponse.parsedJson && rawResponse.rawResponse.parsedJson.red_flags && 
+                 Array.isArray(rawResponse.rawResponse.parsedJson.red_flags)) {
+        result.redFlags = rawResponse.rawResponse.parsedJson.red_flags;
+        console.log(`Found ${result.redFlags.length} red flags in rawResponse.rawResponse.parsedJson.red_flags`);
       }
       
       // Extract summary
       if (nestedSections.summary && typeof nestedSections.summary === 'string') {
         result.summary = nestedSections.summary;
+        console.log("Found summary in nestedSections.summary");
+      } else if (rawResponse.rawResponse.summary && typeof rawResponse.rawResponse.summary === 'string') {
+        result.summary = rawResponse.rawResponse.summary;
+        console.log("Found summary in rawResponse.rawResponse.summary");
+      } else if (rawResponse.rawResponse.parsedJson && rawResponse.rawResponse.parsedJson.summary && 
+                 typeof rawResponse.rawResponse.parsedJson.summary === 'string') {
+        result.summary = rawResponse.rawResponse.parsedJson.summary;
+        console.log("Found summary in rawResponse.rawResponse.parsedJson.summary");
       }
       
       // Extract score if available
       if (nestedSections.score || nestedSections.matching_score) {
         result.score = nestedSections.score || nestedSections.matching_score;
+      } else if (rawResponse.rawResponse.matching_score) {
+        result.score = rawResponse.rawResponse.matching_score;
+      } else if (rawResponse.rawResponse.parsedJson && rawResponse.rawResponse.parsedJson.matching_score) {
+        result.score = rawResponse.rawResponse.parsedJson.matching_score;
+      } else if (rawResponse.score) {
+        result.score = rawResponse.score;
       }
+      
+      // If we successfully extracted at least one field, return the result
+      console.log("Extracted data:", {
+        skillsCount: result.skills.length,
+        workHistoryCount: result.workHistory.length,
+        redFlagsCount: result.redFlags.length,
+        hasSummary: !!result.summary,
+        score: result.score
+      });
       
       return result;
     }
