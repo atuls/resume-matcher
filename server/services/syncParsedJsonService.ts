@@ -248,22 +248,64 @@ export function extractParsedJson(rawResponse: any): {
       return result;
     }
     
-    // CASE 7: From extractedSections in nested rawResponse (another possible structure)
+    // CASE 7: From extractedSections in nested rawResponse
     if (rawResponse.rawResponse && rawResponse.rawResponse.extractedSections) {
       console.log("Found extractedSections in nested rawResponse");
       
       const nestedSections = rawResponse.rawResponse.extractedSections;
       console.log("Nested extractedSections found with keys:", Object.keys(nestedSections));
       
-      // CRITICAL DEBUG: Dump a bit of the data to see what we're working with
-      for (const key of Object.keys(nestedSections)) {
-        const value = nestedSections[key];
-        console.log(`- "${key}" field is type: ${typeof value}, is array: ${Array.isArray(value)}`);
-        if (Array.isArray(value) && value.length > 0) {
-          console.log(`  - First item sample: ${JSON.stringify(value[0]).substring(0, 100)}...`);
-        } else if (typeof value === 'string') {
-          console.log(`  - String value starts with: ${value.substring(0, 100)}...`);
+      // Force convert the section to correct type if needed, addressing serialization/type issues
+      try {
+        // For each section, try to parse it as JSON if it's a string, or use it directly if it's already the right type
+        for (const key of Object.keys(nestedSections)) {
+          const value = nestedSections[key];
+          console.log(`- "${key}" field is type: ${typeof value}, is array: ${Array.isArray(value)}`);
+          
+          if (Array.isArray(value) && value.length > 0) {
+            // This is already an array, we can use it directly
+            console.log(`  - First item sample: ${JSON.stringify(value[0]).substring(0, 100)}...`);
+            
+            // Copy appropriate arrays to our result
+            if (key === 'workHistory') {
+              result.workHistory = value;
+              console.log(`  - Added ${value.length} items to workHistory`);
+            } else if (key === 'redFlags') {
+              result.redFlags = value;
+              console.log(`  - Added ${value.length} items to redFlags`);
+            }
+          } else if (typeof value === 'string') {
+            console.log(`  - String value starts with: ${value.substring(0, 100)}...`);
+            
+            // For skills field as a string, try to parse it
+            if (key === 'skills' && value.trim()) {
+              try {
+                // Try to parse as JSON array first
+                const parsedValue = JSON.parse(value);
+                if (Array.isArray(parsedValue)) {
+                  result.skills = parsedValue;
+                  console.log(`  - Parsed skills string as JSON array with ${parsedValue.length} items`);
+                } else {
+                  // Fallback to comma separation
+                  result.skills = value.split(',').map(s => s.trim()).filter(s => s);
+                  console.log(`  - Split skills string into ${result.skills.length} items`);
+                }
+              } catch (e) {
+                // Fallback to comma separation if JSON parsing fails
+                result.skills = value.split(',').map(s => s.trim()).filter(s => s);
+                console.log(`  - Split skills string into ${result.skills.length} items (after JSON parse failed)`);
+              }
+            }
+            
+            // For summary field as string, use directly
+            if (key === 'summary') {
+              result.summary = value;
+              console.log(`  - Added summary: ${value.substring(0, 50)}...`);
+            }
+          }
         }
+      } catch (error) {
+        console.error("Error processing extractedSections:", error);
       }
       
       // Check skills at multiple levels
