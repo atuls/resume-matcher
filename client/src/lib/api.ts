@@ -207,7 +207,15 @@ export async function getResume(id: string): Promise<Resume & { extractedText: s
     throw new Error("Failed to fetch resume");
   }
   
-  return response.json();
+  const responseData = await response.json();
+  console.log('API response data structure:', responseData);
+  
+  // Check if response has a nested 'resume' property (common pattern)
+  if (responseData && responseData.resume) {
+    return responseData.resume;
+  }
+  
+  return responseData;
 }
 
 export async function updateResumeContactedStatus(id: string, contacted: boolean): Promise<Resume> {

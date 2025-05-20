@@ -57,7 +57,11 @@ export default function ResumeProfilePage() {
   // Resume query
   const { data: resume, error: resumeError, isLoading: resumeLoading } = useQuery({
     queryKey: [`/api/resumes/${resumeId}`],
-    queryFn: () => getResume(resumeId!),
+    queryFn: async () => {
+      const data = await getResume(resumeId!);
+      console.log("Resume data received:", data);
+      return data;
+    },
     enabled: !!resumeId,
   });
 
