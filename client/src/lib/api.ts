@@ -641,6 +641,33 @@ export async function getParsedAnalysisData(resumeId: string, jobId?: string): P
   return response.json();
 }
 
+/**
+ * Get raw AI response for a specific resume and job
+ * 
+ * @param resumeId The resume ID
+ * @param jobDescriptionId The job description ID
+ * @returns The raw AI response data from the analysis
+ */
+export async function getRawAIResponse(resumeId: string, jobDescriptionId?: string): Promise<any> {
+  let url = `/api/resumes/${resumeId}/raw-response`;
+  
+  // Add job ID as a query parameter if provided
+  if (jobDescriptionId) {
+    url += `?jobDescriptionId=${jobDescriptionId}`;
+  }
+  
+  const response = await fetch(url, {
+    method: "GET",
+    credentials: "include"
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error fetching raw AI response: ${response.status}`);
+  }
+
+  return response.json();
+}
+
 // AI Status API
 export async function checkAIStatus(): Promise<{ available: boolean, message: string }> {
   try {

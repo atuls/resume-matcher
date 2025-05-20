@@ -123,6 +123,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get red flag analysis for a resume
   app.get("/api/resumes/:id/red-flag-analysis", handleRedFlagAnalysis);
+  
+  // Get raw AI response for a resume
+  app.get("/api/resumes/:id/raw-response", async (req: Request, res: Response) => {
+    try {
+      const resumeId = req.params.id;
+      const jobDescriptionId = req.query.jobDescriptionId as string;
+      
+      if (!resumeId) {
+        return res.status(400).json({ message: "Resume ID is required" });
+      }
+      
+      // Get the analysis result with the raw response for this resume and job
+      let query = { resumeId };
+      
+      // If job ID is provided, add it to the query
+      if (jobDescriptionId) {
+        query = { ...query, jobDescriptionId };
+      }
+      
+      // Get the result ordered by creation date (newest first)
+      const results = await storage.getAnalysisResultsByFilter(query, { orderBy: 'createdAt', limit: 1 });
+      
+      if (!results || results.length === 0) {
+        return res.status(404).json({ 
+          message: "No analysis results found",
+          resumeId,
+          jobDescriptionId
+        });
+      }
+      
+      // Return the raw response from the latest analysis result
+      res.json({
+        status: "success",
+        rawResponse: results[0].rawResponse,
+        analysisId: results[0].id,
+        createdAt: results[0].createdAt,
+        aiModel: results[0].aiModel
+      });
+    } catch (error) {
+      console.error("Error fetching raw AI response:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch raw AI response",
+        error: String(error)
+      });
+    }
+  });
 
   // Get resume scores for a job description with enhanced data
   app.get("/api/job-descriptions/:id/resume-scores", async (req: Request, res: Response) => {
