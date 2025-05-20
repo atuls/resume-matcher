@@ -234,16 +234,21 @@ export default function ResumeProfilePage() {
   }
 
   // Date formatting
-  const formatDate = (dateString: string | Date) => {
+  const formatDate = (dateString: string | Date | undefined | null) => {
     try {
+      if (!dateString) return 'Unknown date';
       const date = new Date(dateString);
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) return 'Unknown date';
+      
       return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
       }).format(date);
     } catch (e) {
-      return 'Invalid date';
+      return 'Unknown date';
     }
   };
   
@@ -319,9 +324,9 @@ export default function ResumeProfilePage() {
             </Link>
           </Button>
           <h1 className="text-2xl font-bold">
-            {resume.candidateName && resume.candidateName.startsWith("# ") 
-              ? resume.candidateName.substring(2) 
-              : (resume.candidateName || "Unnamed Candidate")}
+            {resume.candidateName 
+              ? (resume.candidateName.startsWith("# ") ? resume.candidateName.substring(2) : resume.candidateName)
+              : (resume.fileName || "Unnamed Candidate")}
           </h1>
           {resume.candidateTitle && (
             <Badge className="ml-2" variant="secondary">{resume.candidateTitle}</Badge>
@@ -465,7 +470,7 @@ export default function ResumeProfilePage() {
                     </Button>
                   </div>
                   <div className="text-sm text-gray-500">
-                    {(resume.fileSize / 1024).toFixed(2)} KB - {resume.fileType}
+                    {resume.fileSize ? `${(resume.fileSize / 1024).toFixed(2)} KB` : 'Unknown size'} - {resume.fileType || 'Unknown type'}
                   </div>
                 </div>
               </div>
@@ -688,13 +693,13 @@ export default function ResumeProfilePage() {
                 </TabsContent>
                 
                 <TabsContent value="raw-text">
-                  {resume?.extractedText ? (
+                  {resume?.extractedText && resume.extractedText.trim() !== '' ? (
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <h3 className="text-lg font-medium">Extracted Resume Text</h3>
                         <div className="flex items-center text-sm text-gray-500">
                           <FileText className="h-4 w-4 mr-1" />
-                          <span>{(resume.extractedText.length / 1000).toFixed(1)}K characters</span>
+                          <span>{((resume.extractedText?.length || 0) / 1000).toFixed(1)}K characters</span>
                         </div>
                       </div>
                       <div className="border rounded-md p-4 bg-gray-50 overflow-auto max-h-[500px]">
@@ -702,8 +707,9 @@ export default function ResumeProfilePage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center h-40 text-gray-400">
+                    <div className="flex flex-col items-center justify-center h-40 text-gray-400">
                       <p>No extracted text found for this resume.</p>
+                      <p className="text-sm mt-2">The system may not have properly extracted text from this file.</p>
                     </div>
                   )}
                 </TabsContent>
