@@ -123,24 +123,52 @@ export function extractParsedJson(rawResponse: any): {
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
           
+          // Check for various capitalization patterns for fields
+          // Skills field
           if (parsed.Skills && Array.isArray(parsed.Skills)) {
             result.skills = parsed.Skills;
+          } else if (parsed.skills && Array.isArray(parsed.skills)) {
+            result.skills = parsed.skills;
           }
           
+          // Work History field
           if (parsed.Work_History && Array.isArray(parsed.Work_History)) {
             result.workHistory = parsed.Work_History;
+          } else if (parsed["Work History"] && Array.isArray(parsed["Work History"])) {
+            result.workHistory = parsed["Work History"];
+          } else if (parsed.workHistory && Array.isArray(parsed.workHistory)) {
+            result.workHistory = parsed.workHistory;
+          } else if (parsed.work_history && Array.isArray(parsed.work_history)) {
+            result.workHistory = parsed.work_history;
           }
           
+          // Red Flags field
           if (parsed.Red_Flags && Array.isArray(parsed.Red_Flags)) {
             result.redFlags = parsed.Red_Flags;
+          } else if (parsed["Red Flags"] && Array.isArray(parsed["Red Flags"])) {
+            result.redFlags = parsed["Red Flags"];
+          } else if (parsed.redFlags && Array.isArray(parsed.redFlags)) {
+            result.redFlags = parsed.redFlags;
+          } else if (parsed.red_flags && Array.isArray(parsed.red_flags)) {
+            result.redFlags = parsed.red_flags;
           }
           
+          // Summary field
           if (parsed.Summary) {
             result.summary = parsed.Summary;
+          } else if (parsed.summary) {
+            result.summary = parsed.summary;
           }
           
+          // Score field
           if (parsed.matching_score) {
             result.score = parsed.matching_score;
+          } else if (parsed.MatchingScore) {
+            result.score = parsed.MatchingScore;
+          } else if (parsed.matchingScore) {
+            result.score = parsed.matchingScore;
+          } else if (parsed.score) {
+            result.score = parsed.score;
           }
           
           return result;
@@ -162,24 +190,52 @@ export function extractParsedJson(rawResponse: any): {
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
           
+          // Check for various capitalization patterns for fields
+          // Skills field
           if (parsed.Skills && Array.isArray(parsed.Skills)) {
             result.skills = parsed.Skills;
+          } else if (parsed.skills && Array.isArray(parsed.skills)) {
+            result.skills = parsed.skills;
           }
           
+          // Work History field
           if (parsed.Work_History && Array.isArray(parsed.Work_History)) {
             result.workHistory = parsed.Work_History;
+          } else if (parsed["Work History"] && Array.isArray(parsed["Work History"])) {
+            result.workHistory = parsed["Work History"];
+          } else if (parsed.workHistory && Array.isArray(parsed.workHistory)) {
+            result.workHistory = parsed.workHistory;
+          } else if (parsed.work_history && Array.isArray(parsed.work_history)) {
+            result.workHistory = parsed.work_history;
           }
           
+          // Red Flags field
           if (parsed.Red_Flags && Array.isArray(parsed.Red_Flags)) {
             result.redFlags = parsed.Red_Flags;
+          } else if (parsed["Red Flags"] && Array.isArray(parsed["Red Flags"])) {
+            result.redFlags = parsed["Red Flags"];
+          } else if (parsed.redFlags && Array.isArray(parsed.redFlags)) {
+            result.redFlags = parsed.redFlags;
+          } else if (parsed.red_flags && Array.isArray(parsed.red_flags)) {
+            result.redFlags = parsed.red_flags;
           }
           
+          // Summary field
           if (parsed.Summary) {
             result.summary = parsed.Summary;
+          } else if (parsed.summary) {
+            result.summary = parsed.summary;
           }
           
+          // Score field
           if (parsed.matching_score) {
             result.score = parsed.matching_score;
+          } else if (parsed.MatchingScore) {
+            result.score = parsed.MatchingScore;
+          } else if (parsed.matchingScore) {
+            result.score = parsed.matchingScore;
+          } else if (parsed.score) {
+            result.score = parsed.score;
           }
           
           return result;
