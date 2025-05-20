@@ -35,6 +35,10 @@ An AI-powered resume analysis platform that efficiently matches candidate resume
 - **Enhanced Current Position Detection**: Intelligent extraction of candidate's current role with multi-strategy fallback
 - **Robust Error Handling**: Graceful handling of JSON parsing errors in AI responses
 - **Admin Processing Interface**: API endpoint for re-processing analysis data on demand
+- **Multi-pass Data Extraction**: Comprehensive field extraction with support for various naming conventions
+- **Data Consistency Management**: Cross-record data sharing to maintain consistency for the same resume
+- **Self-healing Data System**: Automatic repair of records with missing structured data
+- **Field Variation Support**: Handles multiple field name variations (Work History/work_history/workHistory)
 
 ## Tech Stack
 

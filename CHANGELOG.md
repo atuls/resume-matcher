@@ -15,6 +15,9 @@ All notable changes to the Resume Analyzer project will be documented in this fi
 - Analysis Summary Statistics panel showing processing status metrics for all candidates
 - "Load Raw Responses" button to fetch and display all resume analysis data at once
 - Visual progress indicators in statistics panel showing completion percentages
+- Data repair scripts for fixing records with missing work history and other structured data
+- Multi-pass data extraction with support for different field naming variations
+- Cross-record data sharing to ensure consistency across multiple analyses of the same resume
 
 ### Changed
 - Enhanced current position detection with multiple fallback strategies
@@ -22,6 +25,8 @@ All notable changes to the Resume Analyzer project will be documented in this fi
 - More robust JSON parsing with graceful error handling for malformed responses
 - Simplified candidate display to show all resumes at once without pagination
 - Increased default page size limits to accommodate large candidate pools
+- Improved data extraction to handle multiple field name variations (Work History/work_history/workHistory)
+- Enhanced "complete" status validation to ensure all records have proper data
 
 ### Fixed
 - Fixed issue with raw analysis processing API endpoint returning HTML instead of JSON
@@ -32,6 +37,10 @@ All notable changes to the Resume Analyzer project will be documented in this fi
 - Fixed batch processing to correctly handle and display the total number of unanalyzed resumes
 - Fixed pagination issues when loading all resume analysis data (now shows all 278 results)
 - Corrected API parameter naming mismatch between client and server (pageSize vs limit)
+- Fixed over 100 records with missing structured data despite having 'complete' parsing status
+- Resolved issue where work history wasn't properly transferred from raw AI responses to parsed fields
+- Fixed problem with some resumes having complete analysis for one job but empty fields for another
+- Addressed inconsistency between different analysis results for the same resume across different jobs
 
 ## [1.8.0] - 2025-05-15
 
