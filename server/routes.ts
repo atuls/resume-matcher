@@ -120,6 +120,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch resume" });
     }
   });
+  
+  // Mark a resume as contacted
+  app.patch("/api/resumes/:id/contacted", async (req: Request, res: Response) => {
+    try {
+      const resumeId = req.params.id;
+      const { contacted } = req.body;
+      
+      if (typeof contacted !== 'boolean') {
+        return res.status(400).json({ message: "Contacted field must be a boolean" });
+      }
+      
+      // Update the contactedInRippling field which is defined in the schema
+      const resume = await storage.updateResume(resumeId, { 
+        contactedInRippling: contacted 
+      });
+      
+      if (!resume) {
+        return res.status(404).json({ message: "Resume not found" });
+      }
+      
+      res.json(resume);
+    } catch (error) {
+      console.error("Error updating resume contacted status:", error);
+      res.status(500).json({ message: "Failed to update resume" });
+    }
+  });
 
   // Get red flag analysis for a resume
   app.get("/api/resumes/:id/red-flag-analysis", handleRedFlagAnalysis);
