@@ -11,7 +11,8 @@ import {
   getResumeRedFlagAnalysis,
   downloadResume,
   analyzeResumes,
-  getParsedAnalysisData
+  getParsedAnalysisData,
+  getRawAIResponse
 } from "@/lib/api";
 import { 
   User, FileText, Calendar, ArrowLeft, Mail, MapPin, Phone, Award, 
@@ -74,6 +75,17 @@ export default function ResumeProfilePage() {
     queryKey: [`/api/resumes/${resumeId}/analysis`],
     queryFn: () => getResumeAnalysis(resumeId!),
     enabled: !!resumeId,
+  });
+  
+  // Raw AI response query - this will fetch the raw AI response for a specific job
+  const {
+    data: rawAIResponse,
+    error: rawAIResponseError,
+    isLoading: isRawAIResponseLoading
+  } = useQuery({
+    queryKey: [`/api/resumes/${resumeId}/raw-response`, selectedJobId],
+    queryFn: () => getRawAIResponse(resumeId!, selectedJobId!),
+    enabled: !!resumeId && !!selectedJobId,
   });
   
   // Red flag analysis query (legacy - kept for backward compatibility)
@@ -622,6 +634,10 @@ export default function ResumeProfilePage() {
                     <AlertCircle className="h-4 w-4 mr-2" />
                     Debug
                   </TabsTrigger>
+                  <TabsTrigger value="raw-ai" disabled={!selectedJobId}>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Raw AI Response
+                  </TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="skills">
@@ -806,6 +822,47 @@ export default function ResumeProfilePage() {
                     analysis={analysis}
                     redFlagData={redFlagData}
                   />
+                </TabsContent>
+                
+                <TabsContent value="raw-ai">
+                  {isRawAIResponseLoading ? (
+                    <div className="flex justify-center items-center p-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    </div>
+                  ) : rawAIResponseError ? (
+                    <div className="py-8 text-center text-gray-500">
+                      <p>Error loading raw AI response data</p>
+                      <p className="text-sm mt-2">{rawAIResponseError instanceof Error ? rawAIResponseError.message : 'Unknown error'}</p>
+                    </div>
+                  ) : !selectedJobId ? (
+                    <div className="py-8 text-center text-gray-500">
+                      <p>Please select a job description first</p>
+                      <p className="text-sm mt-2">Raw AI responses are specific to a job-resume combination</p>
+                    </div>
+                  ) : rawAIResponse?.status === "success" && rawAIResponse?.rawResponse ? (
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-medium">Raw AI Response</h3>
+                        <div className="flex items-center text-sm text-gray-500">
+                          <Sparkles className="h-4 w-4 mr-1" />
+                          <span>Model: {rawAIResponse.aiModel || 'Unknown'}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="border rounded-md p-4 bg-gray-50 overflow-auto max-h-[600px]">
+                        <pre className="text-sm whitespace-pre-wrap font-mono">
+                          {typeof rawAIResponse.rawResponse === 'string' 
+                            ? rawAIResponse.rawResponse 
+                            : JSON.stringify(rawAIResponse.rawResponse, null, 2)}
+                        </pre>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="py-8 text-center text-gray-500">
+                      <p>No raw AI response data available</p>
+                      <p className="text-sm mt-2">There might not be any analysis results for this resume and job combination</p>
+                    </div>
+                  )}
                 </TabsContent>
               </Tabs>
             </CardContent>
