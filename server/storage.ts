@@ -38,6 +38,10 @@ export interface IStorage {
   getAnalysisResultsByJob(jobDescriptionId: string): Promise<AnalysisResult[]>;
   getAnalysisResultsByResume(resumeId: string): Promise<AnalysisResult[]>;
   getAnalysisResultForResume(resumeId: string, jobDescriptionId: string): Promise<AnalysisResult | undefined>;
+  getAnalysisResultsByFilter(
+    filter: { resumeId?: string; jobDescriptionId?: string }, 
+    options?: { orderBy?: string; limit?: number }
+  ): Promise<AnalysisResult[]>;
   createAnalysisResult(result: InsertAnalysisResult): Promise<AnalysisResult>;
   updateAnalysisResult(id: string, data: Partial<AnalysisResult>): Promise<AnalysisResult | undefined>;
   deleteAnalysisResult(id: string): Promise<boolean>;
