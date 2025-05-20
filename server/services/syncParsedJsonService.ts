@@ -253,6 +253,18 @@ export function extractParsedJson(rawResponse: any): {
       console.log("Found extractedSections in nested rawResponse");
       
       const nestedSections = rawResponse.rawResponse.extractedSections;
+      console.log("Nested extractedSections found with keys:", Object.keys(nestedSections));
+      
+      // CRITICAL DEBUG: Dump a bit of the data to see what we're working with
+      for (const key of Object.keys(nestedSections)) {
+        const value = nestedSections[key];
+        console.log(`- "${key}" field is type: ${typeof value}, is array: ${Array.isArray(value)}`);
+        if (Array.isArray(value) && value.length > 0) {
+          console.log(`  - First item sample: ${JSON.stringify(value[0]).substring(0, 100)}...`);
+        } else if (typeof value === 'string') {
+          console.log(`  - String value starts with: ${value.substring(0, 100)}...`);
+        }
+      }
       
       // Check skills at multiple levels
       if (rawResponse.skills && Array.isArray(rawResponse.skills)) {
@@ -267,12 +279,14 @@ export function extractParsedJson(rawResponse: any): {
           const skillsText = nestedSections.skills.trim();
           if (skillsText) {
             result.skills = skillsText.split(',').map(s => s.trim()).filter(s => s);
+            console.log("Parsed skills from string:", result.skills);
           }
         } catch (e) {
           console.error("Error parsing skills string:", e);
         }
       } else if (nestedSections.skills && Array.isArray(nestedSections.skills)) {
         result.skills = nestedSections.skills;
+        console.log("Using skills array from nestedSections.skills with length:", result.skills.length);
       }
       
       // Extract work history
@@ -399,8 +413,52 @@ export async function syncSingleParsedJson(id: string): Promise<boolean> {
       return false;
     }
     
+    // Add debugging for raw response structure
+    console.log(`Processing record ${id}`);
+    console.log(`Raw response type: ${typeof result.rawResponse}`);
+    
+    try {
+      // Check for extractedSections field
+      if (result.rawResponse && result.rawResponse.extractedSections) {
+        console.log(`extractedSections keys: ${Object.keys(result.rawResponse.extractedSections).join(', ')}`);
+        
+        if (result.rawResponse.extractedSections.workHistory) {
+          console.log(`workHistory found with ${Array.isArray(result.rawResponse.extractedSections.workHistory) ? 
+            result.rawResponse.extractedSections.workHistory.length + ' items' : 'non-array type'}`);
+        }
+        
+        if (result.rawResponse.extractedSections.redFlags) {
+          console.log(`redFlags found with ${Array.isArray(result.rawResponse.extractedSections.redFlags) ? 
+            result.rawResponse.extractedSections.redFlags.length + ' items' : 'non-array type'}`);
+        }
+      } else if (result.rawResponse && result.rawResponse.rawResponse && result.rawResponse.rawResponse.extractedSections) {
+        console.log(`Nested extractedSections keys: ${Object.keys(result.rawResponse.rawResponse.extractedSections).join(', ')}`);
+      } else {
+        console.log(`No extractedSections field found in raw response or its nested structure`);
+        // Debug what's actually in the raw response
+        console.log("Top-level keys:", Object.keys(result.rawResponse || {}));
+        if (result.rawResponse && result.rawResponse.rawResponse) {
+          console.log("Nested rawResponse keys:", Object.keys(result.rawResponse.rawResponse));
+        }
+      }
+    } catch (error) {
+      console.error("Error examining raw response structure:", error);
+    }
+    
     // Extract structured data
     const parsedJson = extractParsedJson(result.rawResponse);
+    
+    // Debug extracted data
+    if (parsedJson) {
+      console.log(`Extracted data from raw response:
+        - Skills: ${parsedJson.skills.length} items
+        - Work History: ${parsedJson.workHistory.length} items
+        - Red Flags: ${parsedJson.redFlags.length} items
+        - Summary: ${parsedJson.summary ? 'Yes' : 'No'}
+        - Score: ${parsedJson.score}`);
+    } else {
+      console.log(`No parsedJson data could be extracted`);
+    }
     
     // Skip if no meaningful data was extracted
     if (!parsedJson || 
