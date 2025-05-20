@@ -189,7 +189,93 @@ export function extractParsedJson(rawResponse: any): {
       }
     }
     
-    // CASE 6: From field-specific parsedX columns
+    // CASE 6: From extractedSections in raw response (matches the structure seen in the screenshots)
+    if (rawResponse.extractedSections) {
+      console.log("Found extractedSections at top level");
+      
+      // Extract skills
+      if (rawResponse.extractedSections.skills && typeof rawResponse.extractedSections.skills === 'string') {
+        try {
+          // Sometimes skills are stored as a comma-separated string
+          const skillsText = rawResponse.extractedSections.skills.trim();
+          if (skillsText) {
+            result.skills = skillsText.split(',').map(s => s.trim()).filter(s => s);
+          }
+        } catch (e) {
+          console.error("Error parsing skills string:", e);
+        }
+      } else if (rawResponse.extractedSections.skills && Array.isArray(rawResponse.extractedSections.skills)) {
+        result.skills = rawResponse.extractedSections.skills;
+      }
+      
+      // Extract work history
+      if (rawResponse.extractedSections.workHistory && Array.isArray(rawResponse.extractedSections.workHistory)) {
+        result.workHistory = rawResponse.extractedSections.workHistory;
+      }
+      
+      // Extract red flags
+      if (rawResponse.extractedSections.redFlags && Array.isArray(rawResponse.extractedSections.redFlags)) {
+        result.redFlags = rawResponse.extractedSections.redFlags;
+      }
+      
+      // Extract summary
+      if (rawResponse.extractedSections.summary && typeof rawResponse.extractedSections.summary === 'string') {
+        result.summary = rawResponse.extractedSections.summary;
+      }
+      
+      // Extract score if available
+      if (rawResponse.extractedSections.score || rawResponse.extractedSections.matching_score) {
+        result.score = rawResponse.extractedSections.score || rawResponse.extractedSections.matching_score;
+      }
+      
+      return result;
+    }
+    
+    // CASE 7: From extractedSections in nested rawResponse (another possible structure)
+    if (rawResponse.rawResponse && rawResponse.rawResponse.extractedSections) {
+      console.log("Found extractedSections in nested rawResponse");
+      
+      const nestedSections = rawResponse.rawResponse.extractedSections;
+      
+      // Extract skills
+      if (nestedSections.skills && typeof nestedSections.skills === 'string') {
+        try {
+          // Sometimes skills are stored as a comma-separated string
+          const skillsText = nestedSections.skills.trim();
+          if (skillsText) {
+            result.skills = skillsText.split(',').map(s => s.trim()).filter(s => s);
+          }
+        } catch (e) {
+          console.error("Error parsing skills string:", e);
+        }
+      } else if (nestedSections.skills && Array.isArray(nestedSections.skills)) {
+        result.skills = nestedSections.skills;
+      }
+      
+      // Extract work history
+      if (nestedSections.workHistory && Array.isArray(nestedSections.workHistory)) {
+        result.workHistory = nestedSections.workHistory;
+      }
+      
+      // Extract red flags
+      if (nestedSections.redFlags && Array.isArray(nestedSections.redFlags)) {
+        result.redFlags = nestedSections.redFlags;
+      }
+      
+      // Extract summary
+      if (nestedSections.summary && typeof nestedSections.summary === 'string') {
+        result.summary = nestedSections.summary;
+      }
+      
+      // Extract score if available
+      if (nestedSections.score || nestedSections.matching_score) {
+        result.score = nestedSections.score || nestedSections.matching_score;
+      }
+      
+      return result;
+    }
+    
+    // CASE 8: From field-specific parsedX columns
     if (rawResponse.parsedSkills || rawResponse.parsedWorkHistory || rawResponse.parsedRedFlags || rawResponse.parsedSummary) {
       console.log("Using existing parsed fields");
       
