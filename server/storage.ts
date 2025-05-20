@@ -286,6 +286,49 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(analysisResults.overallScore));
   }
   
+  async getAnalysisResultsByFilter(
+    filter: { resumeId?: string; jobDescriptionId?: string }, 
+    options: { orderBy?: string; limit?: number } = {}
+  ): Promise<AnalysisResult[]> {
+    const { db } = await import('./db');
+    const { and, eq, desc } = await import('drizzle-orm');
+    const { analysisResults } = await import('@shared/schema');
+    
+    try {
+      let query = db.select().from(analysisResults);
+      let conditions = [];
+      
+      // Add filter conditions
+      if (filter.resumeId) {
+        conditions.push(eq(analysisResults.resumeId, filter.resumeId));
+      }
+      
+      if (filter.jobDescriptionId) {
+        conditions.push(eq(analysisResults.jobDescriptionId, filter.jobDescriptionId));
+      }
+      
+      // Apply all conditions if there are any
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+      
+      // Add ordering if specified
+      if (options.orderBy === 'createdAt') {
+        query = query.orderBy(desc(analysisResults.createdAt));
+      }
+      
+      // Add limit if specified
+      if (options.limit) {
+        query = query.limit(options.limit);
+      }
+      
+      return await query;
+    } catch (err) {
+      console.error("Error in getAnalysisResultsByFilter:", err);
+      return [];
+    }
+  }
+  
   async getAnalysisResultForResume(resumeId: string, jobDescriptionId: string): Promise<AnalysisResult | undefined> {
     const { db } = await import('./db');
     const { and, eq } = await import('drizzle-orm');
